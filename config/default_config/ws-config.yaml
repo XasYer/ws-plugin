@@ -1,0 +1,23 @@
+heartbeat:
+  # 心跳频率, 单位秒
+  # 0 为关闭心跳
+  interval: 5
+
+message:
+  # 上报数据类型
+  # 可选: string, array
+  postFormat: array
+
+# 连接服务列表
+servers:
+  # 添加连接方式, 可添加多个
+    # 连接名字
+  - name: BotName
+    # 连接地址
+    address: ws_address
+    # 连接类型 1:正向 Websocket 2:反向 Websocket 3:gsuid_core
+    type: 1
+    # 重连间隔 单位:秒
+    reconnectInterval: 5
+    # 最大连接次数 0 为无限制
+    maxReconnectAttempts: 0

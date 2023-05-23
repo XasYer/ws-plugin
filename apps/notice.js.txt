@@ -1,0 +1,84 @@
+
+export class notice extends plugin {
+    constructor() {
+        super({
+            name: 'Yunzai-WebSocket-notice',
+            dsc: 'Yunzai-WebSocket-notice',
+            event: 'notice.group',
+            priority: 1,
+        })
+    }
+
+    async accept() {
+        // console.log(this.e);
+        if (ws.length == 0) {
+            return false
+        }
+        let other = {}
+        switch (this.e.sub_type) {
+            //群员增加
+            case 'increase':
+                if (!enableNotice.increase) return false
+                other.notice_type = 'group_increase'
+                other.sub_type = 'approve'
+                other.operator_id = this.e.user_id
+                other.user_id = this.e.user_id
+                break;
+            //群员减少
+            case 'decrease':
+                if (!enableNotice.decrease) return false
+                other.notice_type = 'group_decrease'
+                other.sub_type = this.e.operator_id == this.e.user_id ? 'leave' : 'kick'
+                if (this.e.user_id == Bot.uin) other.sub_type = 'kick_me'
+                other.operator_id = this.operator_id || this.e.user_id
+                other.user_id = this.user_id
+                break
+            case 'poke':
+                if (!enableNotice.poke) return false
+                // console.log('触发戳一戳');
+                other.notice_type = 'notify'
+                other.sub_type = 'poke'
+                other.user_id = this.e.operator_id
+                other.target_id = this.e.target_id
+                break
+            default:
+                return false
+                break;
+        }
+        let msg = {
+            time: Date.now(),
+            self_id: this.e.self_id,
+            post_type: 'notice',
+            group_id: this.e.group_id,
+            ...other
+        }
+        // console.log(msg);
+        stat.message_received += 1
+        sockets.forEach(async socket => {
+            if (socket.item.type != 3) {
+                await this.sendOneBotNotice(socket.socket, msg)
+            }
+        })
+        return false
+    }
+
+    async sendOneBotNotice(socket, msg) {
+        socket.send(JSON.stringify(msg))
+        // console.log('发送消息成功');
+        socket.onmessage = async (event) => {
+            stat.packet_receivend += 1
+            let data = event.data
+            data = JSON.parse(data)
+            console.log(data);
+            let ResponseData = await getApiData(data.action, data.params)
+            let ret = {
+                "status": "ok",
+                "retcode": 0,
+                "data": ResponseData,
+                "echo": data.echo
+            }
+            socket.send(JSON.stringify(ret))
+            stat.packet_send += 1
+        }
+    }
+}

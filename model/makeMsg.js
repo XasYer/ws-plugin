@@ -1,0 +1,310 @@
+import { Config } from '../components/index.js'
+import { MsgToCQ, CQToMsg } from './CQCode.js'
+import { getMsgMap, setMsgMap } from './msgMap.js'
+import _ from 'lodash'
+import cfg from '../../../lib/config/config.js'
+
+/**
+ * 制作OneBot上报消息
+ * @param {*} e 
+ * @returns 
+ */
+async function makeOneBotReportMsg(e) {
+    let reportMsg = []
+    let msg = e.message
+    //前缀处理
+    if (msg[0].type == 'text') {
+        if (Config.noMsgStart.length > 0 && Array.isArray(Config.noMsgStart)) {
+            if (Config.noMsgStart.some(item => e.msg.startsWith(item))) {
+                return false
+            }
+        }
+        if (e.isGroup) {
+            let groupCfg = cfg.getGroup(e.group_id)
+            let alias = groupCfg.botAlias
+            if (!Array.isArray(alias)) {
+                alias = [alias]
+            }
+            for (let name of alias) {
+                if (msg[0].text.startsWith(name)) {
+                    msg[0].text = _.trimStart(msg[0].text, name).trim()
+                    break
+                }
+            }
+        }
+    }
+    if (e.source) {
+        reportMsg.push({
+            "type": "reply",
+            "data": {
+                "id": e.source.rand
+            }
+        })
+    }
+    for (let i = 0; i < msg.length; i++) {
+        if (msg[i].type == 'at') {
+            reportMsg.push({
+                "type": "at",
+                "data": {
+                    "qq": msg[i].qq
+                }
+            })
+        } else if (msg[i].type == 'text') {
+            if (Config.noMsgInclude.length > 0 && Array.isArray(Config.noMsgInclude)) {
+                if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
+                    return false
+                }
+            }
+            reportMsg.push({
+                "type": "text",
+                "data": {
+                    "text": msg[i].text
+                }
+            })
+        } else if (msg[i].type == 'image') {
+            reportMsg.push({
+                "type": "image",
+                "data": {
+                    file: msg[i].file,
+                    subType: 0,
+                    url: msg[i].url
+                }
+            })
+        } else if (msg[i].type == 'json') {
+            reportMsg.push({
+                "type": 'json',
+                "data": {
+                    "data": msg[i].data
+                }
+            })
+        }
+    }
+    if (Config.message.postFormat == 'string') {
+        reportMsg = MsgToCQ(reportMsg)
+    }
+    setMsgMap(e.rand, {
+        time: e.time,
+        message_type: e.message_type,
+        message_id: e.rand,
+        real_id: e.seq,
+        sender: e.sender,
+        message: e.message,
+        message_string: e.message_id,
+        group_id: e.group_id,
+        user_id: e.user_id,
+    })
+    let Message = {
+        time: e.time,
+        self_id: e.self_id,
+        post_type: e.post_type,
+        message_type: e.message_type,
+        sub_type: e.sub_type,
+        message_id: e.rand,
+        group_id: e.group_id || null,
+        user_id: e.user_id,
+        message: reportMsg,
+        raw_message: e.raw_message,
+        font: 1234,//onebot要求int类型,但是icqq获取的好像是string?就随便填了个
+        sender: e.sender
+    }
+
+    return JSON.stringify(Message)
+}
+
+/**
+ * 制作gsuid_core上报消息
+ * @param {*} e 
+ * @returns 
+ */
+async function makeGSUidReportMsg(e) {
+    let message = []
+    let msg = e.message
+    //前缀处理
+    if (msg[0].type == 'text') {
+        if (NoMsgStart.length > 0 && Array.isArray(NoMsgStart)) {
+            if (NoMsgStart.some(item => e.msg.startsWith(item))) {
+                return false
+            }
+        }
+        if (e.isGroup) {
+            let groupCfg = cfg.getGroup(e.group_id)
+            let alias = groupCfg.botAlias
+            if (!Array.isArray(alias)) {
+                alias = [alias]
+            }
+            for (let name of alias) {
+                if (msg[0].text.startsWith(name)) {
+                    msg[0].text = _.trimStart(msg[0].text, name).trim()
+                    break
+                }
+            }
+        }
+    }
+    if (e.source) {
+        message.push({
+            type: "reply",
+            data: e.message_id
+        })
+    }
+    for (let i = 0; i < msg.length; i++) {
+        if (msg[i].type == 'at') {
+            message.push({
+                type: 'at',
+                data: msg[i].qq
+            })
+        } else if (msg[i].type == 'text') {
+            if (NoMsgInclude.length > 0 && Array.isArray(NoMsgInclude)) {
+                if (NoMsgInclude.some(item => msg[i].text.includes(item))) {
+                    return false
+                }
+            }
+            message.push({
+                type: 'text',
+                data: msg[i].text
+            })
+        } else if (msg[i].type == 'image') {
+            message.push({
+                type: 'image',
+                data: msg[i].url
+            })
+        }
+    }
+    if (message.length == 0) {
+        return false
+    }
+    let user_pm = 6
+    if (e.isMaster) {
+        user_pm = 1
+    } else if (e.isGroup) {
+        if (e.sender.role === 'owner') {
+            user_pm = 2
+        } else if (e.sender.role === 'admin') {
+            user_pm = 3
+        }
+    }
+    const MessageReceive = {
+        bot_id: 'Yunzai_Bot',
+        bot_self_id: e.self_id + "",
+        msg_id: e.message_id,
+        user_type: e.isGroup ? 'group' : 'direct',
+        group_id: e.isGroup ? e.group_id + '' : e.user_id + '',
+        user_id: e.user_id + "",
+        user_pm: user_pm,
+        content: message
+    };
+    let data = JSON.stringify(MessageReceive)
+    const encoder = new TextEncoder();
+    const bytes = encoder.encode(data);
+    return bytes
+}
+
+/**
+ * 制作需要发送的消息
+ * @param {*} params 
+ * @returns 
+ */
+async function makeSendMsg(params) {
+    let msg = params.message
+    let sendMsg = []
+    let quote = null
+    if (typeof msg == 'string') {
+        msg = CQToMsg(msg)
+    }
+    for (let i = 0; i < msg.length; i++) {
+        switch (msg[i].type) {
+            case 'reply':
+                quote = getMsgMap(msg[i].data.id)
+                let target
+                let uid
+                let seq
+                if (quote.message_type == 'group') {
+                    target = 'pickGroup'
+                    uid = quote.group_id
+                    seq = quote.seq
+                } else {
+                    target = 'pickFriend'
+                    uid = quote.user_id
+                    seq = quote.time
+                }
+                quote = (await Bot[target](uid).getChatHistory(seq, 1))[0]
+                break
+            case 'image':
+                sendMsg.push(segment.image(msg[i].data.file))
+                break
+            case 'text':
+                sendMsg.push(msg[i].data.text)
+                break
+            case 'at':
+                sendMsg.push(segment.at(Number(msg[i].data.qq)))
+                break
+            case 'video':
+                if (Config.servers.some(obj => ['127.0.0.1', 'localhost'].some(val => obj.address.includes(val)))) {
+                    sendMsg.push(segment.video(msg[i].data.file))
+                } else {
+                    sendMsg.push('远程连接暂不支持视频文件发送')
+                }
+                break
+            case 'music':
+                sendMsg.push('暂不支持分享歌曲')
+                break
+            case 'poke':
+                await Bot.pickGroup(params.group_id).pokeMember(Number(msg[i].data.qq))
+                break
+            case 'record':
+                sendMsg.push(segment.record(msg[i].data.file))
+                break
+            default:
+                sendMsg.push('出现了未适配的消息的类型')
+                break
+        }
+    }
+    return [sendMsg, quote]
+}
+
+/**
+ * 制作合并转发的消息
+ * @param {*} params 
+ */
+async function makeForwardMsg(params) {
+    let forwardMsg = []
+    let msg = params.messages
+    for (let i = 0; i < msg.length; i++) {
+        let _msg = null
+        if (typeof msg[i].data.content == 'string') {
+            _msg = (await makeSendMsg({ message: msg[i].data.content }))[0]
+        } else if (msg[i].data.content.type == 'image') {
+            _msg = segment.image(msg[i].data.content.data.file)
+        } else if (Array.isArray(msg[i].data.content)) {
+            _msg = []
+            for (let j = 0; j < msg[i].data.content.length; j++) {
+                if (msg[i].data.content[j].type == 'text') {
+                    _msg.push(msg[i].data.content[j].data.text)
+                } else if (msg[i].data.content[j].type == 'image') {
+                    _msg.push(segment.image(msg[i].data.content[j].data.file))
+                } else {
+                    _msg.push('出现了未适配的消息的类型,建议联系开发者解决')
+                }
+            }
+        } else {
+            _msg = '出现了未适配的消息的类型,建议联系开发者解决'
+        }
+        forwardMsg.push({
+            message: _msg,
+            nickname: msg[i].data.name,
+            user_id: Number(msg[i].data.uin)
+        })
+    }
+    if (params.group_id) {
+        forwardMsg = await Bot.pickGroup(params.group_id).makeForwardMsg(forwardMsg)
+    } else if (params.user_id) {
+        forwardMsg = await Bot.pickFriend(params.user_id).makeForwardMsg(forwardMsg)
+    }
+    return forwardMsg
+}
+
+export {
+    makeOneBotReportMsg,
+    makeGSUidReportMsg,
+    makeSendMsg,
+    makeForwardMsg
+}
