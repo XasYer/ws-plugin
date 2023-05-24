@@ -187,11 +187,13 @@ async function makeGSUidReportMsg(e) {
         bot_self_id: e.self_id + "",
         msg_id: e.message_id,
         user_type: e.isGroup ? 'group' : 'direct',
-        group_id: e.isGroup ? e.group_id + '' : e.user_id + '',
         user_id: e.user_id + "",
         user_pm: user_pm,
         content: message
     };
+    if (e.isGroup) {
+        MessageReceive.group_id = e.group_id + ""
+    }
     let data = JSON.stringify(MessageReceive)
     const encoder = new TextEncoder();
     const bytes = encoder.encode(data);
