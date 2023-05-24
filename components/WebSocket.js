@@ -1,7 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws'
 import Config from './Config.js'
 import { lifecycle, heartbeat } from '../model/index.js'
-import { getApiData } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg } from '../model/index.js'
 
 let socketList = []
 let serverList = []
@@ -182,38 +182,7 @@ function createWebSocket(servers) {
                     const decoder = new TextDecoder();
                     let data = decoder.decode(event.data);
                     data = JSON.parse(data)
-                    let msg = data.content
-                    if (msg[0].type.startsWith('log')) {
-                        logger.info(msg[0].data);
-                    } else {
-                        let sendMsg = []
-                        let target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
-                        for (let k = 0; k < msg.length; k++) {
-                            if (msg[k].type == 'image') {
-                                sendMsg.push(segment.image(msg[k].data))
-                            } else if (msg[k].type == 'text') {
-                                sendMsg.push(msg[k].data)
-                            } else if (msg[k].type == 'node') {
-                                for (let i = 0; i < msg[k].data.length; i++) {
-                                    let _sendMsg
-                                    if (msg[k].data[i].type == 'text') {
-                                        _sendMsg = msg[k].data[i].data
-                                    } else if (msg[k].data[i].type == 'image') {
-                                        _sendMsg = segment.image(msg[k].data[i].data)
-                                    }
-                                    sendMsg.push({
-                                        message: [
-                                            _sendMsg
-                                        ],
-                                        nickname: '小助手',
-                                        user_id: 2854196310
-                                    })
-                                }
-                                sendMsg = await Bot[target](data.target_id).makeForwardMsg(sendMsg)
-                            }
-                        }
-                        await Bot[target](data.target_id).sendMsg(sendMsg)
-                    }
+                    await makeGSUidSendMsg(data)
                 }
                 socket.onerror = (event) => {
                     logger.error(`${item.name}连接失败\n${event.error}`);

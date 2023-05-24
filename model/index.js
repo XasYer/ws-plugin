@@ -1,5 +1,5 @@
 import { lifecycle, heartbeat } from './meta.js'
-import { makeOneBotReportMsg, makeGSUidReportMsg } from './makeMsg.js'
+import { makeOneBotReportMsg, makeGSUidReportMsg, makeGSUidSendMsg } from './makeMsg.js'
 import { getApiData } from './api.js'
 
 export {
@@ -7,5 +7,6 @@ export {
     heartbeat,
     makeOneBotReportMsg,
     makeGSUidReportMsg,
-    getApiData
+    getApiData,
+    makeGSUidSendMsg
 }

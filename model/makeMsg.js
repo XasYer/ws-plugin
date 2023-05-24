@@ -3,6 +3,7 @@ import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
 import _ from 'lodash'
 import cfg from '../../../lib/config/config.js'
+import fetch from 'node-fetch'
 
 /**
  * 制作OneBot上报消息
@@ -167,6 +168,20 @@ async function makeGSUidReportMsg(e) {
                 type: 'image',
                 data: msg[i].url
             })
+        } else if (msg[i].type == 'file') {
+            if (e.isGroup) {
+                continue
+            }
+            let fileUrl = await e.friend.getFileUrl(e.file.fid);
+            let res = await fetch(fileUrl);
+            let arrayBuffer = await res.arrayBuffer();
+            let buffer = Buffer.from(arrayBuffer);
+            let base64 = buffer.toString('base64');
+            let name = msg[i].name
+            message.push({
+                type: 'file',
+                data: `${name}|${base64}`
+            })
         }
     }
     if (message.length == 0) {
@@ -198,6 +213,51 @@ async function makeGSUidReportMsg(e) {
     const encoder = new TextEncoder();
     const bytes = encoder.encode(data);
     return bytes
+}
+
+/**
+ * 制作gsuid发送消息
+ * @param {*} data 
+ */
+async function makeGSUidSendMsg(data) {
+    let msg = data.content
+    if (msg[0].type.startsWith('log')) {
+        logger.info(msg[0].data);
+    } else {
+        let sendMsg = []
+        let target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
+        for (let k = 0; k < msg.length; k++) {
+            if (msg[k].type == 'image') {
+                sendMsg.push(segment.image(msg[k].data))
+            } else if (msg[k].type == 'text') {
+                sendMsg.push(msg[k].data)
+            } else if (msg[k].type == 'node') {
+                for (let i = 0; i < msg[k].data.length; i++) {
+                    let _sendMsg
+                    if (msg[k].data[i].type == 'text') {
+                        _sendMsg = msg[k].data[i].data
+                    } else if (msg[k].data[i].type == 'image') {
+                        _sendMsg = segment.image(msg[k].data[i].data)
+                    }
+                    sendMsg.push({
+                        message: [
+                            _sendMsg
+                        ],
+                        nickname: '小助手',
+                        user_id: 2854196310
+                    })
+                }
+                sendMsg.push(await Bot[target](data.target_id).makeForwardMsg(sendMsg))
+            } else if (msg[k].type == 'file') {
+                let file = msg[k].data.split('|')
+                let buffer = Buffer.from(file[1], 'base64');
+                Bot.pickGroup(data.target_id).fs.upload(buffer, '/', file[0]);
+            }
+        }
+        if (sendMsg.length > 0 && Array.isArray(sendMsg)) {
+            await Bot[target](data.target_id).sendMsg(sendMsg)
+        }
+    }
 }
 
 /**
@@ -308,5 +368,6 @@ export {
     makeOneBotReportMsg,
     makeGSUidReportMsg,
     makeSendMsg,
-    makeForwardMsg
+    makeForwardMsg,
+    makeGSUidSendMsg
 }
