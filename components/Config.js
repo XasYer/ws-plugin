@@ -4,12 +4,13 @@ import chokidar from 'chokidar'
 import fs from 'node:fs'
 import YamlReader from './YamlReader.js'
 import _ from 'lodash'
+import { createWebSocket, closeWebSocket, clearWebSocket, socketList, serverList } from './WebSocket.js'
 
 const Path = process.cwd()
 const Plugin_Name = 'ws-plugin'
 const Plugin_Path = `${Path}/plugins/${Plugin_Name}`
 class Config {
-  constructor () {
+  constructor() {
     this.config = {}
 
     /** 监听文件 */
@@ -19,7 +20,7 @@ class Config {
   }
 
   /** 初始化配置 */
-  initCfg () {
+  initCfg() {
     let path = `${Plugin_Path}/config/config/`
     let pathDef = `${Plugin_Path}/config/default_config/`
     const files = fs.readdirSync(pathDef).filter(file => file.endsWith('.yaml'))
@@ -50,24 +51,24 @@ class Config {
     return this.getConfig('msg-config').noMsgStart
   }
 
-  get noMsgInclude(){
+  get noMsgInclude() {
     return this.getConfig('msg-config').noMsgInclude
   }
 
   /** 默认配置和用户配置 */
-  getDefOrConfig (name) {
+  getDefOrConfig(name) {
     let def = this.getdefSet(name)
     let config = this.getConfig(name)
     return { ...def, ...config }
   }
 
   /** 默认配置 */
-  getdefSet (name) {
+  getdefSet(name) {
     return this.getYaml('default_config', name)
   }
 
   /** 用户配置 */
-  getConfig (name) {
+  getConfig(name) {
     return this.getYaml('config', name)
   }
 
@@ -76,7 +77,7 @@ class Config {
    * @param type 默认跑配置-defSet，用户配置-config
    * @param name 名称
    */
-  getYaml (type, name) {
+  getYaml(type, name) {
     let file = `${Plugin_Path}/config/${type}/${name}.yaml`
     let key = `${type}.${name}`
 
@@ -92,7 +93,7 @@ class Config {
   }
 
   /** 监听配置文件 */
-  watch (file, name, type = 'default_config') {
+  watch(file, name, type = 'default_config') {
     let key = `${type}.${name}`
 
     if (this.watcher[key]) return
@@ -104,6 +105,12 @@ class Config {
       logger.mark(`[ws-Plugin][修改配置文件][${type}][${name}]`)
       if (this[`change_${name}`]) {
         this[`change_${name}`]()
+      }
+      if (name == 'ws-config') {
+        clearWebSocket()
+        if (this.servers) {
+          createWebSocket(this.servers)
+        }
       }
     })
 
@@ -117,7 +124,7 @@ class Config {
    * @param {String|Number} value 修改的value值
    * @param {'config'|'default_config'} type 配置文件或默认
    */
-  modify (name, key, value, type = 'config') {
+  modify(name, key, value, type = 'config') {
     let path = `${Plugin_Path}/config/${type}/${name}.yaml`
     new YamlReader(path).set(key, value)
     delete this.config[`${type}.${name}`]
@@ -131,7 +138,7 @@ class Config {
    * @param {'add'|'del'} category 类别 add or del
    * @param {'config'|'default_config'} type 配置文件或默认
    */
-  modifyarr (name, key, value, category = 'add', type = 'config') {
+  modifyarr(name, key, value, category = 'add', type = 'config') {
     let path = `${Plugin_Path}/config/${type}/${name}.yaml`
     let yaml = new YamlReader(path)
     if (category == 'add') {
@@ -140,6 +147,15 @@ class Config {
       let index = yaml.jsonData[key].indexOf(value)
       yaml.delete(`${key}.${index}`)
     }
+  }
+
+  delServersArr(value, name = 'ws-config', type = 'config') {
+    let path = `${Plugin_Path}/config/${type}/${name}.yaml`
+    let yaml = new YamlReader(path)
+    let key = 'servers'
+    // let index = yaml.jsonData[key].indexOf(value)
+    let index = yaml.jsonData[key].findIndex(item => item.name === value);
+    yaml.delete(`${key}.${index}`)
   }
 }
 export default new Config()

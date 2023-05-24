@@ -1,20 +1,20 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import _ from 'lodash'
-import { sockets } from '../components/index.js'
+import { socketList } from '../components/index.js'
 import { makeOneBotReportMsg, makeGSUidReportMsg } from '../model/index.js'
 
-export class nonebot extends plugin {
+export class onebot extends plugin {
   constructor() {
     super({
       name: '[ws-plugin] 接收消息',
-      dsc: 'Yunzai-WebSocket',
+      dsc: '[ws-plugin] 接收消息',
       event: 'message',
       priority: 1,
       rule: [
         {
           reg: '',
           fnc: 'onebot',
-          log: true
+          log: false
         },
       ]
     })
@@ -22,11 +22,11 @@ export class nonebot extends plugin {
   }
 
   async onebot() {
-    if (sockets.length == 0) {
+    if (socketList.length == 0) {
       return false
     }
-    sockets.forEach(async socket => {
-      if (socket.type != 3) {
+    socketList.forEach(async socket => {
+      if (Number(socket.type) != 3) {
         await this.SendOneBotMsg(socket)
       } else {
         await this.SendGSUidMsg(socket)

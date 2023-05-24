@@ -3,11 +3,16 @@ import Config from './Config.js'
 import { lifecycle, heartbeat } from '../model/index.js'
 import { getApiData } from '../model/index.js'
 
-let sockets = []
+let socketList = []
+let serverList = []
+let timerList = []
 
 function createWebSocket(servers) {
+    if (!servers) {
+        return
+    }
     servers.forEach((item) => {
-        if (!item.address == 'ws_address') {
+        if (item.address != 'ws_address') {
             if (item.type == 1) {
                 let socket = new WebSocket(item.address, {
                     headers: {
@@ -17,16 +22,18 @@ function createWebSocket(servers) {
                 });
                 socket.type = item.type
                 socket.name = item.name
+                socket.reconnectAttempts = 0
                 let timer = null
                 socket.onopen = async (event) => {
                     logger.mark(`${item.name}已连接`);
-
+                    socket.reconnectAttempts = 0
                     lifecycle(socket)
-                    sockets.push(socket)
+                    socketList.push(socket)
                     if (Config.heartbeat.interval > 0) {
                         timer = setInterval(async () => {
                             heartbeat(socket)
                         }, Config.heartbeat.interval * 1000)
+                        timerList.push(timer)
                     }
                 };
                 socket.onmessage = async (event) => {
@@ -44,29 +51,35 @@ function createWebSocket(servers) {
 
                 socket.onclose = async (event) => {
                     logger.warn(`${item.name}连接已关闭`);
-                    // if (sendMaster) {
-                    //     Bot.pickFriend(cfg.masterQQ[0]).sendMsg(`${item.name}已断开连接`)
-                    // }
                     clearInterval(timer)
-                    sockets = sockets.filter(function (s) {
+                    socketList = socketList.filter(function (s) {
                         return s.name !== socket.name;
                     });
 
-                    console.log(`3秒后尝试重新连接`);
-                    setTimeout(function () {
-                        let newSocket = new WebSocket(item.address, {
-                            headers: {
-                                'X-Self-ID': Bot.uin,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        newSocket.type = item.type;
-                        newSocket.name = item.name;
-                        newSocket.onmessage = socket.onmessage;
-                        newSocket.onclose = socket.onclose;
-                        newSocket.onerror = socket.onerror
-                        newSocket.onopen = socket.onopen;
-                    }, 3000);
+                    // if (item.reconnectInterval > 0) {
+                    //     logger.warn(`${item.reconnectInterval}秒后尝试重新连接,第${socket.reconnectAttempts + 1}次`);
+                    //     socket.reconnectAttempts++
+                    //     setTimeout(function () {
+                    //         let newSocket = new WebSocket(item.address, {
+                    //             headers: {
+                    //                 'X-Self-ID': Bot.uin,
+                    //                 'Content-Type': 'application/json'
+                    //             }
+                    //         });
+                    //         newSocket.type = item.type;
+                    //         newSocket.name = item.name;
+                    //         newSocket.reconnectAttempts = socket.reconnectAttempts
+                    //         newSocket.onopen = socket.onopen;
+                    //         newSocket.onmessage = socket.onmessage;
+                    //         newSocket.onclose = socket.onclose;
+                    //         newSocket.onerror = socket.onerror
+                    //         if (newSocket.reconnectAttempts >= item.maxReconnectAttempts && item.maxReconnectAttempts != 0) {
+                    //             newSocket.onclose = () => {
+                    //                 logger.warn('达到最大重连次数,停止重新连接');
+                    //             }
+                    //         }
+                    //     }, item.reconnectInterval * 1000);
+                    // }
                 };
 
                 socket.onerror = async (event) => {
@@ -74,82 +87,104 @@ function createWebSocket(servers) {
                 };
 
             } else if (item.type == 2) {
-                try {
-                    var parts = wsObj.address.split(':');
-                    var host = parts[0];
-                    var port = parts[1];
-                    let server = new WebSocketServer({ port, host });
-                    server.on('listening', () => {
-                        logger.mark(`ws服务器已启动并监听 ${item.host}:${item.port}`);
-                    });
-                    server.on('connection', async function (socket) {
-                        socket.type = item.type
-                        logger.mark(`新的客户端连接,连接端口为${item.port}`);
-                        lifecycle(socket)
-                        sockets.push(socket);
-
-                        socket.on('close', function () {
-                            logger.warn(`客户端断开连接,端口为${item.port}`);
-                            let index = sockets.indexOf(socket);
-                            if (index !== -1) {
-                                sockets.splice(index, 1);
-                            }
-                        })
-                        socket.on('message', async (event) => {
-                            let data = event.data;
-                            data = JSON.parse(data);
-                            let ResponseData = await getApiData(data.action, data.params);
-                            let ret = {
-                                status: 'ok',
-                                retcode: 0,
-                                data: ResponseData,
-                                echo: data.echo
-                            };
-                            socket.send(JSON.stringify(ret));
+                var parts = item.address.split(':');
+                var host = parts[0];
+                var port = parts[1];
+                let server = new WebSocketServer({ port, host });
+                server.type = item.type
+                server.name = item.name
+                server.on('listening', () => {
+                    logger.mark(`ws服务器已启动并监听 ${host}:${port}`);
+                    serverList.push(server)
+                });
+                server.on('connection', async function (socket) {
+                    socket.type = item.type
+                    socket.name = item.name
+                    logger.mark(`新的客户端连接,连接端口为${port}`);
+                    lifecycle(socket)
+                    if (Config.heartbeat.interval > 0) {
+                        timer = setInterval(async () => {
+                            heartbeat(socket)
+                        }, Config.heartbeat.interval * 1000)
+                        timerList.push(timer)
+                    }
+                    socket.on('close', function () {
+                        logger.warn(`客户端断开连接,端口为${port}`);
+                        socketList = socketList.filter(function (s) {
+                            return s.name !== socket.name;
                         });
                     })
-                    server.on('error', async function (event) {
-                        logger.error(event.error);
-                    })
-                } catch (err) {
-                    logger.error('服务器启动失败:', err);
-                }
+                    socket.on('message', async (event) => {
+                        let data = event.data;
+                        data = JSON.parse(data);
+                        let ResponseData = await getApiData(data.action, data.params);
+                        let ret = {
+                            status: 'ok',
+                            retcode: 0,
+                            data: ResponseData,
+                            echo: data.echo
+                        };
+                        socket.send(JSON.stringify(ret));
+                    });
+                    socketList.push(socket);
+                })
+                server.on('error', async function (error) {
+                    logger.error(`${item.address}启动失败,请检查地址是否填写正确,或者端口是否占用\n${error}`);
+                })
+                server.on('close', async function (error) {
+                    logger.error(`${item.address}已关闭`);
+                    serverList = serverList.filter(function (s) {
+                        return s.name !== server.name;
+                    });
+                })
             } else if (item.type == 3) {
                 let socket = new WebSocket(item.address);
+                socket.type = item.type
+                socket.name = item.name
+                socket.reconnectAttempts = 0
                 socket.onopen = (event) => {
                     logger.mark(`${item.name}已连接`);
-                    sockets.push({ socket, item })
+                    socket.reconnectAttempts = 0
+                    socketList.push(socket)
                 };
                 socket.onclose = (event) => {
                     logger.warn(`${item.name}连接已关闭`);
-                    clearInterval(timer)
-                    sockets = sockets.filter(function (s) {
+                    // clearInterval(timer)
+                    socketList = socketList.filter(function (s) {
                         return s.name !== socket.name;
                     });
-                    console.log(`3秒后尝试重新连接`);
-                    setTimeout(function () {
-                        let newSocket = new WebSocket(item.address, {
-                            headers: {
-                                'X-Self-ID': Bot.uin,
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        newSocket.type = item.type;
-                        newSocket.name = item.name;
-                        newSocket.onmessage = socket.onmessage;
-                        newSocket.onclose = socket.onclose;
-                        newSocket.onerror = socket.onerror
-                        newSocket.onopen = socket.onopen;
-                    }, 3000);
+                    // if (item.reconnectInterval > 0) {
+                    //     logger.warn(`${item.reconnectInterval}秒后尝试重新连接,第${socket.reconnectAttempts + 1}次`);
+                    //     socket.reconnectAttempts++
+                    //     setTimeout(function () {
+                    //         let newSocket = new WebSocket(item.address, {
+                    //             headers: {
+                    //                 'X-Self-ID': Bot.uin,
+                    //                 'Content-Type': 'application/json'
+                    //             }
+                    //         });
+                    //         newSocket.type = item.type;
+                    //         newSocket.name = item.name;
+                    //         newSocket.reconnectAttempts = socket.reconnectAttempts
+                    //         newSocket.onmessage = socket.onmessage;
+                    //         newSocket.onclose = socket.onclose;
+                    //         newSocket.onerror = socket.onerror
+                    //         newSocket.onopen = socket.onopen;
+                    //         if (newSocket.reconnectAttempts >= item.maxReconnectAttempts && item.maxReconnectAttempts != 0) {
+                    //             newSocket.onclose = () => {
+                    //                 logger.warn('达到最大重连次数,停止重新连接');
+                    //             }
+                    //         }
+                    //     }, item.reconnectInterval * 1000);
+                    // }
                 };
                 socket.onmessage = async (event) => {
                     const decoder = new TextDecoder();
                     let data = decoder.decode(event.data);
                     data = JSON.parse(data)
                     let msg = data.content
-                    console.log(data);
                     if (msg[0].type.startsWith('log')) {
-                        logger.mark(msg[0].data);
+                        logger.info(msg[0].data);
                     } else {
                         let sendMsg = []
                         let target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
@@ -177,28 +212,55 @@ function createWebSocket(servers) {
                                 sendMsg = await Bot[target](data.target_id).makeForwardMsg(sendMsg)
                             }
                         }
-                        let sendRet = await Bot[target](data.target_id).sendMsg(sendMsg)
+                        await Bot[target](data.target_id).sendMsg(sendMsg)
                     }
                 }
                 socket.onerror = (event) => {
-                    logger.error(event);
-                    logger.error(`${item.name}连接失败`);
+                    logger.error(`${item.name}连接失败\n${event.error}`);
                 };
             }
         }
     })
-    return sockets
 }
 
-function closeWebSocket(sockets) {
-    sockets.forEach(function (socket) {
+function closeWebSocket(socketList, serverList = '') {
+    socketList.forEach(function (socket) {
         socket.close();
     });
+    if (serverList) {
+        serverList.forEach(function (server) {
+            server.close()
+        })
+    }
+}
+
+function clearWebSocket() {
+    socketList.forEach(socket => {
+        socket.onclose = () => {
+            socketList = socketList.filter(function (s) {
+                return s.name !== socket.name;
+            });
+        }
+    })
+    serverList.forEach(server => {
+        server.on('close', async function (error) {
+            serverList = serverList.filter(function (s) {
+                return s.name !== server.name;
+            });
+        })
+    })
+    timerList.forEach((timer) => {
+        clearInterval(timer);
+    });
+    timerList = timerList.filter(() => false);
+    closeWebSocket(socketList, serverList)
 }
 
 export {
     createWebSocket,
     closeWebSocket,
-    sockets
+    clearWebSocket,
+    socketList,
+    serverList
 }
 

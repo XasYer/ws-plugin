@@ -121,8 +121,8 @@ async function makeGSUidReportMsg(e) {
     let msg = e.message
     //前缀处理
     if (msg[0].type == 'text') {
-        if (NoMsgStart.length > 0 && Array.isArray(NoMsgStart)) {
-            if (NoMsgStart.some(item => e.msg.startsWith(item))) {
+        if (Config.noMsgStart.length > 0 && Array.isArray(Config.noMsgStart)) {
+            if (Config.noMsgStart.some(item => e.msg.startsWith(item))) {
                 return false
             }
         }
@@ -153,8 +153,8 @@ async function makeGSUidReportMsg(e) {
                 data: msg[i].qq
             })
         } else if (msg[i].type == 'text') {
-            if (NoMsgInclude.length > 0 && Array.isArray(NoMsgInclude)) {
-                if (NoMsgInclude.some(item => msg[i].text.includes(item))) {
+            if (Config.noMsgInclude.length > 0 && Array.isArray(Config.noMsgInclude)) {
+                if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
                     return false
                 }
             }

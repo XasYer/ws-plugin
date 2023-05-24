@@ -9,13 +9,13 @@ message:
   postFormat: array
 
 # 连接服务列表
-servers:
+servers: 
   # 添加连接方式, 可添加多个
-    # 连接名字
-  - name: BotName
+    # 连接名字  请保证每个名字都不相同,否则会出问题
+  - name: ws_name
     # 连接地址
     address: ws_address
-    # 连接类型 1:正向 Websocket 2:反向 Websocket 3:gsuid_core
+    # 连接类型 1:反向 Websocket 2:正向 Websocket 3:gsuid_core
     type: 1
     # 重连间隔 单位:秒
     reconnectInterval: 5
