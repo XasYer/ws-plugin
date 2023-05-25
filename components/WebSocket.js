@@ -23,6 +23,15 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 logger.mark(`${name}已连接`);
                 if (!isInit && Config.reconnectToMaster) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}重连成功~`)
+                } else if (isInit && Config.firstconnectToMaster) {
+                    let sendRet = null
+                    //延迟5s发送
+                    let sendTimer = setInterval(async () => {
+                        sendRet = await Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}连接成功~`)
+                        if (sendRet) {
+                            clearInterval(sendTimer)
+                        }
+                    }, 5000)
                 }
                 reconnectCount = 1
                 lifecycle(socket)
@@ -53,8 +62,17 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 socketList = socketList.filter(function (s) {
                     return s.name !== socket.name;
                 });
-                if (!isInit && Config.disconnectToMaster && reconnectCount <= 2) {
+                if (!isInit && Config.disconnectToMaster && reconnectCount <= 1) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}已断开连接`)
+                } else if (isInit && Config.firstconnectToMaster && reconnectCount <= 1) {
+                    let sendRet = null
+                    //延迟5s发送
+                    let sendTimer = setInterval(async () => {
+                        sendRet = await Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}连接失败...`)
+                        if (sendRet) {
+                            clearInterval(sendTimer)
+                        }
+                    }, 5000)
                 }
                 if ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
@@ -125,10 +143,20 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
             let socket = new WebSocket(address);
             socket.type = type
             socket.name = name
-            socket.reconnectAttempts = 0
             socket.onopen = (event) => {
                 logger.mark(`${name}已连接`);
-                socket.reconnectAttempts = 0
+                if (!isInit && Config.reconnectToMaster) {
+                    Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}重连成功~`)
+                } else if (isInit && Config.firstconnectToMaster) {
+                    let sendRet = null
+                    //延迟5s发送
+                    let sendTimer = setInterval(async () => {
+                        sendRet = await Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}连接成功~`)
+                        if (sendRet) {
+                            clearInterval(sendTimer)
+                        }
+                    }, 5000)
+                }
                 socketList.push(socket)
                 if (!isInit && Config.reconnectToMaster) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}重连成功~`)
@@ -139,8 +167,17 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 socketList = socketList.filter(function (s) {
                     return s.name !== socket.name;
                 });
-                if (!isInit && Config.disconnectToMaster && reconnectCount <= 2) {
+                if (!isInit && Config.disconnectToMaster && reconnectCount <= 1) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}已断开连接`)
+                } else if (isInit && Config.firstconnectToMaster && reconnectCount <= 1) {
+                    let sendRet = null
+                    //延迟5s发送
+                    let sendTimer = setInterval(async () => {
+                        sendRet = await Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}连接失败...`)
+                        if (sendRet) {
+                            clearInterval(sendTimer)
+                        }
+                    }, 5000)
                 }
                 if ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
@@ -164,12 +201,12 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
     }
 }
 
-function initWebSocket(servers, isInit = false) {
+function initWebSocket(servers, reconnectCount = 1, isInit = true) {
     if (!servers) {
         return
     }
     servers.forEach(item => {
-        createWebSocket(item)
+        createWebSocket(item, reconnectCount, isInit)
     })
 }
 
@@ -209,7 +246,6 @@ function clearWebSocket() {
 
 export {
     initWebSocket,
-    closeWebSocket,
     clearWebSocket,
     socketList,
     serverList

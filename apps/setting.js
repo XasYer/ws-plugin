@@ -1,5 +1,5 @@
 import plugin from '../../../lib/plugins/plugin.js'
-import { Config } from '../components/index.js'
+import { Config, clearWebSocket, initWebSocket } from '../components/index.js'
 
 export class setting extends plugin {
     constructor() {
@@ -22,6 +22,11 @@ export class setting extends plugin {
                 {
                     reg: '^#ws连接说明$',
                     fnc: 'help',
+                    permission: 'master'
+                },
+                {
+                    reg: '^#ws重新连接$',
+                    fnc: 'reset',
                     permission: 'master'
                 }
             ]
@@ -53,11 +58,11 @@ export class setting extends plugin {
             } else {
                 try {
                     Config.delServersArr(target.name)
-                    this.reply('操作成功,请留意控制台输出')
+                    this.reply('操作成功~')
                     return true
                 } catch (error) {
                     logger.error(error)
-                    this.reply('操作失败,请留意控制台输出')
+                    this.reply('操作失败~')
                     return true
                 }
             }
@@ -97,10 +102,10 @@ export class setting extends plugin {
             }
             try {
                 Config.modifyarr('ws-config', 'servers', value)
-                this.reply('操作成功,请留意控制台输出')
+                this.reply('操作成功~')
             } catch (error) {
                 logger.error(error)
-                this.reply('操作失败,请留意控制台输出')
+                this.reply('操作失败~')
             }
             this.finish('checkAddWs')
         }
@@ -137,5 +142,12 @@ export class setting extends plugin {
                 return true
             }
         }
+    }
+
+    async reset() {
+        clearWebSocket()
+        initWebSocket(Config.servers)
+        this.reply('操作成功~')
+        return true
     }
 }

@@ -71,6 +71,11 @@ class Config {
     return this.getConfig('msg-config').reconnectToMaster
   }
 
+  /**首次连接成功时是否通知主人 */
+  get firstconnectToMaster() {
+    return this.getConfig('msg-config').firstconnectToMaster
+  }
+
   /** 默认配置和用户配置 */
   getDefOrConfig(name) {
     let def = this.getdefSet(name)
@@ -124,9 +129,7 @@ class Config {
       }
       if (name == 'ws-config') {
         clearWebSocket()
-        if (this.servers) {
-          initWebSocket(this.servers)
-        }
+        initWebSocket(this.servers)
       }
     })
 
