@@ -6,7 +6,7 @@ function getMsgMap(key) {
     let msg = msgMap.get(Number(key));
     let message = []
     if (!msg) {
-        return false
+        return null
     }
     if (!msg.message) {
         return msg
@@ -59,7 +59,14 @@ function setMsgMap(key, value) {
     keys.push(key);
 }
 
+function getLatestMsg() {
+    let key = keys[keys.length - 1]
+    let msg = getMsgMap(key)
+    return msg
+}
+
 export {
     getMsgMap,
-    setMsgMap
+    setMsgMap,
+    getLatestMsg
 }

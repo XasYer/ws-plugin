@@ -1,4 +1,5 @@
 import { Config } from '../components/index.js'
+import { getLatestMsg } from './msgMap.js'
 /**
  * 生命周期
  * @param {*} socket 
@@ -19,6 +20,11 @@ function lifecycle(socket) {
  * @param {*} socket 
  */
 function heartbeat(socket) {
+    let latestMsg = getLatestMsg()
+    let time = 0
+    if (latestMsg) {
+        time = latestMsg.time
+    }
     let data = {
         time: Date.parse(new Date()) / 1000,
         self_id: Bot.uin,
@@ -35,7 +41,7 @@ function heartbeat(socket) {
                 message_send: Bot.stat.sent_msg_cnt,
                 disconnect_times: 0,
                 lost_times: Bot.stat.lost_times,
-                last_message_time: Date.parse(new Date()) / 1000    //就当是现在吧
+                last_message_time: time
             }
         },
         interval: Config.heartbeat.interval * 1000
