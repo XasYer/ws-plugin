@@ -3,8 +3,9 @@ import YAML from 'yaml'
 import chokidar from 'chokidar'
 import fs from 'node:fs'
 import YamlReader from './YamlReader.js'
+import cfg from '../../../lib/config/config.js'
 import _ from 'lodash'
-import { createWebSocket, closeWebSocket, clearWebSocket, socketList, serverList } from './WebSocket.js'
+import { initWebSocket, clearWebSocket } from './WebSocket.js'
 
 const Path = process.cwd()
 const Plugin_Name = 'ws-plugin'
@@ -32,6 +33,11 @@ class Config {
     }
   }
 
+  /** 主人QQ */
+  get masterQQ() {
+    return cfg.masterQQ
+  }
+
   /** 心跳 */
   get heartbeat() {
     return this.getConfig('ws-config').heartbeat
@@ -53,6 +59,16 @@ class Config {
 
   get noMsgInclude() {
     return this.getConfig('msg-config').noMsgInclude
+  }
+
+  /**掉线时否通知主人 */
+  get disconnectToMaster() {
+    return this.getConfig('msg-config').disconnectToMaster
+  }
+
+  /**重连成功时是否通知主人 */
+  get reconnectToMaster() {
+    return this.getConfig('msg-config').reconnectToMaster
   }
 
   /** 默认配置和用户配置 */
@@ -109,7 +125,7 @@ class Config {
       if (name == 'ws-config') {
         clearWebSocket()
         if (this.servers) {
-          createWebSocket(this.servers)
+          initWebSocket(this.servers)
         }
       }
     })

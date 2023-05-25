@@ -1,7 +1,13 @@
 #以数组内开头的消息不上传
 noMsgStart:
-  - #
+  - "#"
 
 #包含了数组内的消息不上传
 noMsgInclude:
   - 示例1
+
+#断开连接时否通知主人
+disconnectToMaster: false
+
+#重新连接成功时是否通知主人
+reconnectToMaster: false

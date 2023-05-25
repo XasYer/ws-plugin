@@ -1,0 +1,11 @@
+{
+  "name": "ws-plugin",
+  "version": "1.0.0",
+  "description": "Yunzai-Bot 的扩展插件",
+  "main": "index.js",
+  "type": "module",
+  "dependencies": {
+    "ws": "^8.13.0"
+  },
+  "author": "xiaoye12123"
+}

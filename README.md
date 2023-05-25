@@ -15,7 +15,7 @@ Yunzai-Bot 的扩展插件 ws-plugin 提供ontbot协议适配,通过ws连接oneb
 ```
 // 使用gitee
 git clone --depth=1 https://gitee.com/xiaoye12123/ws-plugin.git ./plugins/ws-plugin/
-pnpm add ws -w
+pnpm i
 
 ```
 
@@ -30,13 +30,19 @@ pnpm add ws -w
 ## 功能说明
 
 暂未完全开发完成,仅提供基础实现
-当前可正常连接并使用部分功能,暂不支持重连
+当前可正常连接并使用部分功能
 
 当前指令: 只支持主人私聊Bot
 1.  #ws添加连接
 2.  #ws删除连接
 
 添加和删除之后会自动进行断开所有已连接的ws进行重连
+
+# TODO
+
+1.  更详细的帮助和设置
+2.  支持锅巴
+3.  支持更多onebot api
 
 ## 参与贡献
 

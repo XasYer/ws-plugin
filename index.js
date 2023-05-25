@@ -1,12 +1,12 @@
 import fs from 'node:fs'
-import { createWebSocket, Config } from './components/index.js'
+import { initWebSocket, Config, Version } from './components/index.js'
 
 const files = fs.readdirSync('./plugins/ws-plugin/apps').filter(file => file.endsWith('.js'))
 
 let ret = []
 
 logger.info('-----------------')
-logger.info('ws-plugin插件初始化~')
+logger.info(`ws-plugin${Version.version}插件初始化~`)
 
 
 files.forEach((file) => {
@@ -32,7 +32,7 @@ for (let i in files) {
 }
 
 let servers = Config.servers
-createWebSocket(servers)
+initWebSocket(servers)
 
 
 export { apps }
