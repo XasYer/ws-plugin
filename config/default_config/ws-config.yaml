@@ -1,12 +1,10 @@
-heartbeat:
-  # 心跳频率, 单位秒
-  # 0 为关闭心跳
-  interval: 5
+# 心跳频率, 单位秒
+# 0 为关闭心跳
+heartbeatInterval: 5
 
-message:
-  # 上报数据类型
-  # 可选: string, array
-  postFormat: array
+# 上报数据类型
+# 可选: 1:string, 2:array
+messagePostFormat: 2
 
 # 连接服务列表
 servers: 

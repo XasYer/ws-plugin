@@ -44,7 +44,7 @@ function heartbeat(socket) {
                 last_message_time: time
             }
         },
-        interval: Config.heartbeat.interval * 1000
+        interval: Config.heartbeatInterval * 1000
     }
     socket.send(JSON.stringify(data))
 }

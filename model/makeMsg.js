@@ -80,7 +80,7 @@ async function makeOneBotReportMsg(e) {
             })
         }
     }
-    if (Config.message.postFormat == 'string') {
+    if (Config.messagePostFormat == 'string' || Config.messagePostFormat == '1') {
         reportMsg = MsgToCQ(reportMsg)
     }
     setMsgMap(e.rand, {

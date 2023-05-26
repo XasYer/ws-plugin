@@ -35,8 +35,16 @@ pnpm i
 当前指令: 只支持主人私聊Bot
 1.  #ws添加连接
 2.  #ws删除连接
+3.  #ws设置
+
+以下指令全部人可用
+1.  #ws版本
 
 添加和删除之后会自动进行断开所有已连接的ws进行重连
+
+## 反馈或建议
+
+QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi5xpxdmJj8VRT&authKey=gnMoAHGtaQcqlGg50M%2B6QvIvKsyzMrPymK0FjIxCe7mdzUM8rSIi2jvxWczaZEU5&noverify=0&group_code=698673296)
 
 ## TODO
 
@@ -44,12 +52,14 @@ pnpm i
 2.  支持锅巴
 3.  支持更多onebot api
 
-## 参与贡献
+## 鸣谢
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+* [miao-plugin](https://gitee.com/yoimiya-kokomi/miao-plugin) : 使用的ui代码及实现均来自miao-plugin
+* [onebot](https://github.com/botuniverse/onebot) : 统一的聊天机器人应用接口标准
+* [Miao-Yunzai](https://github.com/yoimiya-kokomi/Miao-Yunzai) : 喵版Yunzai [Gitee](https://gitee.com/yoimiya-kokomi/Miao-Yunzai)
+  / [Github](https://github.com/yoimiya-kokomi/Miao-Yunzai)
+* [Yunzai-V3](https://github.com/yoimiya-kokomi/Yunzai-Bot) ：Yunzai V3 - 喵喵维护版（使用 icqq）
+* [Yunzai-V3](https://gitee.com/Le-niao/Yunzai-Bot) ：Yunzai V3 - 乐神原版（使用 oicq）
 
 
 ## 免责声明

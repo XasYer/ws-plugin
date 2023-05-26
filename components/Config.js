@@ -6,6 +6,7 @@ import YamlReader from './YamlReader.js'
 import cfg from '../../../lib/config/config.js'
 import _ from 'lodash'
 import { initWebSocket, clearWebSocket } from './WebSocket.js'
+import { cfgSchema } from '../config/system/cfg_system.js'
 
 const Path = process.cwd()
 const Plugin_Name = 'ws-plugin'
@@ -39,13 +40,13 @@ class Config {
   }
 
   /** 心跳 */
-  get heartbeat() {
-    return this.getConfig('ws-config').heartbeat
+  get heartbeatInterval() {
+    return this.getConfig('ws-config').heartbeatInterval || this.getConfig('ws-config').heartbeat.interval
   }
 
-  /** 消息 */
-  get message() {
-    return this.getConfig('ws-config').message
+  /** 数据上报类型 */
+  get messagePostFormat() {
+    return this.getConfig('ws-config').messagePostFormat || this.getConfig('ws-config').message.postFormat
   }
 
   /** 连接列表 */
@@ -134,6 +135,42 @@ class Config {
     })
 
     this.watcher[key] = watcher
+  }
+
+  getCfgSchemaMap() {
+    let ret = {}
+    _.forEach(cfgSchema, (cfgGroup) => {
+      _.forEach(cfgGroup.cfg, (cfgItem, cfgKey) => {
+        ret[cfgItem.key] = cfgItem
+        cfgItem.cfgKey = cfgKey
+      })
+    })
+    return ret
+  }
+
+  getCfgSchema() {
+    return cfgSchema
+  }
+
+  getCfg() {
+    let wsfile = `${Plugin_Path}/config/config/ws-config.yaml`
+    let msgfile = `${Plugin_Path}/config/config/msg-config.yaml`
+    let wsconfig = YAML.parse(
+      fs.readFileSync(wsfile, 'utf8')
+    )
+    let msgconfig = YAML.parse(
+      fs.readFileSync(msgfile, 'utf8')
+    )
+    if (typeof wsconfig.heartbeatInterval === 'undefined') {
+      wsconfig.heartbeatInterval = wsconfig.heartbeat.interval
+    }
+    if (typeof wsconfig.messagePostFormat === 'undefined') {
+      wsconfig.messagePostFormat = wsconfig.message.postFormat
+    }
+    return {
+      ...wsconfig,
+      ...msgconfig
+    }
   }
 
   /**

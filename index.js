@@ -34,5 +34,4 @@ for (let i in files) {
 let servers = Config.servers
 initWebSocket(servers)
 
-
 export { apps }

@@ -36,10 +36,10 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 reconnectCount = 1
                 lifecycle(socket)
                 socketList.push(socket)
-                if (Config.heartbeat.interval > 0) {
+                if (Config.heartbeatInterval > 0) {
                     timer = setInterval(async () => {
                         heartbeat(socket)
-                    }, Config.heartbeat.interval * 1000)
+                    }, Config.heartbeatInterval * 1000)
                     timerList.push(timer)
                 }
             };
@@ -104,10 +104,10 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 socket.name = name
                 logger.mark(`新的客户端连接,连接端口为${port}`);
                 lifecycle(socket)
-                if (Config.heartbeat.interval > 0) {
+                if (Config.heartbeatInterval > 0) {
                     timer = setInterval(async () => {
                         heartbeat(socket)
-                    }, Config.heartbeat.interval * 1000)
+                    }, Config.heartbeatInterval * 1000)
                     timerList.push(timer)
                 }
                 socket.on('close', function () {

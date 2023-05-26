@@ -1,0 +1,42 @@
+{{extend defaultLayout}}
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{_res_path}}/admin/index.css"/>
+{{/block}}
+{{block 'main'}}
+
+<div class="info_box">
+  <div class="head-box type{{bgType}}">
+    <div class="label">ws管理面板</div>
+    <div class="title">#ws设置</div>
+  </div>
+</div>
+{{each schema cfgGroup}}
+<div class="cfg-box">
+  <div class="cfg-group">{{cfgGroup.title}}</div>
+  <ul class="cfg-ul">
+    {{each cfgGroup.cfg cfgItem cfgKey}}
+    <li class="cfg-li">
+      <div class="cfg-line">
+        {{cfgItem.title}}
+        <span class="cfg-hint"> #ws设置{{cfgItem.key}}
+          {{if cfgItem.type==='num'}} {{cfgItem.def}}{{else}} 开启/关闭{{/if}}
+        </span>
+        {{if cfgItem.type === 'num'}}
+        <div class="cfg-status">{{cfg[cfgKey]}}</div>
+        {{else}}
+        {{if cfg[cfgKey]}}
+        <div class="cfg-status">已开启</div>
+        {{else}}
+        <div class="cfg-status status-off">已关闭</div>
+        {{/if}}
+        {{/if}}
+      </div>
+      {{if cfgItem.desc && cfgItem.showDesc!== false}}
+      <div class="cfg-desc">{{cfgItem.desc}}</div>
+      {{/if}}
+    </li>
+    {{/each}}
+  </ul>
+</div>
+{{/each}}
+{{/block}}

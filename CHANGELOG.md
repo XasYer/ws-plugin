@@ -1,3 +1,7 @@
+# 0.1.0
+
+* 增加指令`#ws版本``#ws设置` Copyright miao-plugin
+
 # 0.0.5
 
 * 增加指令`#ws重新连接`
