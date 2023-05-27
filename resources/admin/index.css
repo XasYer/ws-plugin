@@ -3,7 +3,7 @@ body {
   width: 660px;
 }
 .container {
-  background: url("./imgs/bg.png") #000144 left top no-repeat;
+  background: url("./imgs/bg.png") #000144 left top repeat-y;
   background-size: 700px auto;
   width: 660px;
 }

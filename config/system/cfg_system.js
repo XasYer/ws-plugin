@@ -46,5 +46,66 @@ export const cfgSchema = {
         fileName: 'msg-config'
       }
     }
+  },
+  notice: {
+    title: '通知相关设置',
+    cfg: {
+      groupAdmin: {
+        title: '管理员变动',
+        key: '管理',
+        def: false,
+        desc: '群管理员变动是否上报',
+        fileName: 'notice-config'
+      },
+      groupDecrease: {
+        title: '群成员减少',
+        key: '群员减少',
+        def: false,
+        desc: '群成员减少是否上报',
+        fileName: 'notice-config'
+      },
+      groupIncrease: {
+        title: '群成员增加',
+        key: '群员增加',
+        def: false,
+        desc: '群成员增加是否上报',
+        fileName: 'notice-config'
+      },
+      groupBan: {
+        title: '群禁言',
+        key: '禁言',
+        def: false,
+        desc: '群禁言是否上报',
+        fileName: 'notice-config'
+      },
+      friendIncrease: {
+        title: '好友添加',
+        key: '好友添加',
+        def: false,
+        desc: '好友添加是否上报',
+        fileName: 'notice-config'
+      },
+      groupRecall: {
+        title: '群消息撤回',
+        key: '群撤回',
+        def: false,
+        desc: '群消息撤回是否上报',
+        fileName: 'notice-config'
+      },
+      friendRecall: {
+        title: '好友消息撤回',
+        key: '好友撤回',
+        def: false,
+        desc: '好友消息撤回是否上报',
+        fileName: 'notice-config'
+      },
+      groupPoke: {
+        title: '群内戳一戳',
+        key: '戳一戳',
+        def: false,
+        desc: '群内戳一戳是否上报',
+        fileName: 'notice-config'
+      },
+    }
   }
 }

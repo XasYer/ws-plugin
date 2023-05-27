@@ -77,6 +77,46 @@ class Config {
     return this.getConfig('msg-config').firstconnectToMaster
   }
 
+  /**群管理员变动是否上报 */
+  get groupAdmin() {
+    return this.getConfig('notice-config').groupAdmin
+  }
+
+  /**群成员减少是否上报 */
+  get groupDecrease() {
+    return this.getConfig('notice-config').groupDecrease
+  }
+
+  /**群成员增加是否上报 */
+  get groupIncrease() {
+    return this.getConfig('notice-config').groupIncrease
+  }
+
+  /**群禁言是否上报 */
+  get groupBan() {
+    return this.getConfig('notice-config').groupBan
+  }
+
+  /**好友添加是否上报 */
+  get friendIncrease() {
+    return this.getConfig('notice-config').friendIncrease
+  }
+
+  /**群消息撤回是否上报 */
+  get groupRecall() {
+    return this.getConfig('notice-config').groupRecall
+  }
+
+  /**好友消息撤回是否上报 */
+  get friendRecall() {
+    return this.getConfig('notice-config').friendRecall
+  }
+
+  /**群内戳一戳是否上报 */
+  get groupPoke() {
+    return this.getConfig('notice-config').groupPoke
+  }
+
   /** 默认配置和用户配置 */
   getDefOrConfig(name) {
     let def = this.getdefSet(name)
@@ -155,11 +195,15 @@ class Config {
   getCfg() {
     let wsfile = `${Plugin_Path}/config/config/ws-config.yaml`
     let msgfile = `${Plugin_Path}/config/config/msg-config.yaml`
+    let noticefile = `${Plugin_Path}/config/config/notice-config.yaml`
     let wsconfig = YAML.parse(
       fs.readFileSync(wsfile, 'utf8')
     )
     let msgconfig = YAML.parse(
       fs.readFileSync(msgfile, 'utf8')
+    )
+    let noticeconfig = YAML.parse(
+      fs.readFileSync(noticefile, 'utf8')
     )
     if (typeof wsconfig.heartbeatInterval === 'undefined') {
       wsconfig.heartbeatInterval = wsconfig.heartbeat.interval
@@ -169,7 +213,8 @@ class Config {
     }
     return {
       ...wsconfig,
-      ...msgconfig
+      ...msgconfig,
+      ...noticeconfig
     }
   }
 
