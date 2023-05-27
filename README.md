@@ -47,6 +47,12 @@ pnpm i
 
 添加和删除之后会自动进行断开所有已连接的ws进行重连
 
+## 支持的通信方式(连接类型)
+
+1. 反向 WebSocket
+2. 正向 WebSocket  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!目前可能会有bug
+3. [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
+
 ## 反馈或建议
 
 QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi5xpxdmJj8VRT&authKey=gnMoAHGtaQcqlGg50M%2B6QvIvKsyzMrPymK0FjIxCe7mdzUM8rSIi2jvxWczaZEU5&noverify=0&group_code=698673296)
@@ -112,6 +118,7 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 
 | 事件类型  | Event            |
 | -------- | ---------------- |
+|更新中...|
 
 </details>
 
