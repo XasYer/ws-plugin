@@ -158,3 +158,11 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 
 1. 功能仅限内部交流与小范围使用，请勿将Yunzai-Bot及ws-plugin用于以盈利为目的的场景
 2. 图片与其他素材均来自于网络，仅供交流学习使用，如有侵权请联系，会立即删除
+
+## 其他
+
+如果觉得此插件对你有帮助的话,可以点一个star,你的支持就是不断更新的动力~
+
+## 访问量
+
+[![访问量](https://profile-counter.glitch.me/xiaoye12123-ws-plugin/count.svg)](https://gitee.com/xiaoye12123/ws-plugin)
