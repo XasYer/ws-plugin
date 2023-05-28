@@ -5,10 +5,12 @@ import { getApiData, makeGSUidSendMsg } from '../model/index.js'
 
 let socketList = []
 let serverList = []
-let timerList = []
 
-function createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts }, reconnectCount = 1, isInit = true) {
+function createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, close }, reconnectCount = 1, isInit = true) {
     if (address != 'ws_address') {
+        if (close) {
+            return
+        }
         if (type == 1) {
             let socket = new WebSocket(address, {
                 headers: {
@@ -18,7 +20,6 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
             });
             socket.type = type
             socket.name = name
-            let timer = null
             socket.onopen = async (event) => {
                 logger.mark(`${name}已连接`);
                 if (!isInit && Config.reconnectToMaster) {
@@ -37,10 +38,9 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 lifecycle(socket)
                 socketList.push(socket)
                 if (Config.heartbeatInterval > 0) {
-                    timer = setInterval(async () => {
+                    socket.timer = setInterval(async () => {
                         heartbeat(socket)
                     }, Config.heartbeatInterval * 1000)
-                    timerList.push(timer)
                 }
             };
             socket.onmessage = async (event) => {
@@ -58,7 +58,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
 
             socket.onclose = async (event) => {
                 logger.warn(`${name}连接已关闭`);
-                clearInterval(timer)
+                clearInterval(socket.timer)
                 socketList = socketList.filter(function (s) {
                     return s.name !== socket.name;
                 });
@@ -77,7 +77,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 if ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
                     setTimeout(() => {
-                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts }, reconnectCount + 1, false); // 重新连接服务器
+                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, close }, reconnectCount + 1, false); // 重新连接服务器
                     }, reconnectInterval * 1000);
                 } else {
                     logger.warn('达到最大重连次数,停止重连');
@@ -88,58 +88,59 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 logger.error(`${name}连接失败\n${event.error}`);
             };
 
-        } else if (type == 2) {
-            var parts = address.split(':');
-            var host = parts[0];
-            var port = parts[1];
-            let server = new WebSocketServer({ port, host });
-            server.type = type
-            server.name = name
-            server.on('listening', () => {
-                logger.mark(`ws服务器已启动并监听 ${host}:${port}`);
-                serverList.push(server)
-            });
-            server.on('connection', async function (socket) {
-                socket.type = type
-                socket.name = name
-                logger.mark(`新的客户端连接,连接端口为${port}`);
-                lifecycle(socket)
-                if (Config.heartbeatInterval > 0) {
-                    timer = setInterval(async () => {
-                        heartbeat(socket)
-                    }, Config.heartbeatInterval * 1000)
-                    timerList.push(timer)
-                }
-                socket.on('close', function () {
-                    logger.warn(`客户端断开连接,端口为${port}`);
-                    socketList = socketList.filter(function (s) {
-                        return s.name !== socket.name;
-                    });
-                })
-                socket.on('message', async (event) => {
-                    let data = event.data;
-                    data = JSON.parse(data);
-                    let ResponseData = await getApiData(data.action, data.params);
-                    let ret = {
-                        status: 'ok',
-                        retcode: 0,
-                        data: ResponseData,
-                        echo: data.echo
-                    };
-                    socket.send(JSON.stringify(ret));
-                });
-                socketList.push(socket);
-            })
-            server.on('error', async function (error) {
-                logger.error(`${address}启动失败,请检查地址是否填写正确,或者端口是否占用\n${error}`);
-            })
-            server.on('close', async function (error) {
-                logger.error(`${address}已关闭`);
-                serverList = serverList.filter(function (s) {
-                    return s.name !== server.name;
-                });
-            })
-        } else if (type == 3) {
+        }
+        // else if (type == 2) {
+        //     var parts = address.split(':');
+        //     var host = parts[0];
+        //     var port = parts[1];
+        //     let server = new WebSocketServer({ port, host });
+        //     server.type = type
+        //     server.name = name
+        //     server.on('listening', () => {
+        //         logger.mark(`ws服务器已启动并监听 ${host}:${port}`);
+        //         serverList.push(server)
+        //     });
+        //     server.on('connection', async function (socket) {
+        //         socket.type = type
+        //         socket.name = name
+        //         logger.mark(`新的客户端连接,连接端口为${port}`);
+        //         lifecycle(socket)
+        //         if (Config.heartbeatInterval > 0) {
+        //             socket.timer = setInterval(async () => {
+        //                 heartbeat(socket)
+        //             }, Config.heartbeatInterval * 1000)
+        //         }
+        //         socket.on('close', function () {
+        //             logger.warn(`客户端断开连接,端口为${port}`);
+        //             socketList = socketList.filter(function (s) {
+        //                 return s.name !== socket.name;
+        //             });
+        //         })
+        //         socket.on('message', async (event) => {
+        //             let data = event.data;
+        //             data = JSON.parse(data);
+        //             let ResponseData = await getApiData(data.action, data.params);
+        //             let ret = {
+        //                 status: 'ok',
+        //                 retcode: 0,
+        //                 data: ResponseData,
+        //                 echo: data.echo
+        //             };
+        //             socket.send(JSON.stringify(ret));
+        //         });
+        //         socketList.push(socket);
+        //     })
+        //     server.on('error', async function (error) {
+        //         logger.error(`${address}启动失败,请检查地址是否填写正确,或者端口是否占用\n${error}`);
+        //     })
+        //     server.on('close', async function (error) {
+        //         logger.error(`${address}已关闭`);
+        //         serverList = serverList.filter(function (s) {
+        //             return s.name !== server.name;
+        //         });
+        //     })
+        // }
+        else if (type == 3) {
             let socket = new WebSocket(address);
             socket.type = type
             socket.name = name
@@ -201,6 +202,36 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
     }
 }
 
+function modifyWebSocket(servers, reconnectCount = 1, isInit = true) {
+    let newServers = servers.filter(item => !item.hasOwnProperty('close') || !item.close);
+    //增加
+    if (newServers.length > socketList.length) {
+        let result = newServers.filter(item1 => !socketList.find(item2 => item2.name === item1.name));
+        if (result) {
+            result.forEach(item => {
+                createWebSocket(item)
+            })
+        }
+    }
+    //减少 
+    else if (newServers.length < socketList.length) {
+        socketList.reduce((acc, item1, index) => {
+            if (!newServers.find(item2 => item2.name === item1.name)) {
+                item1.onclose = () => {
+                    Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${item1.name}已断开连接`)
+                    logger.warn(`${item1.name}连接已关闭`);
+                    clearInterval(item1.timer)
+                    socketList = socketList.filter(function (s) {
+                        return s.name !== item1.name;
+                    });
+                }
+                item1.close()
+            }
+            return acc;
+        }, []);
+    }
+}
+
 function initWebSocket(servers, reconnectCount = 1, isInit = true) {
     if (!servers) {
         return
@@ -225,6 +256,8 @@ function closeWebSocket(socketList, serverList = '') {
 function clearWebSocket() {
     socketList.forEach(socket => {
         socket.onclose = () => {
+            Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${socket.name}已断开连接`)
+            clearInterval(socket.timer)
             socketList = socketList.filter(function (s) {
                 return s.name !== socket.name;
             });
@@ -237,16 +270,13 @@ function clearWebSocket() {
             });
         })
     })
-    timerList.forEach((timer) => {
-        clearInterval(timer);
-    });
-    timerList = timerList.filter(() => false);
     closeWebSocket(socketList, serverList)
 }
 
 export {
     initWebSocket,
     clearWebSocket,
+    modifyWebSocket,
     socketList,
     serverList
 }

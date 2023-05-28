@@ -5,7 +5,7 @@ import fs from 'node:fs'
 import YamlReader from './YamlReader.js'
 import cfg from '../../../lib/config/config.js'
 import _ from 'lodash'
-import { initWebSocket, clearWebSocket } from './WebSocket.js'
+import { initWebSocket, clearWebSocket, modifyWebSocket } from './WebSocket.js'
 import { cfgSchema } from '../config/system/cfg_system.js'
 
 const Path = process.cwd()
@@ -169,8 +169,9 @@ class Config {
         this[`change_${name}`]()
       }
       if (name == 'ws-config') {
-        clearWebSocket()
-        initWebSocket(this.servers)
+        // clearWebSocket()
+        // initWebSocket(this.servers)
+        modifyWebSocket(this.servers)
       }
     })
 
