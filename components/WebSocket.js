@@ -289,7 +289,7 @@ function clearWebSocket() {
     socketList.forEach(socket => {
         socket.onclose = () => {
             if (Config.disconnectToMaster) {
-                Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${item1.name}已断开连接`)
+                Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${socket.name}已断开连接`)
             }
             clearInterval(socket.timer)
             socketList = socketList.filter(function (s) {
