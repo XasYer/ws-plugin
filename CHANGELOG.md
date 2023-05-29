@@ -1,3 +1,7 @@
+# 0.3.2
+
+* 重新开放一下正向ws连接
+
 # 0.3.1
 
 * 增加指令`#ws帮助` Copyright miao-plugin

@@ -1,5 +1,5 @@
 import plugin from '../../../lib/plugins/plugin.js'
-import { Config, clearWebSocket, initWebSocket, Render, Version, socketList } from '../components/index.js'
+import { Config, clearWebSocket, initWebSocket, Render, Version, socketList, serverList } from '../components/index.js'
 import lodash from 'lodash'
 
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
@@ -44,7 +44,7 @@ export class setting extends plugin {
                     let msg = regRet[2].split(/,|，/g)
                     await this.addWs(msg)
                 } else {
-                    this.setContext('checkAddWs')
+                    this.setContext('checkAddWs', this.e.isGroup)
                     await this.reply('请一次性发送以下参数:\n连接名字,连接地址,连接类型,重连间隔,最大重连次数\n用逗号分割,例如:\nNoneBot2,ws://127.0.0.1:8080/onebot/v11/ws,1,5,0\n如果对参数不懂意思,可以发送#ws连接说明')
                 }
                 break
@@ -52,7 +52,7 @@ export class setting extends plugin {
                 if (regRet[2]) {
                     await this.delWs(regRet[2])
                 } else {
-                    this.setContext('checkDelWs')
+                    this.setContext('checkDelWs', this.e.isGroup)
                     await this.reply('请继续发送需要删除的ws连接名字')
                 }
                 break
@@ -60,7 +60,7 @@ export class setting extends plugin {
                 if (regRet[2]) {
                     await this.openWs(regRet[2])
                 } else {
-                    this.setContext('checkOpenWs')
+                    this.setContext('checkOpenWs', this.e.isGroup)
                     this.reply('请继续发送需要打开的ws连接名字')
                 }
                 break
@@ -68,7 +68,7 @@ export class setting extends plugin {
                 if (regRet[2]) {
                     await this.closeWs(regRet[2])
                 } else {
-                    this.setContext('checkCloseWs')
+                    this.setContext('checkCloseWs', this.e.isGroup)
                     this.reply('请继续发送需要关闭的ws连接名字')
                 }
                 break
@@ -129,16 +129,12 @@ export class setting extends plugin {
                 reconnectInterval: msg[3],
                 maxReconnectAttempts: msg[4],
             }
-            if (msg[2] == 2) {
-                this.reply('正向ws连接更新中...')
-            } else {
-                try {
-                    Config.modifyarr('ws-config', 'servers', value)
-                    this.reply('操作成功~')
-                } catch (error) {
-                    logger.error(error)
-                    this.reply('操作失败~')
-                }
+            try {
+                Config.modifyarr('ws-config', 'servers', value)
+                this.reply('操作成功~')
+            } catch (error) {
+                logger.error(error)
+                this.reply('操作失败~')
             }
             return true
         }
@@ -202,7 +198,7 @@ export class setting extends plugin {
         }
         let msg = this.e.msg
         await this.openWs(msg)
-        this.finish('checkOpenWs')
+        this.finish('checkOpenWs', this.e.isGroup)
     }
 
     async checkCloseWs() {
@@ -211,7 +207,7 @@ export class setting extends plugin {
         }
         let msg = this.e.msg
         await this.closeWs(msg)
-        this.finish('checkCloseWs')
+        this.finish('checkCloseWs', this.e.isGroup)
     }
 
     async delWs(msg) {
@@ -251,12 +247,12 @@ export class setting extends plugin {
         let msg = this.e.msg
         if (msg == '#ws连接说明') {
             await this.help()
-            this.setContext('checkAddWs')
+            this.setContext('checkAddWs', this.e.isGroup)
             return false
         }
         msg = msg.split(/,|，/g)
         await this.addWs(msg)
-        this.finish('checkAddWs')
+        this.finish('checkAddWs', this.e.isGroup)
         return false
     }
 
@@ -266,7 +262,7 @@ export class setting extends plugin {
         }
         let msg = this.e.msg
         await this.delWs(msg)
-        this.finish('checkDelWs')
+        this.finish('checkDelWs', this.e.isGroup)
     }
 
     async reset() {
@@ -285,6 +281,14 @@ export class setting extends plugin {
                 status.push({
                     name: item.name,
                     state: item.readyState
+                })
+            })
+        }
+        if (serverList.length != 0) {
+            serverList.forEach(item => {
+                status.push({
+                    name: item.name,
+                    state: '运行中'
                 })
             })
         }
@@ -311,7 +315,10 @@ export class setting extends plugin {
                         }
                     }
                 }
-                msg.push(`连接名字: ${item.name}\n当前状态: ${statu}`)
+                msg.push(`连接名字: ${item.name}\n连接类型: ${item.type}\n当前状态: ${statu}`)
+                if (!this.e.isGroup) {
+                    msg.push(`\n连接地址: ${item.address}`)
+                }
             })
         }
         if (msg.length > 0) {

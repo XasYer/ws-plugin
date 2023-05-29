@@ -1,7 +1,7 @@
 import Version from './Version.js'
 import YamlReader from './YamlReader.js'
 import Config from './Config.js'
-import { initWebSocket, socketList, clearWebSocket, modifyWebSocket } from './WebSocket.js'
+import { initWebSocket, socketList, serverList, clearWebSocket, modifyWebSocket } from './WebSocket.js'
 import Render from './Render.js'
 const Path = process.cwd()
 export {
@@ -13,5 +13,6 @@ export {
     clearWebSocket,
     modifyWebSocket,
     socketList,
+    serverList,
     Render
 }

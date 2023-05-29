@@ -169,9 +169,9 @@ class Config {
         this[`change_${name}`]()
       }
       if (name == 'ws-config') {
-        // clearWebSocket()
-        // initWebSocket(this.servers)
-        modifyWebSocket(this.servers)
+        setTimeout(() => {
+          modifyWebSocket(this.servers)
+        }, 500)
       }
     })
 

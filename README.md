@@ -50,7 +50,7 @@ pnpm i
 ## 支持的通信方式(连接类型)
 
 1. 反向 WebSocket
-2. 正向 WebSocket  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!目前可能会有bug
+2. 正向 WebSocket  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!!只做了简单的连接
 3. [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
 
 ## 反馈或建议
