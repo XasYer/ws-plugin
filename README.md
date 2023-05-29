@@ -69,17 +69,21 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 
 | CQ 码        | 功能                        |
 | ------------ | --------------------------- |
+| [CQ:face]    | [QQ表情]                    |
 | [CQ:image]   | [图片]                      |
 | [CQ:at]      | [@某人]                     |
 | [CQ:poke]    | [戳一戳]                    |
 | [CQ:reply]   | [回复]                      |
 | [CQ:node]    | [合并转发自定义节点]         |
+| [CQ:json]    | [JSON消息]                  |
 
+[QQ 表情]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#qq-%E8%A1%A8%E6%83%85
 [图片]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E5%9B%BE%E7%89%87
 [@某人]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E6%9F%90%E4%BA%BA
 [戳一戳]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E6%88%B3%E4%B8%80%E6%88%B3
 [回复]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E5%9B%9E%E5%A4%8D
 [合并转发自定义节点]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E5%90%88%E5%B9%B6%E8%BD%AC%E5%8F%91%E8%87%AA%E5%AE%9A%E4%B9%89%E8%8A%82%E7%82%B9
+[JSON消息]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#json-%E6%B6%88%E6%81%AF
 
 </details>
 

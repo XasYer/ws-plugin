@@ -43,41 +43,56 @@ async function makeOneBotReportMsg(e) {
         })
     }
     for (let i = 0; i < msg.length; i++) {
-        if (msg[i].type == 'at') {
-            reportMsg.push({
-                "type": "at",
-                "data": {
-                    "qq": msg[i].qq
+        switch (msg[i].type) {
+            case 'at':
+                reportMsg.push({
+                    "type": "at",
+                    "data": {
+                        "qq": msg[i].qq
+                    }
+                })
+                break
+            case 'text':
+                if (Config.noMsgInclude.length > 0 && Array.isArray(Config.noMsgInclude)) {
+                    if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
+                        return false
+                    }
                 }
-            })
-        } else if (msg[i].type == 'text') {
-            if (Config.noMsgInclude.length > 0 && Array.isArray(Config.noMsgInclude)) {
-                if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
-                    return false
-                }
-            }
-            reportMsg.push({
-                "type": "text",
-                "data": {
-                    "text": msg[i].text
-                }
-            })
-        } else if (msg[i].type == 'image') {
-            reportMsg.push({
-                "type": "image",
-                "data": {
-                    file: msg[i].file,
-                    subType: 0,
-                    url: msg[i].url
-                }
-            })
-        } else if (msg[i].type == 'json') {
-            reportMsg.push({
-                "type": 'json',
-                "data": {
-                    "data": msg[i].data
-                }
-            })
+                reportMsg.push({
+                    "type": "text",
+                    "data": {
+                        "text": msg[i].text
+                    }
+                })
+                break
+            case 'image':
+                reportMsg.push({
+                    "type": "image",
+                    "data": {
+                        file: msg[i].file,
+                        subType: 0,
+                        url: msg[i].url
+                    }
+                })
+                break
+            case 'json':
+                reportMsg.push({
+                    "type": 'json',
+                    "data": {
+                        "data": msg[i].data
+                    }
+                })
+                break
+            case 'face':
+                reportMsg.push({
+                    'type': 'face',
+                    'data': {
+                        'id': msg[i].id
+                    }
+                })
+                break
+            default:
+                break
         }
     }
     if (Config.messagePostFormat == 'string' || Config.messagePostFormat == '1') {
@@ -315,8 +330,12 @@ async function makeSendMsg(params) {
             case 'record':
                 sendMsg.push(segment.record(msg[i].data.file))
                 break
+            case 'face':
+                sendMsg.push(segment.face(msg[i].data.id))
+                break
             default:
                 sendMsg.push('出现了未适配的消息的类型')
+                logger.warn(`出现了未适配的消息的类型${msg[i]}`)
                 break
         }
     }
@@ -345,10 +364,12 @@ async function makeForwardMsg(params) {
                     _msg.push(segment.image(msg[i].data.content[j].data.file))
                 } else {
                     _msg.push('出现了未适配的消息的类型,建议联系开发者解决')
+                    logger.warn(`出现了未适配的消息的类型${msg[i]}`)
                 }
             }
         } else {
             _msg = '出现了未适配的消息的类型,建议联系开发者解决'
+            logger.warn(`出现了未适配的消息的类型${msg[i]}`)
         }
         forwardMsg.push({
             message: _msg,
