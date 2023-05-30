@@ -1,7 +1,7 @@
 import { makeSendMsg, makeForwardMsg } from './makeMsg.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
 
-async function getApiData(api, params = {}) {
+async function getApiData(api, params = {}, name) {
     let sendRet = null
     let ResponseData = null
     let publicApi = {
@@ -14,26 +14,31 @@ async function getApiData(api, params = {}) {
                     sendRet = await Bot.pickFriend(params.user_id).sendMsg(...sendMsg)
                 }
             }
+            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_private_msg': async (params) => {
             let sendMsg = await makeSendMsg(params)
             if (sendMsg[0].length > 0) {
                 sendRet = await Bot.pickFriend(params.user_id).sendMsg(...sendMsg)
             }
+            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_group_msg': async (params) => {
             let sendMsg = await makeSendMsg(params)
             if (sendMsg[0].length > 0) {
                 sendRet = await Bot.pickGroup(params.group_id).sendMsg(...sendMsg)
             }
+            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_group_forward_msg': async (params) => {
             let sendMsg = await makeForwardMsg(params)
             sendRet = await Bot.pickGroup(params.group_id).sendMsg(sendMsg)
+            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_private_forward_msg': async (params) => {
             let sendMsg = await makeForwardMsg(params)
             sendRet = await Bot.pickFriend(params.user_id).sendMsg(sendMsg)
+            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'set_group_ban': async (params) => {
             ResponseData = await Bot.setGroupBan(params.group_id, params.user_id, params.duration)

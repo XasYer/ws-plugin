@@ -42,6 +42,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                     let sendTimer = setInterval(async () => {
                         sendRet = await Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}连接成功~`)
                         if (sendRet) {
+                            logger.mark(`[ws-plugin] 连接名字:${name} 发送主人消息 处理完成`)
                             clearInterval(sendTimer)
                         }
                     }, 5000)
@@ -58,7 +59,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
             socket.onmessage = async (event) => {
                 let data = event.data;
                 data = JSON.parse(data);
-                let ResponseData = await getApiData(data.action, data.params);
+                let ResponseData = await getApiData(data.action, data.params, socket.name);
                 let ret = {
                     status: 'ok',
                     retcode: 0,
@@ -81,12 +82,14 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 });
                 if (!isInit && Config.disconnectToMaster && reconnectCount <= 1) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}已断开连接`)
+                    logger.mark(`[ws-plugin] 连接名字:${name} 发送主人消息 处理完成`)
                 } else if (isInit && Config.firstconnectToMaster && reconnectCount <= 1) {
                     let sendRet = null
                     //延迟5s发送
                     let sendTimer = setInterval(async () => {
                         sendRet = await Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}连接失败...`)
                         if (sendRet) {
+                            logger.mark(`[ws-plugin] 连接名字:${name} 发送主人消息 处理完成`)
                             clearInterval(sendTimer)
                         }
                     }, 5000)
@@ -143,7 +146,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                     } else {
                         data = JSON.parse(event.data);
                     }
-                    let ResponseData = await getApiData(data.action, data.params);
+                    let ResponseData = await getApiData(data.action, data.params, socket.name);
                     let ret = {
                         status: 'ok',
                         retcode: 0,
@@ -183,12 +186,14 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 logger.mark(`${name}已连接`);
                 if (!isInit && Config.reconnectToMaster) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}重连成功~`)
+                    logger.mark(`[ws-plugin] 连接名字:${name} 发送主人消息 处理完成`)
                 } else if (isInit && Config.firstconnectToMaster) {
                     let sendRet = null
                     //延迟5s发送
                     let sendTimer = setInterval(async () => {
                         sendRet = await Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}连接成功~`)
                         if (sendRet) {
+                            logger.mark(`[ws-plugin] 连接名字:${name} 发送主人消息 处理完成`)
                             clearInterval(sendTimer)
                         }
                     }, 5000)
@@ -196,6 +201,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 socketList.push(socket)
                 if (!isInit && Config.reconnectToMaster) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}重连成功~`)
+                    logger.mark(`[ws-plugin] 连接名字:${name} 发送主人消息 处理完成`)
                 }
             };
             socket.onclose = (event) => {
@@ -210,12 +216,14 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 });
                 if (!isInit && Config.disconnectToMaster && reconnectCount <= 1) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}已断开连接`)
+                    logger.mark(`[ws-plugin] 连接名字:${name} 发送主人消息 处理完成`)
                 } else if (isInit && Config.firstconnectToMaster && reconnectCount <= 1) {
                     let sendRet = null
                     //延迟5s发送
                     let sendTimer = setInterval(async () => {
                         sendRet = await Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}连接失败...`)
                         if (sendRet) {
+                            logger.mark(`[ws-plugin] 连接名字:${name} 发送主人消息 处理完成`)
                             clearInterval(sendTimer)
                         }
                     }, 5000)
@@ -234,7 +242,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 const decoder = new TextDecoder();
                 let data = decoder.decode(event.data);
                 data = JSON.parse(data)
-                await makeGSUidSendMsg(data)
+                await makeGSUidSendMsg(data,socket.name)
             }
             socket.onerror = (event) => {
                 logger.error(`${name}连接失败\n${event.error}`);

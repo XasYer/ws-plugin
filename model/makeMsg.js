@@ -234,7 +234,7 @@ async function makeGSUidReportMsg(e) {
  * 制作gsuid发送消息
  * @param {*} data 
  */
-async function makeGSUidSendMsg(data) {
+async function makeGSUidSendMsg(data, name) {
     let msg = data.content
     if (msg[0].type.startsWith('log')) {
         logger.info(msg[0].data);
@@ -271,6 +271,7 @@ async function makeGSUidSendMsg(data) {
         }
         if (sendMsg.length > 0 && Array.isArray(sendMsg)) {
             await Bot[target](data.target_id).sendMsg(sendMsg)
+            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         }
     }
 }
@@ -287,12 +288,13 @@ async function makeSendMsg(params) {
     if (typeof msg == 'string') {
         msg = CQToMsg(msg)
     }
+    // console.log('params', params);
+    let target
+    let uid
     for (let i = 0; i < msg.length; i++) {
         switch (msg[i].type) {
             case 'reply':
                 quote = getMsgMap(msg[i].data.id)
-                let target
-                let uid
                 let seq
                 if (quote.message_type == 'group') {
                     target = 'pickGroup'
@@ -322,7 +324,19 @@ async function makeSendMsg(params) {
                 }
                 break
             case 'music':
-                sendMsg.push('暂不支持分享歌曲')
+                if (params.message_type == 'group') {
+                    target = 'pickGroup'
+                    uid = params.group_id
+                } else {
+                    target = 'pickFriend'
+                    uid = params.user_id
+                }
+                if (msg[i].data.id) {
+                    await Bot[target](uid).shareMusic(msg[i].data.type, msg[i].data.id)
+                } else {
+                    // TODO
+                    logger.warn('不会分享自定义歌曲捏')
+                }
                 break
             case 'poke':
                 await Bot.pickGroup(params.group_id).pokeMember(Number(msg[i].data.qq))
