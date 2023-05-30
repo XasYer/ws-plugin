@@ -1,5 +1,5 @@
 import plugin from '../../../lib/plugins/plugin.js'
-import { Render, Version } from '../components/index.js'
+import { Render, Version, Config } from '../components/index.js'
 import { helpCfg, helpList } from '../config/system/help_system.js'
 import { style } from '../resources/help/imgs/config.js'
 import _ from 'lodash'
@@ -10,7 +10,7 @@ export class setting extends plugin {
             name: '[ws-plugin] 帮助',
             dsc: '[ws-plugin] 帮助',
             event: 'message',
-            priority: 998,
+            priority: Config.priority,
             rule: [
                 {
                     reg: '^#ws版本$',

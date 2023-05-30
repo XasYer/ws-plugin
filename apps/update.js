@@ -2,6 +2,7 @@ import plugin from '../../../lib/plugins/plugin.js'
 import lodash from 'lodash'
 import { createRequire } from 'module'
 import { Restart } from '../../other/restart.js'
+import { Config } from '../components/index.js'
 
 const require = createRequire(import.meta.url)
 const { exec, execSync } = require('child_process')
@@ -14,7 +15,7 @@ export class update extends plugin {
             name: '[ws-plugin] 插件更新',
             dsc: '[ws-plugin] 插件更新',
             event: 'message',
-            priority: 998,
+            priority: Config.priority,
             rule: [
                 {
                     reg: '^#ws(插件)?(强制)?更新$',

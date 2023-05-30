@@ -6,7 +6,8 @@ export class notice extends plugin {
             name: '[ws-plugin] 通知处理',
             dsc: '[ws-plugin] 通知处理',
             event: 'notice.group',
-            priority: 1,
+            priority: Config.priority,
+            log: false
         })
     }
 

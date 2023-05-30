@@ -44,6 +44,14 @@ export const cfgSchema = {
         def: false,
         desc: '首次连接时是否通知主人成功还是失败',
         fileName: 'msg-config'
+      },
+      priority: {
+        title: '插件优先级',
+        key: '优先级',
+        type: 'num',
+        def: 1,
+        desc: '设置插件的优先级,数值越低优先级越高,重启后生效!!!',
+        fileName: 'msg-config'
       }
     }
   },

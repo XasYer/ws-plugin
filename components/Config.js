@@ -5,7 +5,7 @@ import fs from 'node:fs'
 import YamlReader from './YamlReader.js'
 import cfg from '../../../lib/config/config.js'
 import _ from 'lodash'
-import { initWebSocket, clearWebSocket, modifyWebSocket } from './WebSocket.js'
+import { modifyWebSocket } from './WebSocket.js'
 import { cfgSchema } from '../config/system/cfg_system.js'
 
 const Path = process.cwd()
@@ -75,6 +75,10 @@ class Config {
   /**首次连接成功时是否通知主人 */
   get firstconnectToMaster() {
     return this.getConfig('msg-config').firstconnectToMaster
+  }
+
+  get priority() {
+    return this.getConfig('msg-config').priority || 1
   }
 
   /**群管理员变动是否上报 */
@@ -211,6 +215,9 @@ class Config {
     }
     if (typeof wsconfig.messagePostFormat === 'undefined') {
       wsconfig.messagePostFormat = wsconfig.message.postFormat
+    }
+    if (typeof msgconfig.priority === 'undefined') {
+      msgconfig.priority = 1
     }
     return {
       ...wsconfig,

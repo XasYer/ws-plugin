@@ -5,6 +5,8 @@ import { getApiData, makeGSUidSendMsg } from '../model/index.js'
 
 let socketList = []
 let serverList = []
+let closeList = []
+let stopReconnectMap = new Map();
 
 function createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, close }, reconnectCount = 1, isInit = true) {
     if (address != 'ws_address') {
@@ -12,15 +14,25 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
             return
         }
         if (type == 1) {
-            let socket = new WebSocket(address, {
-                headers: {
-                    'X-Self-ID': Bot.uin,
-                    'Content-Type': 'application/json'
-                }
-            });
+            let socket
+            try {
+                socket = new WebSocket(address, {
+                    headers: {
+                        'X-Self-ID': Bot.uin,
+                        'Content-Type': 'application/json'
+                    }
+                });
+            } catch (error) {
+                logger.error(`出错了,可能是ws地址填错了~\nws名字: ${name}\n地址: ${address}\n类型: ${type}`)
+                return
+            }
             socket.type = type
             socket.name = name
             socket.onopen = async (event) => {
+                let index = closeList.findIndex(item => item.name === socket.name);
+                if (index !== -1) {
+                    closeList.splice(index, 1);
+                }
                 logger.mark(`${name}已连接`);
                 if (!isInit && Config.reconnectToMaster) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}重连成功~`)
@@ -57,6 +69,11 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
             };
 
             socket.onclose = async (event) => {
+                let index = closeList.findIndex(item => item.name === socket.name);
+                if (index !== -1) {
+                    closeList.splice(index, 1);
+                }
+                closeList.push(socket);
                 logger.warn(`${name}连接已关闭`);
                 clearInterval(socket.timer)
                 socketList = socketList.filter(function (s) {
@@ -74,13 +91,15 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                         }
                     }, 5000)
                 }
-                if ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0) {
+                let stopReconnect = stopReconnectMap.get(name) || false;
+                if (!stopReconnect && ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0)) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
                     setTimeout(() => {
                         createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, close }, reconnectCount + 1, false); // 重新连接服务器
                     }, reconnectInterval * 1000);
                 } else {
-                    logger.warn('达到最大重连次数,停止重连');
+                    logger.warn('达到最大重连次数或关闭连接,停止重连');
+                    stopReconnectMap.delete(name);
                 }
             };
 
@@ -147,10 +166,20 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
             })
         }
         else if (type == 3) {
-            let socket = new WebSocket(address);
+            let socket
+            try {
+                socket = new WebSocket(address)
+            } catch (error) {
+                logger.error(`出错了,可能是ws地址填错了~\nws名字: ${name}\n地址: ${address}\n类型: ${type}`)
+                return
+            }
             socket.type = type
             socket.name = name
             socket.onopen = (event) => {
+                let index = closeList.findIndex(item => item.name === socket.name);
+                if (index !== -1) {
+                    closeList.splice(index, 1);
+                }
                 logger.mark(`${name}已连接`);
                 if (!isInit && Config.reconnectToMaster) {
                     Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${name}重连成功~`)
@@ -170,6 +199,11 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 }
             };
             socket.onclose = (event) => {
+                let index = closeList.findIndex(item => item.name === socket.name);
+                if (index !== -1) {
+                    closeList.splice(index, 1);
+                }
+                closeList.push(socket)
                 logger.warn(`${name}连接已关闭`);
                 socketList = socketList.filter(function (s) {
                     return s.name !== socket.name;
@@ -186,7 +220,8 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                         }
                     }, 5000)
                 }
-                if ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0) {
+                let stopReconnect = stopReconnectMap.get(name) || false;
+                if (!stopReconnect && ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0)) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
                     setTimeout(() => {
                         createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts }, reconnectCount + 1, false); // 重新连接服务器
@@ -208,10 +243,39 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
     }
 }
 
+
 function modifyWebSocket(servers, reconnectCount = 1, isInit = true) {
-    let newServers = servers.filter(item => !item.hasOwnProperty('close') || !item.close);
+    let newClose = [];      //修改前就一直在重连
+    let newServers = []
+    servers.forEach(server => {
+        // 如果name在closeList中有对应的值,则放入newClose中
+        if (closeList.some(item => item.name === server.name)) {
+            newClose.push(server);
+        }
+
+        // 如果没有close属性或者close=false则放到newSocket中
+        if (!server.close) {
+            newServers.push(server);
+        }
+
+    });
+    let arr = closeList.filter(item => !servers.some(server => server.name === item.name));
+    if (arr.length > 0) {
+        newClose.push(...arr)
+    }
+
+    if (newClose.length > 0) {
+        newClose.forEach(item => {
+            closeList.forEach(item2 => {
+                if (item2.name == item.name) {
+                    if (item.close) {
+                        stopReconnectMap.set(item.name, true);
+                    }
+                }
+            })
+        })
+    }
     let newSocket = newServers.filter(item => item.type == 1 || item.type == 3)
-    let newServer = newServers.filter(item => item.type == 2)
     let oldSocketList = socketList.filter(item => item.type == 1 || item.type == 3);
 
     //增加1或3
@@ -228,9 +292,6 @@ function modifyWebSocket(servers, reconnectCount = 1, isInit = true) {
         oldSocketList.reduce((acc, item1, index) => {
             if (!newSocket.find(item2 => item2.name === item1.name)) {
                 item1.onclose = () => {
-                    if (Config.disconnectToMaster) {
-                        Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${item1.name}已断开连接`)
-                    }
                     logger.warn(`${item1.name}连接已关闭`);
                     clearInterval(item1.timer)
                     socketList = socketList.filter(function (s) {
@@ -243,6 +304,7 @@ function modifyWebSocket(servers, reconnectCount = 1, isInit = true) {
         }, []);
     }
 
+    let newServer = newServers.filter(item => item.type == 2)
     //增加2
     if (newServer.length > serverList.length) {
         let result = newServer.filter(item1 => !serverList.find(item2 => item2.name === item1.name));
@@ -288,9 +350,6 @@ function closeWebSocket(socketList, serverList = '') {
 function clearWebSocket() {
     socketList.forEach(socket => {
         socket.onclose = () => {
-            if (Config.disconnectToMaster) {
-                Bot.pickFriend(Config.masterQQ[0]).sendMsg(`${socket.name}已断开连接`)
-            }
             clearInterval(socket.timer)
             socketList = socketList.filter(function (s) {
                 return s.name !== socket.name;

@@ -1,6 +1,6 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import _ from 'lodash'
-import { socketList } from '../components/index.js'
+import { socketList, Config } from '../components/index.js'
 import { makeOneBotReportMsg, makeGSUidReportMsg } from '../model/index.js'
 
 export class onebot extends plugin {
@@ -9,7 +9,7 @@ export class onebot extends plugin {
       name: '[ws-plugin] 接收消息',
       dsc: '[ws-plugin] 接收消息',
       event: 'message',
-      priority: 1,
+      priority: Config.priority,
       rule: [
         {
           reg: '',
