@@ -71,15 +71,17 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 | ------------ | --------------------------- |
 | [CQ:face]    | [QQ表情]                    |
 | [CQ:image]   | [图片]                      |
+| [CQ:record]  | [语音]                      |
 | [CQ:at]      | [@某人]                     |
 | [CQ:poke]    | [戳一戳]                    |
-| [CQ:music]   | [音乐分享]                   |
+| [CQ:music]   | [音乐分享]                  |
 | [CQ:reply]   | [回复]                      |
 | [CQ:node]    | [合并转发自定义节点]         |
 | [CQ:json]    | [JSON消息]                  |
 
 [QQ表情]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#qq-%E8%A1%A8%E6%83%85
 [图片]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E5%9B%BE%E7%89%87
+[语音]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E8%AF%AD%E9%9F%B3
 [@某人]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E6%9F%90%E4%BA%BA
 [戳一戳]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E6%88%B3%E4%B8%80%E6%88%B3
 [音乐分享]: https://github.com/botuniverse/onebot-11/blob/master/message/segment.md#%E9%9F%B3%E4%B9%90%E5%88%86%E4%BA%AB-

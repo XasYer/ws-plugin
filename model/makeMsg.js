@@ -91,6 +91,14 @@ async function makeOneBotReportMsg(e) {
                     }
                 })
                 break
+            case 'record':
+                reportMsg.push({
+                    'type': 'record',
+                    'data': {
+                        'file': msg[i].file
+                    }
+                })
+                break
             default:
                 break
         }
@@ -317,11 +325,7 @@ async function makeSendMsg(params) {
                 sendMsg.push(segment.at(Number(msg[i].data.qq)))
                 break
             case 'video':
-                if (Config.servers.some(obj => ['127.0.0.1', 'localhost'].some(val => obj.address.includes(val)))) {
-                    sendMsg.push(segment.video(msg[i].data.file))
-                } else {
-                    sendMsg.push('远程连接暂不支持视频文件发送')
-                }
+                sendMsg.push(segment.video(decodeURIComponent(msg[i].data.file)))
                 break
             case 'music':
                 if (params.message_type == 'group') {
@@ -342,7 +346,7 @@ async function makeSendMsg(params) {
                 await Bot.pickGroup(params.group_id).pokeMember(Number(msg[i].data.qq))
                 break
             case 'record':
-                sendMsg.push(segment.record(msg[i].data.file))
+                sendMsg.push(segment.record(decodeURIComponent(msg[i].data.file)))
                 break
             case 'face':
                 sendMsg.push(segment.face(msg[i].data.id))
