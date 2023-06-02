@@ -236,6 +236,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                     }, reconnectInterval * 1000);
                 } else {
                     logger.warn('达到最大重连次数,停止重连');
+                    stopReconnectMap.delete(name);
                 }
             };
             socket.onmessage = async (event) => {
