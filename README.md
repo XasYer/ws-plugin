@@ -94,6 +94,8 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 <details>
 <summary>已实现 API</summary>
 
+### 可能符合 OneBot 标准的 API
+
 | API                   | 功能                        |
 | --------------------- | --------------------------- |
 | send_private_msg      | [发送私聊消息]               |
@@ -123,6 +125,18 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 [获取群列表]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#get_group_list-%E8%8E%B7%E5%8F%96%E7%BE%A4%E5%88%97%E8%A1%A8
 [获取群成员信息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#get_group_member_info-%E8%8E%B7%E5%8F%96%E7%BE%A4%E6%88%90%E5%91%98%E4%BF%A1%E6%81%AF
 [获取群成员列表]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#get_group_member_list-%E8%8E%B7%E5%8F%96%E7%BE%A4%E6%88%90%E5%91%98%E5%88%97%E8%A1%A8
+
+### 从 go-cqhttp cv 过来的api
+
+| 拓展 API                    | 功能                   |
+| --------------------------- | ---------------------- |
+| get_group_root_files       | [获取群根目录文件列表] |
+| get_group_files_by_folder  | [获取群子目录文件列表] |
+| get_group_file_url         | [获取群文件资源链接]   |
+
+[获取群根目录文件列表]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E6%A0%B9%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8
+[获取群子目录文件列表]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E5%AD%90%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8
+[获取群文件资源链接]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E6%96%87%E4%BB%B6%E8%B5%84%E6%BA%90%E9%93%BE%E6%8E%A5
 
 </details>
 

@@ -64,6 +64,98 @@ async function getApiData(api, params = {}, name) {
         'get_msg': async (params) => {
             ResponseData = getMsgMap(params.message_id)
         },
+        'get_group_root_files': async (params) => {
+            let list = await Bot.pickGroup(params.group_id).fs.ls()
+            let files = []
+            let folders = []
+            let nickname = {}
+            if (Array.isArray(list) && list.length > 0) {
+                for (const item of list) {
+                    let user_id = item.user_id
+                    if (!nickname[user_id]) {
+                        nickname[user_id] = (await Bot.getStrangerInfo(item.user_id)).nickname
+                    }
+                    if (item.is_dir) {
+                        folders.push({
+                            group_id: params.group_id,
+                            folder_id: item.fid,
+                            folder_name: item.name,
+                            create_time: item.create_time,
+                            creator: item.user_id,
+                            creator_name: nickname[user_id],
+                            total_file_count: item.file_count
+                        })
+                    } else {
+                        files.push({
+                            group_id: params.group_id,
+                            file_id: item.fid,
+                            file_name: item.name,
+                            busid: item.busid,
+                            file_size: item.size,
+                            upload_time: item.create_time,
+                            dead_time: item.duration,
+                            modify_time: item.create_time,
+                            download_times: item.download_times,
+                            uploader: item.user_id,
+                            uploader_name: nickname[user_id]
+                        })
+                    }
+                }
+            }
+            ResponseData = {
+                files,
+                folders
+            }
+        },
+        'get_group_files_by_folder': async params => {
+            let list = await Bot.pickGroup(params.group_id).fs.ls(params.folder_id)
+            let files = []
+            let folders = []
+            let nickname = {}
+            if (Array.isArray(list) && list.length > 0) {
+                for (const item of list) {
+                    let user_id = item.user_id
+                    if (!nickname[user_id]) {
+                        nickname[user_id] = (await Bot.getStrangerInfo(item.user_id)).nickname
+                    }
+                    if (item.is_dir) {
+                        folders.push({
+                            group_id: params.group_id,
+                            folder_id: item.fid,
+                            folder_name: item.name,
+                            create_time: item.create_time,
+                            creator: item.user_id,
+                            creator_name: nickname[user_id],
+                            total_file_count: item.file_count
+                        })
+                    } else {
+                        files.push({
+                            group_id: params.group_id,
+                            file_id: item.fid,
+                            file_name: item.name,
+                            busid: item.busid,
+                            file_size: item.size,
+                            upload_time: item.create_time,
+                            dead_time: item.duration,
+                            modify_time: item.create_time,
+                            download_times: item.download_times,
+                            uploader: item.user_id,
+                            uploader_name: nickname[user_id]
+                        })
+                    }
+                }
+            }
+            ResponseData = {
+                files,
+                folders
+            }
+        },
+        'get_group_file_url': async params => {
+            let file = await Bot.pickGroup(params.group_id).fs.download(params.file_id)
+            ResponseData = {
+                url: file.url
+            }
+        },
         'get_login_info': async params => {
             ResponseData = {
                 user_id: Bot.uin,

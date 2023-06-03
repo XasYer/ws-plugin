@@ -1,3 +1,10 @@
+# 0.3.7
+
+* 增加api
+    * get_group_root_files 获取群根目录文件列表
+    * get_group_files_by_folder 获取群子目录文件列表
+    * get_group_file_url 获取群文件资源链接
+
 # 0.3.6
 
 * 增加CQ码[CQ:record] 语音
