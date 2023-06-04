@@ -25,6 +25,9 @@ export class onebot extends plugin {
     if (socketList.length == 0) {
       return false
     }
+    if (this.e.detail_type === 'guild') {
+      return false
+    }
     socketList.forEach(async socket => {
       if (Number(socket.type) != 3) {
         await this.SendOneBotMsg(socket)
