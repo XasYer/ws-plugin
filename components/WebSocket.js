@@ -19,6 +19,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 socket = new WebSocket(address, {
                     headers: {
                         'X-Self-ID': Bot.uin,
+                        'X-Client-Role': 'Universal',
                         'Content-Type': 'application/json'
                     }
                 });
