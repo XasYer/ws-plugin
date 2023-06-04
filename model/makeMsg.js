@@ -15,8 +15,8 @@ async function makeOneBotReportMsg(e) {
     let msg = e.message
     //前缀处理
     if (msg[0].type == 'text') {
-        if (Config.noMsgStart.length > 0 && Array.isArray(Config.noMsgStart)) {
-            if (Config.noMsgStart.some(item => e.msg.startsWith(item))) {
+        if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
+            if (Config.noMsgStart.some(item => msg[0].text.startsWith(item))) {
                 return false
             }
         }
@@ -53,7 +53,7 @@ async function makeOneBotReportMsg(e) {
                 })
                 break
             case 'text':
-                if (Config.noMsgInclude.length > 0 && Array.isArray(Config.noMsgInclude)) {
+                if (Array.isArray(Config.noMsgStart) && Config.noMsgInclude.length > 0) {
                     if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
                         return false
                     }
