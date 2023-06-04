@@ -1,7 +1,7 @@
 import WebSocket, { WebSocketServer } from 'ws'
 import Config from './Config.js'
-import { lifecycle, heartbeat } from '../model/index.js'
-import { getApiData, makeGSUidSendMsg } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat } from '../model/index.js'
+import Version from './Version.js'
 
 let socketList = []
 let serverList = []
@@ -20,7 +20,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                     headers: {
                         'X-Self-ID': Bot.uin,
                         'X-Client-Role': 'Universal',
-                        'Content-Type': 'application/json'
+                        'User-Agent': `ws-plugin/${Version.version}`
                     }
                 });
             } catch (error) {
@@ -244,7 +244,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 const decoder = new TextDecoder();
                 let data = decoder.decode(event.data);
                 data = JSON.parse(data)
-                await makeGSUidSendMsg(data,socket.name)
+                await makeGSUidSendMsg(data, socket.name)
             }
             socket.onerror = (event) => {
                 logger.error(`${name}连接失败\n${event.error}`);
