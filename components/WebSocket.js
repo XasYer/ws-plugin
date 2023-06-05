@@ -24,7 +24,6 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 if (accessToken) {
                     headers["Authorization"] = 'Token ' + accessToken
                 }
-                console.log(headers);
                 socket = new WebSocket(address, {
                     headers
                 });
