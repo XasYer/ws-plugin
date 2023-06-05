@@ -103,8 +103,9 @@ async function makeOneBotReportMsg(e) {
                 break
         }
     }
+    let raw_message = MsgToCQ(reportMsg)
     if (Config.messagePostFormat == 'string' || Config.messagePostFormat == '1') {
-        reportMsg = MsgToCQ(reportMsg)
+        reportMsg = raw_message
     }
     setMsgMap(e.rand, {
         time: e.time,
@@ -127,7 +128,7 @@ async function makeOneBotReportMsg(e) {
         group_id: e.group_id || null,
         user_id: e.user_id,
         message: reportMsg,
-        raw_message: e.raw_message,
+        raw_message: raw_message,
         font: 1234,//onebot要求int类型,但是icqq获取的好像是string?就随便填了个
         sender: e.sender
     }
