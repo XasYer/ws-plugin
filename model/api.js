@@ -50,6 +50,7 @@ async function getApiData(api, params = {}, name) {
         'get_group_member_info': async (params) => {
             try {
                 ResponseData = await Bot.getGroupMemberInfo(params.group_id, params.user_id);
+                ResponseData.shut_up_timestamp = ResponseData.shutup_time
             } catch (error) {
                 console.log(error);
             }
