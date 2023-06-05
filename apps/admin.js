@@ -45,7 +45,14 @@ export class setting extends plugin {
                     await this.addWs(msg)
                 } else {
                     this.setContext('checkAddWs', this.e.isGroup)
-                    await this.reply('请一次性发送以下参数:\n连接名字,连接地址,连接类型,重连间隔,最大重连次数\n用逗号分割,例如:\nNoneBot2,ws://127.0.0.1:8080/onebot/v11/ws,1,5,0\n如果对参数不懂意思,可以发送#ws连接说明')
+                    await this.reply([
+                        '请一次性发送以下参数:\n',
+                        '-----------------------\n',
+                        '连接名字,连接地址,连接类型,重连间隔,最大重连次数,access-token(没有可不加)\n',
+                        '-----------------------\n',
+                        '用逗号分割,例如:\nNoneBot2,ws://127.0.0.1:8080/onebot/v11/ws,1,5,0\n',
+                        '如果对参数不懂意思,可以发送#ws连接说明'
+                    ])
                 }
                 break
             case '删除':
@@ -118,7 +125,8 @@ export class setting extends plugin {
     }
 
     async addWs(msg) {
-        if (msg.length != 5) {
+        console.log(msg);
+        if (msg.length != 5 && msg.length != 6) {
             await this.reply('格式有误,请检查后重新发送')
             return false
         } else {
@@ -128,6 +136,9 @@ export class setting extends plugin {
                 type: msg[2],
                 reconnectInterval: msg[3],
                 maxReconnectAttempts: msg[4],
+            }
+            if (msg[5]) {
+                value.accessToken = msg[5]
             }
             try {
                 Config.modifyarr('ws-config', 'servers', value)
@@ -236,7 +247,15 @@ export class setting extends plugin {
     }
 
     async help() {
-        await this.reply('ws连接说明:\n1.连接名字:一般代表需要连接的bot名字\n2.连接地址:需要连接的ws地址或者本地开启的地址:端口\n3.连接类型:1.反向ws连接 2.正向ws连接 3.gsuid_core专用连接\n4.重连间隔:连接被断开之后每隔一段时间进行重新连接,单位秒,0代表不重连\n5.最大重连次数:每次连接失败时+1,达到最大重连次数时停止重新连接,0代表一直重连')
+        await this.reply([
+            'ws连接说明:\n',
+            '1.连接名字:一般代表需要连接的bot名字\n',
+            '2.连接地址:需要连接的ws地址或者本地开启的地址:端口\n',
+            '3.连接类型:1.反向ws连接 2.正向ws连接 3.gsuid_core专用连接\n',
+            '4.重连间隔:连接被断开之后每隔一段时间进行重新连接,单位秒,0代表不重连\n',
+            '5.最大重连次数:每次连接失败时+1,达到最大重连次数时停止重新连接,0代表一直重连\n',
+            '6.access-token:访问密钥'
+        ])
         return true
     }
 

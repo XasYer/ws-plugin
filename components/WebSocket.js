@@ -8,7 +8,7 @@ let serverList = []
 let closeList = []
 let stopReconnectMap = new Map();
 
-function createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, close }, reconnectCount = 1, isInit = true) {
+function createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount = 1, isInit = true) {
     if (address != 'ws_address') {
         if (close) {
             return
@@ -16,12 +16,17 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
         if (type == 1) {
             let socket
             try {
+                let headers = {
+                    'X-Self-ID': Bot.uin,
+                    'X-Client-Role': 'Universal',
+                    'User-Agent': `ws-plugin/${Version.version}`
+                }
+                if (accessToken) {
+                    headers["Authorization"] = 'Token ' + accessToken
+                }
+                console.log(headers);
                 socket = new WebSocket(address, {
-                    headers: {
-                        'X-Self-ID': Bot.uin,
-                        'X-Client-Role': 'Universal',
-                        'User-Agent': `ws-plugin/${Version.version}`
-                    }
+                    headers
                 });
             } catch (error) {
                 logger.error(`出错了,可能是ws地址填错了~\nws名字: ${name}\n地址: ${address}\n类型: ${type}`)
@@ -99,7 +104,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 if (!stopReconnect && ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0)) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
                     setTimeout(() => {
-                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, close }, reconnectCount + 1, false); // 重新连接服务器
+                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount + 1, false); // 重新连接服务器
                     }, reconnectInterval * 1000);
                 } else {
                     logger.warn('达到最大重连次数或关闭连接,停止重连');
@@ -233,7 +238,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 if (!stopReconnect && ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0)) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
                     setTimeout(() => {
-                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts }, reconnectCount + 1, false); // 重新连接服务器
+                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount + 1, false); // 重新连接服务器
                     }, reconnectInterval * 1000);
                 } else {
                     logger.warn('达到最大重连次数,停止重连');
