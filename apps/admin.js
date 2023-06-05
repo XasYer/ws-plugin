@@ -125,7 +125,6 @@ export class setting extends plugin {
     }
 
     async addWs(msg) {
-        console.log(msg);
         if (msg.length != 5 && msg.length != 6) {
             await this.reply('格式有误,请检查后重新发送')
             return false
