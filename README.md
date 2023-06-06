@@ -11,6 +11,10 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 
 可以在Yunzai-Bot的基础上连接多个使用onebot协议的机器人,比如[NoneBot2](https://github.com/nonebot/nonebot2), [zhenxun_bot](https://github.com/HibiKier/zhenxun_bot), [ZeroBot-Plugin](https://github.com/FloatTech/ZeroBot-Plugin)等
 
+### 其他
+
+[TRSS-Yunzai](https://gitee.com/TimeRainStarSky/Yunzai) 使用本插件可能会有问题,建议直接使用go-cqhttp进行连接
+
 ## 安装与更新
 
 ### 使用Git安装（推荐）
