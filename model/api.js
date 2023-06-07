@@ -59,7 +59,7 @@ async function getApiData(api, params = {}, name) {
             ResponseData = await Bot.getStrangerInfo(params.user_id)
         },
         'delete_msg': async (params) => {
-            let msg = getMsgMap(params.message_id)
+            let msg = getMsgMap(params.message_id, false)
             await Bot.deleteMsg(msg.message_id)
         },
         'get_msg': async (params) => {

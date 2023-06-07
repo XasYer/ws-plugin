@@ -2,15 +2,17 @@
 const msgMap = new Map()
 let keys = []
 
-function getMsgMap(key) {
+function getMsgMap(key, isOneBotMsg = true) {
     let msg = msgMap.get(Number(key));
-    let message = []
     if (!msg) {
         return null
     }
-    if (!msg.message) {
+    if (!msg.message || !isOneBotMsg || msg.isOneBotMsg) {
         return msg
     }
+    let message = []
+    msg.message_id = msg.rand
+    msg.isOneBotMsg = true
     for (let i = 0; i < msg.message.length; i++) {
         switch (msg.message[i].type) {
             case 'at':
@@ -37,6 +39,30 @@ function getMsgMap(key) {
                         url: msg.message[i].url
                     }
                 })
+            case 'json':
+                message.push({
+                    "type": 'json',
+                    "data": {
+                        "data": msg.message[i].data
+                    }
+                })
+                break
+            case 'face':
+                message.push({
+                    'type': 'face',
+                    'data': {
+                        'id': msg.message[i].id
+                    }
+                })
+                break
+            case 'record':
+                message.push({
+                    'type': 'record',
+                    'data': {
+                        'file': msg.message[i].file
+                    }
+                })
+                break
             default:
                 break;
         }

@@ -108,15 +108,17 @@ async function makeOneBotReportMsg(e) {
         reportMsg = raw_message
     }
     setMsgMap(e.rand, {
-        time: e.time,
-        message_type: e.message_type,
-        message_id: e.rand,
-        real_id: e.seq,
-        sender: e.sender,
-        message: e.message,
-        message_string: e.message_id,
-        group_id: e.group_id,
+        message_id: e.message_id,
         user_id: e.user_id,
+        time: e.time,
+        seq: e.seq,
+        rand: e.rand,
+        message: e.message,
+        raw_message: e.raw_message,
+        sender: e.sender,
+        group_id: e.group_id,
+        message_type: e.message_type,
+        real_id: e.seq
     })
     let Message = {
         time: e.time,
@@ -297,24 +299,12 @@ async function makeSendMsg(params) {
     if (typeof msg == 'string') {
         msg = CQToMsg(msg)
     }
-    // console.log('params', params);
     let target
     let uid
     for (let i = 0; i < msg.length; i++) {
         switch (msg[i].type) {
             case 'reply':
-                quote = getMsgMap(msg[i].data.id)
-                let seq
-                if (quote.message_type == 'group') {
-                    target = 'pickGroup'
-                    uid = quote.group_id
-                    seq = quote.seq
-                } else {
-                    target = 'pickFriend'
-                    uid = quote.user_id
-                    seq = quote.time
-                }
-                quote = (await Bot[target](uid).getChatHistory(seq, 1))[0]
+                quote = getMsgMap(msg[i].data.id, false)
                 break
             case 'image':
                 sendMsg.push(segment.image(msg[i].data.file))
