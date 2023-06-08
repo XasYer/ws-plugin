@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import { Config } from '../components/index.js'
+import cfg from '../../../lib/config/config.js'
 
 function msgToOneBotMsg(msg, other = {}) {
     let reportMsg = []
@@ -12,7 +13,7 @@ function msgToOneBotMsg(msg, other = {}) {
                 }
             }
             if (other.isGroup) {
-                let groupCfg = cfg.getGroup(e.group_id)
+                let groupCfg = cfg.getGroup(other.group_id)
                 let alias = groupCfg.botAlias
                 if (!Array.isArray(alias)) {
                     alias = [alias]
