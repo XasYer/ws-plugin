@@ -2,72 +2,11 @@
 const msgMap = new Map()
 let keys = []
 
-function getMsgMap(key, isOneBotMsg = true) {
+function getMsgMap(key) {
     let msg = msgMap.get(Number(key));
     if (!msg) {
         return null
     }
-    if (!msg.message || !isOneBotMsg || msg.isOneBotMsg) {
-        return msg
-    }
-    let message = []
-    msg.message_id = msg.rand
-    msg.isOneBotMsg = true
-    for (let i = 0; i < msg.message.length; i++) {
-        switch (msg.message[i].type) {
-            case 'at':
-                message.push({
-                    type: 'at',
-                    data: {
-                        qq: msg.message[i].qq
-                    }
-                })
-                break;
-            case 'text':
-                message.push({
-                    type: 'text',
-                    data: {
-                        text: msg.message[i].text
-                    }
-                })
-                break
-            case 'image':
-                message.push({
-                    type: 'image',
-                    data: {
-                        file: msg.message[i].file,
-                        url: msg.message[i].url
-                    }
-                })
-            case 'json':
-                message.push({
-                    "type": 'json',
-                    "data": {
-                        "data": msg.message[i].data
-                    }
-                })
-                break
-            case 'face':
-                message.push({
-                    'type': 'face',
-                    'data': {
-                        'id': msg.message[i].id
-                    }
-                })
-                break
-            case 'record':
-                message.push({
-                    'type': 'record',
-                    'data': {
-                        'file': msg.message[i].file
-                    }
-                })
-                break
-            default:
-                break;
-        }
-    }
-    msg.message = message
     return msg
 }
 

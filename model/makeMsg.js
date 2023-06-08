@@ -1,6 +1,7 @@
 import { Config } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
+import { msgToOneBotMsg } from './tool.js'
 import _ from 'lodash'
 import cfg from '../../../lib/config/config.js'
 import fetch from 'node-fetch'
@@ -11,114 +12,19 @@ import fetch from 'node-fetch'
  * @returns 
  */
 async function makeOneBotReportMsg(e) {
-    let reportMsg = []
     let msg = e.message
-    //前缀处理
-    if (msg[0].type == 'text') {
-        if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
-            if (Config.noMsgStart.some(item => msg[0].text.startsWith(item))) {
-                return false
-            }
-        }
-        if (e.isGroup) {
-            let groupCfg = cfg.getGroup(e.group_id)
-            let alias = groupCfg.botAlias
-            if (!Array.isArray(alias)) {
-                alias = [alias]
-            }
-            for (let name of alias) {
-                if (msg[0].text.startsWith(name)) {
-                    msg[0].text = _.trimStart(msg[0].text, name).trim()
-                    break
-                }
-            }
-        }
-    }
-    if (e.source) {
-        reportMsg.push({
-            "type": "reply",
-            "data": {
-                "id": e.source.rand
-            }
-        })
-    }
-    for (let i = 0; i < msg.length; i++) {
-        switch (msg[i].type) {
-            case 'at':
-                reportMsg.push({
-                    "type": "at",
-                    "data": {
-                        "qq": msg[i].qq
-                    }
-                })
-                break
-            case 'text':
-                if (Array.isArray(Config.noMsgStart) && Config.noMsgInclude.length > 0) {
-                    if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
-                        return false
-                    }
-                }
-                reportMsg.push({
-                    "type": "text",
-                    "data": {
-                        "text": msg[i].text
-                    }
-                })
-                break
-            case 'image':
-                reportMsg.push({
-                    "type": "image",
-                    "data": {
-                        file: msg[i].file,
-                        subType: 0,
-                        url: msg[i].url
-                    }
-                })
-                break
-            case 'json':
-                reportMsg.push({
-                    "type": 'json',
-                    "data": {
-                        "data": msg[i].data
-                    }
-                })
-                break
-            case 'face':
-                reportMsg.push({
-                    'type': 'face',
-                    'data': {
-                        'id': msg[i].id
-                    }
-                })
-                break
-            case 'record':
-                reportMsg.push({
-                    'type': 'record',
-                    'data': {
-                        'file': msg[i].file
-                    }
-                })
-                break
-            default:
-                break
-        }
-    }
+
+    let reportMsg = msgToOneBotMsg(msg, { source: e.source, startsWith: true, isGroup: e.isGroup })
+
     let raw_message = MsgToCQ(reportMsg)
     if (Config.messagePostFormat == 'string' || Config.messagePostFormat == '1') {
         reportMsg = raw_message
     }
     setMsgMap(e.rand, {
         message_id: e.message_id,
-        user_id: e.user_id,
         time: e.time,
         seq: e.seq,
         rand: e.rand,
-        message: e.message,
-        raw_message: e.raw_message,
-        sender: e.sender,
-        group_id: e.group_id,
-        message_type: e.message_type,
-        real_id: e.seq
     })
     let Message = {
         time: e.time,
@@ -304,7 +210,8 @@ async function makeSendMsg(params) {
     for (let i = 0; i < msg.length; i++) {
         switch (msg[i].type) {
             case 'reply':
-                quote = getMsgMap(msg[i].data.id, false)
+                quote = getMsgMap(msg[i].data.id)
+                quote = (await Bot.getChatHistory(quote.message_id, 1)).pop()
                 break
             case 'image':
                 sendMsg.push(segment.image(msg[i].data.file))
