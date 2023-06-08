@@ -16,6 +16,9 @@ async function makeOneBotReportMsg(e) {
 
     let reportMsg = msgToOneBotMsg(msg, { source: e.source, startsWith: true, isGroup: e.isGroup, group_id: e.group_id })
 
+    if (!reportMsg) {
+        return false
+    }
     let raw_message = MsgToCQ(reportMsg)
     if (Config.messagePostFormat == 'string' || Config.messagePostFormat == '1') {
         reportMsg = raw_message
