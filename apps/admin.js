@@ -1,5 +1,5 @@
 import plugin from '../../../lib/plugins/plugin.js'
-import { Config, clearWebSocket, initWebSocket, Render, Version, socketList, serverList } from '../components/index.js'
+import { Config, clearWebSocket, initWebSocket, Render, Version, socketList, serverList, closeList } from '../components/index.js'
 import lodash from 'lodash'
 
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
@@ -138,6 +138,18 @@ export class setting extends plugin {
             }
             if (msg[5]) {
                 value.accessToken = msg[5]
+            }
+            let old = Config.servers
+            if (Array.isArray(old) && old.length > 0) {
+                for (const item of old) {
+                    if (item.name == value.name) {
+                        this.reply(`已经有连接名为${value.name}的连接了\n连接地址为${item.address}\n请删除旧的连接或更改连接名字`)
+                        return false
+                    } else if (item.address == value.address) {
+                        this.reply(`已经有连接地址为${value.address}的连接了\n连接名字为${item.name}\n请删除旧的连接或更改连接地址`)
+                        return false
+                    }
+                }
             }
             try {
                 Config.modifyarr('ws-config', 'servers', value)
@@ -302,6 +314,14 @@ export class setting extends plugin {
                 })
             })
         }
+        if (closeList.length != 0) {
+            closeList.forEach(item => {
+                status.push({
+                    name: item.name,
+                    state: '断线重连中...'
+                })
+            })
+        }
         if (serverList.length != 0) {
             serverList.forEach(item => {
                 status.push({
@@ -323,10 +343,6 @@ export class setting extends plugin {
                         if (status[i].name == item.name) {
                             if (status[i].state == 1) {
                                 statu = '正常'
-                            } else if (status[i].state == 3) {
-                                statu = '已断开连接'
-                            } else if (status[i].state == 2) {
-                                statu = '正在断开连接'
                             } else {
                                 statu = status[i].state
                             }

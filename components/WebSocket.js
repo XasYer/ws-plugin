@@ -385,6 +385,7 @@ export {
     clearWebSocket,
     modifyWebSocket,
     socketList,
-    serverList
+    serverList,
+    closeList
 }
 
