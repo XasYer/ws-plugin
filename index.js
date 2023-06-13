@@ -30,6 +30,15 @@ for (let i in files) {
     }
     apps[name] = ret[i].value[Object.keys(ret[i].value)[0]]
 }
+let path = ['./apps/message/message.js', './apps/notice/notice.js']
+for (const item of path) {
+    try {
+        await import(`${item}`)
+    } catch (e) {
+        logger.error(`载入事件错误：${item}`)
+        logger.error(e)
+    }
+}
 
 let servers = Config.servers
 initWebSocket(servers)

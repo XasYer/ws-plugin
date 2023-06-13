@@ -11,7 +11,7 @@ export class setting extends plugin {
             name: '[ws-plugin] 设置',
             dsc: '[ws-plugin] 设置',
             event: 'message',
-            priority: Config.priority,
+            priority: 1,
             rule: [
                 {
                     reg: '^#ws(添加|删除|打开|关闭|重新|查看)连接.*$',

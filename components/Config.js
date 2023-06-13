@@ -77,10 +77,6 @@ class Config {
     return this.getConfig('msg-config').firstconnectToMaster
   }
 
-  get priority() {
-    return this.getConfig('msg-config').priority || 1
-  }
-
   /**群管理员变动是否上报 */
   get groupAdmin() {
     return this.getConfig('notice-config').groupAdmin
@@ -215,9 +211,6 @@ class Config {
     }
     if (typeof wsconfig.messagePostFormat === 'undefined') {
       wsconfig.messagePostFormat = wsconfig.message.postFormat
-    }
-    if (typeof msgconfig.priority === 'undefined') {
-      msgconfig.priority = 1
     }
     return {
       ...wsconfig,

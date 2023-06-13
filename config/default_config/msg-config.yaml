@@ -14,6 +14,3 @@ reconnectToMaster: false
 
 #首次连接时是否通知主人成功还是失败
 firstconnectToMaster: false
-
-#插件优先级
-priority: 1

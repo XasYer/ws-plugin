@@ -10,7 +10,7 @@ export class setting extends plugin {
             name: '[ws-plugin] 帮助',
             dsc: '[ws-plugin] 帮助',
             event: 'message',
-            priority: Config.priority,
+            priority: 1,
             rule: [
                 {
                     reg: '^#ws版本$',

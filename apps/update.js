@@ -15,7 +15,7 @@ export class update extends plugin {
             name: '[ws-plugin] 插件更新',
             dsc: '[ws-plugin] 插件更新',
             event: 'message',
-            priority: Config.priority,
+            priority: 1,
             rule: [
                 {
                     reg: '^#ws(插件)?(强制)?更新$',
