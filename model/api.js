@@ -68,7 +68,7 @@ async function getApiData(api, params = {}, name) {
         'get_msg': async (params) => {
             ResponseData = await getMsgMap(params.message_id)
             if (ResponseData) {
-                ResponseData = (await Bot.getChatHistory(ResponseData.message_id, 1)).pop()
+                ResponseData = await Bot.getMsg(ResponseData.message_id)
                 ResponseData.real_id = ResponseData.seq
                 ResponseData.message_id = ResponseData.rand
                 ResponseData.message = msgToOneBotMsg(ResponseData.message)
