@@ -44,6 +44,21 @@ export const cfgSchema = {
         def: false,
         desc: '首次连接时是否通知主人成功还是失败',
         fileName: 'msg-config'
+      },
+      msgStoreTime: {
+        title: '消息存储时间',
+        key: '存储',
+        type: 'num',
+        input: (n) => {
+          if (n >= 0) {
+            return n * 1
+          } else {
+            return 600
+          }
+        },
+        def: 600,
+        desc: '用于撤回和回复消息,仅限于ws-plugin和用户发送,如果超过时间去获取就会获取不到,单位秒,0不存储',
+        fileName: 'msg-config'
       }
     }
   },

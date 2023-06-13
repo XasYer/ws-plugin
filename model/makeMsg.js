@@ -23,7 +23,7 @@ async function makeOneBotReportMsg(e) {
     if (Config.messagePostFormat == 'string' || Config.messagePostFormat == '1') {
         reportMsg = raw_message
     }
-    setMsgMap(e.rand, {
+    await setMsgMap(e.rand, {
         message_id: e.message_id,
         time: e.time,
         seq: e.seq,
@@ -213,7 +213,7 @@ async function makeSendMsg(params) {
     for (let i = 0; i < msg.length; i++) {
         switch (msg[i].type) {
             case 'reply':
-                quote = getMsgMap(msg[i].data.id)
+                quote = await getMsgMap(msg[i].data.id)
                 quote = (await Bot.getChatHistory(quote.message_id, 1)).pop()
                 break
             case 'image':

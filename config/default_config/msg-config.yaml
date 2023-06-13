@@ -14,3 +14,6 @@ reconnectToMaster: false
 
 #首次连接时是否通知主人成功还是失败
 firstconnectToMaster: false
+
+#消息存储时间,用于撤回和回复消息,单位秒
+msgStoreTime: 600

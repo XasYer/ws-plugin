@@ -60,15 +60,19 @@ async function getApiData(api, params = {}, name) {
             ResponseData = await Bot.getStrangerInfo(params.user_id)
         },
         'delete_msg': async (params) => {
-            let msg = getMsgMap(params.message_id)
-            await Bot.deleteMsg(msg.message_id)
+            let msg = await getMsgMap(params.message_id)
+            if (msg) {
+                await Bot.deleteMsg(msg.message_id)
+            }
         },
         'get_msg': async (params) => {
-            ResponseData = getMsgMap(params.message_id)
-            ResponseData = (await Bot.getChatHistory(ResponseData.message_id, 1)).pop()
-            ResponseData.real_id = ResponseData.seq
-            ResponseData.message_id = ResponseData.rand
-            ResponseData.message = msgToOneBotMsg(ResponseData.message)
+            ResponseData = await getMsgMap(params.message_id)
+            if (ResponseData) {
+                ResponseData = (await Bot.getChatHistory(ResponseData.message_id, 1)).pop()
+                ResponseData.real_id = ResponseData.seq
+                ResponseData.message_id = ResponseData.rand
+                ResponseData.message = msgToOneBotMsg(ResponseData.message)
+            }
         },
         'get_group_root_files': async (params) => {
             let list = await Bot.pickGroup(params.group_id).fs.ls()
@@ -226,7 +230,7 @@ async function getApiData(api, params = {}, name) {
                 message_id: sendRet.rand,
                 time: sendRet.time
             }
-            setMsgMap(sendRet.rand, sendRet)
+            await setMsgMap(sendRet.rand, sendRet)
         }
         return ResponseData
     } else {

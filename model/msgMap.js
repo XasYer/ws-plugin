@@ -1,33 +1,22 @@
-//临时解决,后续想到什么办法了再改
-const msgMap = new Map()
-let keys = []
+import { Config } from "../components/index.js"
 
-function getMsgMap(key) {
-    let msg = msgMap.get(Number(key));
+let latestMsg = null
+
+async function getMsgMap(key) {
+    let msg = await redis.get(`Yz:ws-plugin:msg:${key}`)
     if (!msg) {
         return null
     }
-    return msg
+    return JSON.parse(msg)
 }
 
-/**
- * 把最近500条消息存起来,用于getMsg和deleteMsg
- * @param {*} key 
- * @param {*} value 
- */
-function setMsgMap(key, value) {
-    if (keys.length >= 500) {
-        let firstKey = keys.shift();
-        msgMap.delete(firstKey);
-    }
-    msgMap.set(key, value);
-    keys.push(key);
+async function setMsgMap(key, value) {
+    await redis.set(`Yz:ws-plugin:msg:${key}`, JSON.stringify(value), { EX: Config.msgStoreTime })
+    latestMsg = value
 }
 
 function getLatestMsg() {
-    let key = keys[keys.length - 1]
-    let msg = getMsgMap(key)
-    return msg
+    return latestMsg
 }
 
 export {

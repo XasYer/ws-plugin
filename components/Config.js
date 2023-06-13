@@ -41,80 +41,85 @@ class Config {
 
   /** 心跳 */
   get heartbeatInterval() {
-    return this.getConfig('ws-config').heartbeatInterval || this.getConfig('ws-config').heartbeat.interval
+    return this.getDefOrConfig('ws-config').heartbeatInterval
   }
 
   /** 数据上报类型 */
   get messagePostFormat() {
-    return this.getConfig('ws-config').messagePostFormat || this.getConfig('ws-config').message.postFormat
+    return this.getDefOrConfig('ws-config').messagePostFormat
   }
 
   /** 连接列表 */
   get servers() {
-    return this.getConfig('ws-config').servers
+    return this.getDefOrConfig('ws-config').servers
   }
 
   get noMsgStart() {
-    return this.getConfig('msg-config').noMsgStart
+    return this.getDefOrConfig('msg-config').noMsgStart
   }
 
   get noMsgInclude() {
-    return this.getConfig('msg-config').noMsgInclude
+    return this.getDefOrConfig('msg-config').noMsgInclude
   }
 
   /**掉线时否通知主人 */
   get disconnectToMaster() {
-    return this.getConfig('msg-config').disconnectToMaster
+    return this.getDefOrConfig('msg-config').disconnectToMaster
   }
 
   /**重连成功时是否通知主人 */
   get reconnectToMaster() {
-    return this.getConfig('msg-config').reconnectToMaster
+    return this.getDefOrConfig('msg-config').reconnectToMaster
   }
 
   /**首次连接成功时是否通知主人 */
   get firstconnectToMaster() {
-    return this.getConfig('msg-config').firstconnectToMaster
+    return this.getDefOrConfig('msg-config').firstconnectToMaster
+  }
+  
+  /**消息存储时间 */
+  get msgStoreTime() {
+    return this.getDefOrConfig('msg-config').msgStoreTime
   }
 
   /**群管理员变动是否上报 */
   get groupAdmin() {
-    return this.getConfig('notice-config').groupAdmin
+    return this.getDefOrConfig('notice-config').groupAdmin
   }
 
   /**群成员减少是否上报 */
   get groupDecrease() {
-    return this.getConfig('notice-config').groupDecrease
+    return this.getDefOrConfig('notice-config').groupDecrease
   }
 
   /**群成员增加是否上报 */
   get groupIncrease() {
-    return this.getConfig('notice-config').groupIncrease
+    return this.getDefOrConfig('notice-config').groupIncrease
   }
 
   /**群禁言是否上报 */
   get groupBan() {
-    return this.getConfig('notice-config').groupBan
+    return this.getDefOrConfig('notice-config').groupBan
   }
 
   /**好友添加是否上报 */
   get friendIncrease() {
-    return this.getConfig('notice-config').friendIncrease
+    return this.getDefOrConfig('notice-config').friendIncrease
   }
 
   /**群消息撤回是否上报 */
   get groupRecall() {
-    return this.getConfig('notice-config').groupRecall
+    return this.getDefOrConfig('notice-config').groupRecall
   }
 
   /**好友消息撤回是否上报 */
   get friendRecall() {
-    return this.getConfig('notice-config').friendRecall
+    return this.getDefOrConfig('notice-config').friendRecall
   }
 
   /**群内戳一戳是否上报 */
   get groupPoke() {
-    return this.getConfig('notice-config').groupPoke
+    return this.getDefOrConfig('notice-config').groupPoke
   }
 
   /** 默认配置和用户配置 */
@@ -194,24 +199,9 @@ class Config {
   }
 
   getCfg() {
-    let wsfile = `${Plugin_Path}/config/config/ws-config.yaml`
-    let msgfile = `${Plugin_Path}/config/config/msg-config.yaml`
-    let noticefile = `${Plugin_Path}/config/config/notice-config.yaml`
-    let wsconfig = YAML.parse(
-      fs.readFileSync(wsfile, 'utf8')
-    )
-    let msgconfig = YAML.parse(
-      fs.readFileSync(msgfile, 'utf8')
-    )
-    let noticeconfig = YAML.parse(
-      fs.readFileSync(noticefile, 'utf8')
-    )
-    if (typeof wsconfig.heartbeatInterval === 'undefined') {
-      wsconfig.heartbeatInterval = wsconfig.heartbeat.interval
-    }
-    if (typeof wsconfig.messagePostFormat === 'undefined') {
-      wsconfig.messagePostFormat = wsconfig.message.postFormat
-    }
+    let wsconfig = this.getDefOrConfig('ws-config')
+    let msgconfig = this.getDefOrConfig('msg-config')
+    let noticeconfig = this.getDefOrConfig('notice-config')
     return {
       ...wsconfig,
       ...msgconfig,
