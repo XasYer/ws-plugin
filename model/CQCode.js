@@ -5,7 +5,7 @@
  */
 function CQToMsg(cq) {
     let msg = [];
-    let matches = cq.matchAll(/(\[CQ:(.*?),(.*?)\]|.)/g);
+    let matches = cq.matchAll(/(\[CQ:(.*?),(.*?)\]|.)/gs);
     let text = '';
     for (const match of matches) {
         if (match[2]) {
