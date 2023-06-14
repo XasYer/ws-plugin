@@ -1,7 +1,7 @@
 import { Config } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
-import { msgToOneBotMsg } from './tool.js'
+import { msgToOneBotMsg, SendMusicShare } from './tool.js'
 import _ from 'lodash'
 import cfg from '../../../lib/config/config.js'
 import fetch from 'node-fetch'
@@ -236,11 +236,14 @@ async function makeSendMsg(params) {
                     target = 'pickFriend'
                     uid = params.user_id
                 }
-                if (msg[i].data.id) {
-                    await Bot[target](uid).shareMusic(msg[i].data.type, msg[i].data.id)
+                if (msg[i].data.type == 'custom') {
+                    let data = msg[i].data
+                    data.message_type = params.message_type
+                    data.user_id = params.user_id
+                    data.group_id = params.group_id
+                    await SendMusicShare(data)
                 } else {
-                    // TODO
-                    logger.warn('不会分享自定义歌曲捏')
+                    await Bot[target](uid).shareMusic(msg[i].data.type, msg[i].data.id)
                 }
                 break
             case 'poke':

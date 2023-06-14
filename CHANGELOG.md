@@ -1,3 +1,7 @@
+# 0.3.11
+
+* 新增CQ码[CQ:music] 音乐自定义分享 Copyright xiaofei-plugin
+
 # 0.3.10
 
 * 修改message_id存储于redis
