@@ -13,10 +13,21 @@ files.forEach((file) => {
     ret.push(import(`./apps/${file}`))
 })
 
-if (!global.segment) {
-    global.segment = (await import('oicq')).segment
+try {
+    if (!global.segment) {
+        global.segment = (await import('oicq')).segment
+    }
+    if (!global.core) {
+        global.core = (await import('oicq')).core;
+    }
+} catch (error) {
+    if (!global.segment) {
+        global.segment = (await import('icqq')).segment
+    }
+    if (!global.core) {
+        global.core = (await import('icqq')).core;
+    }
 }
-
 ret = await Promise.allSettled(ret)
 
 let apps = {}
