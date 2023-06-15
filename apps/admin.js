@@ -27,9 +27,89 @@ export class setting extends plugin {
                     reg: sysCfgReg,
                     fnc: 'setting',
                     permission: 'master'
+                },
+                {
+                    reg: '^#ws(查看)?(禁用|启用)群[0-9]*$',
+                    fnc: 'modifyGroup',
+                    permission: 'master'
                 }
             ]
         })
+    }
+
+    async modifyGroup() {
+        let reg = new RegExp('^#ws(查看)?(禁用|启用)群([0-9]*)$')
+        let regRet = reg.exec(this.e.msg)
+        if (!regRet) {
+            return true
+        }
+        let groupList = Config.noGroup
+        if (regRet[1]) {
+            let sendMsg = []
+            if (Array.isArray(groupList) && groupList.length > 0) {
+                sendMsg.push('以下为禁用群聊的群号\n')
+                sendMsg.push(groupList.join('\n'))
+            }
+            if (sendMsg.length > 0) {
+                this.reply(sendMsg)
+            } else {
+                this.reply('暂无禁用群聊')
+            }
+        } else {
+            let group_id = this.e.group_id
+            if (regRet[3]) {
+                group_id = Number(regRet[3])
+            }
+            if (!group_id) {
+                this.reply('群号捏?')
+                return true
+            }
+            switch (regRet[2]) {
+                case '禁用':
+                    let isExist = false
+                    if (Array.isArray(groupList) && groupList.length > 0) {
+                        for (const item of groupList) {
+                            if (item === group_id) {
+                                isExist = true
+                                break
+                            }
+                        }
+                    } else {
+                        groupList = []
+                    }
+                    if (isExist) {
+                        this.reply('达咩,已经禁止这个群聊了')
+                        return true
+                    }
+                    groupList.push(group_id)
+                    break
+                case '启用':
+                    let index = -1
+                    if (Array.isArray(groupList) && groupList.length > 0) {
+                        for (let i = 0; i < groupList.length; i++) {
+                            if (groupList[i] == group_id) {
+                                index = i
+                            }
+                        }
+                    }
+                    if (index == -1) {
+                        this.reply('达咩,没有禁止这个群聊')
+                        return true
+                    }
+                    groupList.splice(index, 1)
+                    break
+                default:
+                    break
+            }
+            try {
+                Config.modify('msg-config', 'noGroup', groupList)
+                this.reply(`操作成功~`)
+            } catch (error) {
+                this.reply('操作失败...')
+                logger.error(error)
+            }
+        }
+        return true
     }
 
     async modifyWs() {

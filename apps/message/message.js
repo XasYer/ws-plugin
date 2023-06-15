@@ -8,9 +8,22 @@ Bot.on('message', async e => {
     if (socketList.length == 0) {
         return false
     }
+    //判断是否启用
+    let groupList = Config.noGroup
+    if (Array.isArray(groupList) && groupList.length > 0) {
+        if (groupList.some(item => item == e.group_id)) return false
+    }
+    //判断前缀
+    if (e.message[0].type === 'text') {
+        if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
+            if (Config.noMsgStart.some(item => e.message[0].text.startsWith(item))) {
+                return false
+            }
+        }
+    }
     //深拷贝e
     let msg = _.cloneDeep(e);
-    //增加isGroup
+    //增加isGroup e.isPrivate
     if (msg.message_type == 'group') {
         msg.isGroup = true
     } else if (msg.message_type == 'private') {
@@ -54,10 +67,11 @@ function onlyReplyAt(e) {
     if (groupCfg.onlyReplyAt != 1 || !groupCfg.botAlias || e.isPrivate) return e
 
     let at = atBot(e.message)
+    if (at) return e
     e = hasAlias(e)
-    if (!at && !e) return false
+    if (e) return e
 
-    return e
+    return false
 }
 
 function atBot(msg) {
@@ -75,11 +89,6 @@ function atBot(msg) {
 function hasAlias(e) {
     if (!e.message) return false
     if (e.message[0].type === 'text') {
-        if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
-            if (Config.noMsgStart.some(item => e.message[0].text.startsWith(item))) {
-                return false
-            }
-        }
         if (e.isGroup) {
             let groupCfg = cfg.getGroup(e.group_id)
             let alias = groupCfg.botAlias

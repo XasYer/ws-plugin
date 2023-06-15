@@ -76,10 +76,15 @@ class Config {
   get firstconnectToMaster() {
     return this.getDefOrConfig('msg-config').firstconnectToMaster
   }
-  
+
   /**消息存储时间 */
   get msgStoreTime() {
     return this.getDefOrConfig('msg-config').msgStoreTime
+  }
+
+  /**禁用群聊列表 */
+  get noGroup() {
+    return this.getDefOrConfig('msg-config').noGroup
   }
 
   /**群管理员变动是否上报 */

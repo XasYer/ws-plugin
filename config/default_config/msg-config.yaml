@@ -17,3 +17,6 @@ firstconnectToMaster: false
 
 #消息存储时间,用于撤回和回复消息,单位秒
 msgStoreTime: 600
+
+noGroup:
+  - 123456

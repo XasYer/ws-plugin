@@ -7,7 +7,7 @@ export const helpCfg = {
   "themeExclude": [
     "default"
   ],
-  "colCount": 2,
+  "colCount": 3,
   "bgBlur": true
 }
 export const helpList = [
@@ -44,6 +44,26 @@ export const helpList = [
         "title": "#ws重新连接",
         "desc": "强制断开已有的所有连接并重新连接"
       }
+    ]
+  },
+  {
+    "group": "其他设置",
+    "list": [
+      {
+        "icon": 81,
+        "title": "#ws禁用群123456",
+        "desc": "不需要开启的群聊,不带群号为当前群"
+      },
+      {
+        "icon": 84,
+        "title": "#ws启用群123456",
+        "desc": "解除禁止"
+      },
+      {
+        "icon": 85,
+        "title": "#ws查看禁用群",
+        "desc": "查看当前禁用的群聊列表"
+      },
     ]
   },
   {
