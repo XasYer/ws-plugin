@@ -1,37 +1,13 @@
 import _ from 'lodash'
 import { Config } from '../components/index.js'
-import cfg from '../../../lib/config/config.js'
 
-function msgToOneBotMsg(msg, other = {}) {
+function msgToOneBotMsg(msg, source = null) {
     let reportMsg = []
-    //前缀处理
-    if (other.startsWith) {
-        if (msg[0].type == 'text') {
-            if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
-                if (Config.noMsgStart.some(item => msg[0].text.startsWith(item))) {
-                    return false
-                }
-            }
-            if (other.isGroup) {
-                let groupCfg = cfg.getGroup(other.group_id)
-                let alias = groupCfg.botAlias
-                if (!Array.isArray(alias)) {
-                    alias = [alias]
-                }
-                for (let name of alias) {
-                    if (msg[0].text.startsWith(name)) {
-                        msg[0].text = _.trimStart(msg[0].text, name).trim()
-                        break
-                    }
-                }
-            }
-        }
-    }
-    if (other.source) {
+    if (source) {
         reportMsg.push({
             "type": "reply",
             "data": {
-                "id": other.source.rand
+                "id": source.rand
             }
         })
     }

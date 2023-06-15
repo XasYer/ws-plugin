@@ -12,9 +12,7 @@ import fetch from 'node-fetch'
  * @returns 
  */
 async function makeOneBotReportMsg(e) {
-    let msg = e.message
-
-    let reportMsg = msgToOneBotMsg(msg, { source: e.source, startsWith: true, isGroup: e.isGroup, group_id: e.group_id })
+    let reportMsg = msgToOneBotMsg(e.message, e.source)
 
     if (!reportMsg) {
         return false
