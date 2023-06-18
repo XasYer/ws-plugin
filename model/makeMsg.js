@@ -253,6 +253,9 @@ async function makeSendMsg(params) {
             case 'face':
                 sendMsg.push(segment.face(msg[i].data.id))
                 break
+            case 'node':
+                sendMsg.push(await nodeToMsg(params))
+                break
             default:
                 sendMsg.push('出现了未适配的消息的类型')
                 logger.warn(`出现了未适配的消息的类型${msg[i]}`)
@@ -295,6 +298,56 @@ async function makeForwardMsg(params) {
             message: _msg,
             nickname: msg[i].data.name,
             user_id: Number(msg[i].data.uin)
+        })
+    }
+    if (params.group_id) {
+        forwardMsg = await Bot.pickGroup(params.group_id).makeForwardMsg(forwardMsg)
+    } else if (params.user_id) {
+        forwardMsg = await Bot.pickFriend(params.user_id).makeForwardMsg(forwardMsg)
+    }
+    return forwardMsg
+}
+
+async function nodeToMsg(params) {
+    let msg = params.message[0].data
+    let forwardMsg = []
+    for (let i = 0; i < msg.length; i++) {
+        let _msg = null
+        if (typeof msg[i].message === 'string') {
+            _msg = (await makeSendMsg({ message: msg[i].message }))[0]
+        } else if (msg[i].message.type === 'image') {
+            _msg = segment.image(msg[i].message.file)
+        } else if (Array.isArray(msg[i].message)) {
+            _msg = []
+            for (let j = 0; j < msg[i].message.length; j++) {
+                if (msg[i].message[j].type == 'text') {
+                    _msg.push(msg[i].message[j].text)
+                } else if (msg[i].message[j].type == 'image') {
+                    _msg.push(segment.image(msg[i].message[j].file))
+                } else if (typeof msg[i].message[j] == 'string') {
+                    _msg = (await makeSendMsg({ message: msg[i].message[j] }))[0]
+                } else {
+                    _msg.push('出现了未适配的消息的类型,建议联系开发者解决')
+                    logger.warn(`出现了未适配的消息的类型${msg[i]}`)
+                }
+            }
+        } else {
+            _msg = '出现了未适配的消息的类型,建议联系开发者解决'
+            logger.warn(`出现了未适配的消息的类型${msg[i]}`)
+        }
+        let user_id = msg[i].user_id
+        if (Array.isArray(user_id)) {
+            for (const id of user_id) {
+                if (typeof id === 'number') {
+                    user_id = id
+                    break
+                }
+            }
+        }
+        forwardMsg.push({
+            message: _msg,
+            nickname: msg[i].nickname,
+            user_id
         })
     }
     if (params.group_id) {
