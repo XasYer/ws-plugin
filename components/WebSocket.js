@@ -9,6 +9,10 @@ let closeList = []
 let stopReconnectMap = new Map();
 
 function createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount = 1, isInit = true) {
+    if (!Bot.uin || Array.isArray(Bot.uin)) {
+        logger.warn('ws-plugin不支持trss-yunzai')
+        return
+    }
     if (address != 'ws_address') {
         if (close) {
             return

@@ -13,7 +13,7 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 
 ### 其他
 
-[TRSS-Yunzai](https://gitee.com/TimeRainStarSky/Yunzai) 使用本插件可能会有问题,建议直接使用go-cqhttp进行连接
+本插件不支持 [TRSS-Yunzai](https://gitee.com/TimeRainStarSky/Yunzai) ,建议直接使用go-cqhttp进行连接
 
 ## 安装与更新
 
