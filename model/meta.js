@@ -10,7 +10,7 @@ function lifecycle(socket) {
         post_type: 'meta_event',
         self_id: Bot.uin,
         sub_type: 'connect',
-        time: Date.now()
+        time: Date.parse(new Date()) / 1000
     }
     socket.send(JSON.stringify(data));
 }
