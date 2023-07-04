@@ -4,11 +4,11 @@ import { getLatestMsg } from './msgMap.js'
  * 生命周期
  * @param {*} socket 
  */
-function lifecycle(socket) {
+function lifecycle(socket,uin) {
     let data = {
         meta_event_type: 'lifecycle',
         post_type: 'meta_event',
-        self_id: Bot.uin,
+        self_id: uin,
         sub_type: 'connect',
         time: Date.parse(new Date()) / 1000
     }
@@ -19,7 +19,7 @@ function lifecycle(socket) {
  * 心跳
  * @param {*} socket 
  */
-function heartbeat(socket) {
+function heartbeat(socket,uin) {
     let latestMsg = getLatestMsg()
     let time = 0
     if (latestMsg) {
@@ -27,7 +27,7 @@ function heartbeat(socket) {
     }
     let data = {
         time: Date.parse(new Date()) / 1000,
-        self_id: Bot.uin,
+        self_id: uin,
         post_type: 'meta_event',
         meta_event_type: 'heartbeat',
         status: {

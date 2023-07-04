@@ -8,11 +8,11 @@ let serverList = []
 let closeList = []
 let stopReconnectMap = new Map();
 
-function createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount = 1, isInit = true) {
-    if (!Bot.uin || Array.isArray(Bot.uin)) {
-        logger.warn('ws-plugin不支持trss-yunzai')
-        return
-    }
+function createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount = 1, isInit = true, uin = Bot.uin, self_id = 0) {
+    // if (Version.isTrss) {
+    //     logger.warn('ws-plugin不支持trss-yunzai')
+    //     return
+    // }
     if (address != 'ws_address') {
         if (close) {
             return
@@ -21,7 +21,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
             let socket
             try {
                 let headers = {
-                    'X-Self-ID': Bot.uin,
+                    'X-Self-ID': uin,
                     'X-Client-Role': 'Universal',
                     'User-Agent': `ws-plugin/${Version.version}`
                 }
@@ -57,7 +57,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                     }, 5000)
                 }
                 reconnectCount = 1
-                lifecycle(socket)
+                lifecycle(socket, uin)
                 socketList.push(socket)
                 if (Config.heartbeatInterval > 0) {
                     socket.timer = setInterval(async () => {
@@ -68,7 +68,8 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
             socket.onmessage = async (event) => {
                 let data = event.data;
                 data = JSON.parse(data);
-                let ResponseData = await getApiData(data.action, data.params, socket.name);
+                // console.log(data);
+                let ResponseData = await getApiData(data.action, data.params, socket.name, self_id);
                 let ret = {
                     status: 'ok',
                     retcode: 0,
@@ -107,7 +108,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 if (!stopReconnect && ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0)) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
                     setTimeout(() => {
-                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount + 1, false); // 重新连接服务器
+                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount + 1, false, uin, self_id); // 重新连接服务器
                     }, reconnectInterval * 1000);
                 } else {
                     logger.warn('达到最大重连次数或关闭连接,停止重连');
@@ -241,7 +242,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 if (!stopReconnect && ((reconnectCount < maxReconnectAttempts) || maxReconnectAttempts <= 0)) {
                     logger.warn('开始尝试重新连接第' + reconnectCount + '次');
                     setTimeout(() => {
-                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount + 1, false); // 重新连接服务器
+                        createWebSocket({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, close }, reconnectCount + 1, false, uin, self_id); // 重新连接服务器
                     }, reconnectInterval * 1000);
                 } else {
                     logger.warn('达到最大重连次数,停止重连');
@@ -262,7 +263,10 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
 }
 
 
-function modifyWebSocket(servers, reconnectCount = 1, isInit = true) {
+function modifyWebSocket(servers, uin = Bot.uin, self_id = 0, reconnectCount = 1, isInit = true) {
+    if (Version.isTrss) {
+        return
+    }
     let newClose = [];      //修改前就一直在重连
     let newServers = []
     servers.forEach(server => {
@@ -301,7 +305,7 @@ function modifyWebSocket(servers, reconnectCount = 1, isInit = true) {
         let result = newSocket.filter(item1 => !oldSocketList.find(item2 => item2.name === item1.name));
         if (result.length > 0) {
             result.forEach(item => {
-                createWebSocket(item)
+                createWebSocket(item, reconnectCount, isInit, uin, self_id)
             })
         }
     }
@@ -328,7 +332,7 @@ function modifyWebSocket(servers, reconnectCount = 1, isInit = true) {
         let result = newServer.filter(item1 => !serverList.find(item2 => item2.name === item1.name));
         if (result.length > 0) {
             result.forEach(item => {
-                createWebSocket(item)
+                createWebSocket(item, reconnectCount, isInit, uin, self_id)
             })
         }
     } else if (newServer.length < serverList.length) {
@@ -344,12 +348,12 @@ function modifyWebSocket(servers, reconnectCount = 1, isInit = true) {
 }
 
 
-function initWebSocket(servers, reconnectCount = 1, isInit = true) {
+function initWebSocket(servers, uin = Bot.uin, self_id = 0, reconnectCount = 1, isInit = true) {
     if (!servers) {
         return
     }
     servers.forEach(item => {
-        createWebSocket(item, reconnectCount, isInit)
+        createWebSocket(item, reconnectCount, isInit, uin, self_id)
     })
 }
 

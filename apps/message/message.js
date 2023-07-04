@@ -1,12 +1,38 @@
-import { socketList, Config } from '../../components/index.js'
-import { makeOneBotReportMsg, makeGSUidReportMsg } from '../../model/index.js'
+import { socketList, Config, Version, initWebSocket } from '../../components/index.js'
+import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMesId } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
 
+
 Bot.on('message', async e => {
+    // console.log(e);
     //如果没有已连接的Websocket
     if (socketList.length == 0) {
         return false
+    }
+    setGuildLatestMesId(e.message_id)
+    //深拷贝e
+    let msg = _.cloneDeep(e);
+    let message = []
+    if (Version.isTrss) {
+        //处理成message
+        if (e.content) {
+            let content = toMsg(e.content)
+            message.push(...content)
+        }
+        if (e.attachments) {
+            e.attachments.forEach(item => {
+                if (item.content_type.startsWith('image')) {
+                    message.push({
+                        type: 'image',
+                        file: item.filename,
+                        url: item.url
+                    })
+                }
+            })
+        }
+        msg.message = message
+        // return false
     }
     //判断是否启用
     let groupList = Config.noGroup
@@ -14,20 +40,62 @@ Bot.on('message', async e => {
         if (groupList.some(item => item == e.group_id)) return false
     }
     //判断前缀
-    if (e.message[0].type === 'text') {
+    if (msg.message[0].type === 'text') {
         if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
-            if (Config.noMsgStart.some(item => e.message[0].text.startsWith(item))) {
+            if (Config.noMsgStart.some(item => msg.message[0].text.startsWith(item))) {
                 return false
             }
         }
     }
-    //深拷贝e
-    let msg = _.cloneDeep(e);
+
     //增加isGroup e.isPrivate
-    if (msg.message_type == 'group') {
+    if (msg.guild_id) {
+        msg.isGuild = true
+        msg.param = {
+            time: Math.floor(new Date(msg.timestamp).getTime() / 1000),
+            post_type: 'message',
+            message_type: 'guild',
+            sub_type: 'channel',
+            guild_id: msg.guild_id,
+            channel_id: msg.channel_id,
+            user_id: msg.author.id,
+            message_id: msg.message_id,
+            self_id: msg.bot.appID,
+            sender: {
+                user_id: msg.author.id,
+                nickname: msg.author.username,
+                tiny_id: msg.author.id,
+            },
+            self_tiny_id: msg.bot.appID,
+        }
+    } else if (msg.message_type == 'group') {
         msg.isGroup = true
+        msg.param = {
+            time: e.time,
+            self_id: e.self_id,
+            post_type: e.post_type,
+            message_type: e.message_type,
+            sub_type: e.sub_type,
+            message_id: e.rand,
+            group_id: e.group_id,
+            user_id: e.user_id,
+            font: 1234,
+            sender: e.sender
+        }
     } else if (msg.message_type == 'private') {
         msg.isPrivate = true
+        msg.param = {
+            time: e.time,
+            self_id: e.self_id,
+            post_type: e.post_type,
+            message_type: e.message_type,
+            sub_type: e.sub_type,
+            message_id: e.rand,
+            group_id: e.group_id,
+            user_id: e.user_id,
+            font: 1234,
+            sender: e.sender
+        }
     } else {
         return false
     }
@@ -104,4 +172,29 @@ function hasAlias(e) {
         }
     }
     return false
+}
+
+function toMsg(content) {
+    const regex = /<@!(\d+)>|<emoji:(\d+)>|([^<]+)/g;
+    let match;
+    const result = [];
+    while ((match = regex.exec(content)) !== null) {
+        if (match[1]) {
+            result.push({
+                type: 'at',
+                qq: match[1]
+            });
+        } else if (match[2]) {
+            result.push({
+                type: 'face',
+                id: parseInt(match[2])
+            });
+        } else if (match[3]) {
+            result.push({
+                type: 'text',
+                text: match[3]
+            });
+        }
+    }
+    return result;
 }

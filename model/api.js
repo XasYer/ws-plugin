@@ -1,8 +1,9 @@
 import { makeSendMsg, makeForwardMsg } from './makeMsg.js'
-import { getMsgMap, setMsgMap } from './msgMap.js'
+import { getMsgMap, setMsgMap, getGuildLatestMesId } from './msgMap.js'
 import { msgToOneBotMsg } from './tool.js'
+import { Version } from '../components/index.js'
 
-async function getApiData(api, params = {}, name) {
+async function getApiData(api, params = {}, name, self_id) {
     let sendRet = null
     let ResponseData = null
     let publicApi = {
@@ -16,6 +17,16 @@ async function getApiData(api, params = {}, name) {
                 }
             }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+        },
+        'send_guild_channel_msg': async params => {
+            let sendMsg = (await makeSendMsg(params))[0]
+            sendMsg.push({
+                type: 'reply',
+                data: {
+                    id: getGuildLatestMesId()
+                }
+            })
+            await Bot[self_id].pickGroup(`qg_${params.guild_id}-${params.channel_id}`).sendMsg(sendMsg)
         },
         'send_private_msg': async (params) => {
             let sendMsg = await makeSendMsg(params)

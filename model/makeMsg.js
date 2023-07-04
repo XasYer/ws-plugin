@@ -28,18 +28,9 @@ async function makeOneBotReportMsg(e) {
         rand: e.rand,
     })
     let Message = {
-        time: e.time,
-        self_id: e.self_id,
-        post_type: e.post_type,
-        message_type: e.message_type,
-        sub_type: e.sub_type,
-        message_id: e.rand,
-        group_id: e.group_id || null,
-        user_id: e.user_id,
         message: reportMsg,
         raw_message: raw_message,
-        font: 1234,//onebot要求int类型,但是icqq获取的好像是string?就随便填了个
-        sender: e.sender
+        ...e.param
     }
 
     return JSON.stringify(Message)

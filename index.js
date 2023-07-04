@@ -17,16 +17,13 @@ try {
     if (!global.segment) {
         global.segment = (await import('oicq')).segment
     }
-    if (!global.core) {
-        global.core = (await import('oicq')).core;
+    if (!Version.isTrss) {
+        if (!global.core) {
+            global.core = (await import('oicq')).core;
+        }
     }
 } catch (error) {
-    if (!global.segment) {
-        global.segment = (await import('icqq')).segment
-    }
-    if (!global.core) {
-        global.core = (await import('icqq')).core;
-    }
+
 }
 ret = await Promise.allSettled(ret)
 
@@ -51,7 +48,15 @@ for (const item of path) {
     }
 }
 
-let servers = Config.servers
-initWebSocket(servers)
+if (!Version.isTrss) {
+    initWebSocket(Config.servers)
+} else {
+    Bot.on('connect', data => {
+        console.log(data.version.id + '连接');
+        if (data.version.id == 'QQGuild') {
+            initWebSocket(Config.servers, data.appID, data.uin)
+        }
+    })
+}
 
 export { apps }

@@ -2,6 +2,8 @@ import { Config } from "../components/index.js"
 
 let latestMsg = null
 
+let guildLatestMesId = null
+
 async function getMsgMap(key) {
     let msg = await redis.get(`Yz:ws-plugin:msg:${key}`)
     if (!msg) {
@@ -19,8 +21,18 @@ function getLatestMsg() {
     return latestMsg
 }
 
+function getGuildLatestMesId() {
+    return guildLatestMesId
+}
+
+function setGuildLatestMesId(message_id) {
+    guildLatestMesId = message_id
+}
+
 export {
     getMsgMap,
     setMsgMap,
-    getLatestMsg
+    getLatestMsg,
+    getGuildLatestMesId,
+    setGuildLatestMesId
 }
