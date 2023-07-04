@@ -42,7 +42,7 @@ Bot.on('message', async e => {
     //判断前缀
     if (msg.message?.[0]?.type === 'text') {
         if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
-            if (Config.noMsgStart.some(item => e.message[0].text.startsWith(item))) {
+            if (Config.noMsgStart.some(item => msg.message[0].text.startsWith(item))) {
                 return false
             }
         }
