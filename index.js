@@ -52,7 +52,6 @@ if (!Version.isTrss) {
     initWebSocket(Config.servers)
 } else {
     Bot.on('connect', data => {
-        console.log(data.version.id + '连接');
         if (data.version.id == 'QQGuild') {
             initWebSocket(Config.servers, data.appID, data.uin)
         }
