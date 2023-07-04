@@ -1,10 +1,10 @@
-import { Config } from '../components/index.js'
+import { Config, Version } from '../components/index.js'
 import { getLatestMsg } from './msgMap.js'
 /**
  * 生命周期
  * @param {*} socket 
  */
-function lifecycle(socket,uin) {
+function lifecycle(socket, uin) {
     let data = {
         meta_event_type: 'lifecycle',
         post_type: 'meta_event',
@@ -19,11 +19,19 @@ function lifecycle(socket,uin) {
  * 心跳
  * @param {*} socket 
  */
-function heartbeat(socket,uin) {
+function heartbeat(socket, uin) {
     let latestMsg = getLatestMsg()
     let time = 0
     if (latestMsg) {
         time = latestMsg.time
+    }
+    let online, good
+    if (Version.isTrss) {
+        online = true
+        good = true
+    } else {
+        online = Bot.isOnline()
+        good = Bot.isOnline()
     }
     let data = {
         time: Date.parse(new Date()) / 1000,
