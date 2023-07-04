@@ -10,11 +10,11 @@ Bot.on('message', async e => {
     if (socketList.length == 0) {
         return false
     }
-    setGuildLatestMesId(e.message_id)
     //深拷贝e
     let msg = _.cloneDeep(e);
     let message = []
     if (Version.isTrss) {
+        setGuildLatestMesId(e.message_id)
         //处理成message
         if (e.content) {
             let content = toMsg(e.content)
@@ -40,9 +40,9 @@ Bot.on('message', async e => {
         if (groupList.some(item => item == e.group_id)) return false
     }
     //判断前缀
-    if (msg.message[0].type === 'text') {
+    if (msg.message?.[0]?.type === 'text') {
         if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
-            if (Config.noMsgStart.some(item => msg.message[0].text.startsWith(item))) {
+            if (Config.noMsgStart.some(item => e.message[0].text.startsWith(item))) {
                 return false
             }
         }
