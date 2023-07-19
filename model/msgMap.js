@@ -21,11 +21,11 @@ function getLatestMsg() {
     return latestMsg
 }
 
-function getGuildLatestMesId() {
+function getGuildLatestMsgId() {
     return guildLatestMesId
 }
 
-function setGuildLatestMesId(message_id) {
+function setGuildLatestMsgId(message_id) {
     guildLatestMesId = message_id
 }
 
@@ -33,6 +33,6 @@ export {
     getMsgMap,
     setMsgMap,
     getLatestMsg,
-    getGuildLatestMesId,
-    setGuildLatestMesId
+    getGuildLatestMsgId,
+    setGuildLatestMsgId
 }

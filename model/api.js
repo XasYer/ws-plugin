@@ -1,5 +1,5 @@
 import { makeSendMsg, makeForwardMsg } from './makeMsg.js'
-import { getMsgMap, setMsgMap, getGuildLatestMesId } from './msgMap.js'
+import { getMsgMap, setMsgMap, getGuildLatestMsgId } from './msgMap.js'
 import { msgToOneBotMsg } from './tool.js'
 import { Version } from '../components/index.js'
 
@@ -23,7 +23,7 @@ async function getApiData(api, params = {}, name, self_id) {
             sendMsg.push({
                 type: 'reply',
                 data: {
-                    id: getGuildLatestMesId()
+                    id: getGuildLatestMsgId()
                 }
             })
             await Bot[self_id].pickGroup(`qg_${params.guild_id}-${params.channel_id}`).sendMsg(sendMsg)

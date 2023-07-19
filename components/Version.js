@@ -72,10 +72,9 @@ const readLogFile = function (root, versionCount = 4) {
 
 const { changelogs, currentVersion } = readLogFile(`${process.cwd()}/plugins/ws-plugin/`)
 
-
 const yunzaiVersion = packageJson.version
 const isMiao = packageJson.name === 'miao-yunzai'
-const isTrss = Bot.uin ? false : true
+const isTrss = Array.isArray(Bot.uin) ? true : false
 
 let Version = {
   isMiao,

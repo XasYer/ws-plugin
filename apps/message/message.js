@@ -1,5 +1,5 @@
 import { socketList, Config, Version, initWebSocket } from '../../components/index.js'
-import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMesId } from '../../model/index.js'
+import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
 
@@ -14,7 +14,7 @@ Bot.on('message', async e => {
     let msg = _.cloneDeep(e);
     let message = []
     if (Version.isTrss) {
-        setGuildLatestMesId(e.message_id)
+        setGuildLatestMsgId(e.message_id)
         //处理成message
         if (e.content) {
             let content = toMsg(e.content)

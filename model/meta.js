@@ -39,8 +39,8 @@ function heartbeat(socket, uin) {
         post_type: 'meta_event',
         meta_event_type: 'heartbeat',
         status: {
-            online: Bot.isOnline(),
-            good: Bot.isOnline(),
+            online,
+            good,
             stat: {
                 packet_receivend: Bot.stat.recv_pkt_cnt,
                 packet_send: Bot.stat.sent_pkt_cnt,
