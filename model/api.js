@@ -20,7 +20,7 @@ async function getApiData(api, params = {}, name, self_id) {
         },
         'send_guild_channel_msg': async params => {
             let sendMsg = (await makeSendMsg(params))[0]
-            sendMsg.push({
+            sendMsg.unshift({
                 type: 'reply',
                 data: {
                     id: getGuildLatestMsgId()
