@@ -26,7 +26,7 @@ export class update extends plugin {
         this.typeName = 'ws-plugin'
     }
 
-    async update(e) {
+    async update() {
         if (!this.e.isMaster) return false
         if (uping) {
             await this.reply('已有命令更新中..请勿重复操作')
@@ -65,12 +65,12 @@ export class update extends plugin {
     async runUpdate(plugin = '') {
         this.isNowUp = false
 
-        let cm = `git -C ./plugins/${plugin}/ pull --no-rebase`
+        let cm = `cd "plugins/${plugin}" && git pull --no-rebase`
 
         let type = '更新'
         if (this.e.msg.includes('强制')) {
             type = '强制更新'
-            cm = `git -C ./plugins/${plugin}/ checkout . && ${cm}`
+            cm = `cd "plugins/${plugin}" && git reset --hard && git pull --rebase --allow-unrelated-histories`
         }
 
         this.oldCommitId = await this.getcommitId(plugin)
@@ -133,10 +133,7 @@ export class update extends plugin {
     }
 
     async getcommitId(plugin = '') {
-        let cm = 'git rev-parse --short HEAD'
-        if (plugin) {
-            cm = `git -C ./plugins/${plugin}/ rev-parse --short HEAD`
-        }
+        let cm = `cd "plugins/${plugin}" && git rev-parse --short HEAD`
 
         let commitId = await execSync(cm, { encoding: 'utf-8' })
         commitId = lodash.trim(commitId)
@@ -145,10 +142,7 @@ export class update extends plugin {
     }
 
     async getTime(plugin = '') {
-        let cm = 'git log  -1 --oneline --pretty=format:"%cd" --date=format:"%m-%d %H:%M"'
-        if (plugin) {
-            cm = `cd ./plugins/${plugin}/ && git log -1 --oneline --pretty=format:"%cd" --date=format:"%m-%d %H:%M"`
-        }
+        let cm = `cd "plugins/${plugin}" && git log -1 --pretty=format:"%cd" --date=format:"%F %T"`
 
         let time = ''
         try {
@@ -172,9 +166,9 @@ export class update extends plugin {
 
 
     async getLog(plugin = '') {
-        let cm = 'git log  -20 --oneline --pretty=format:"%h||[%cd]  %s" --date=format:"%m-%d %H:%M"'
+        let cm = 'git log -20 --pretty=format:"%h||[%cd] %s" --date=format:"%F %T"'
         if (plugin) {
-            cm = `cd ./plugins/${plugin}/ && ${cm}`
+            cm = `cd "plugins/${plugin}" && ${cm}`
         }
 
         let logAll
@@ -210,7 +204,7 @@ export class update extends plugin {
         let nickname = Bot.nickname
         if (this.e.isGroup) {
             let info = await Bot.getGroupMemberInfo(this.e.group_id, Bot.uin)
-            nickname = info.card ?? info.nickname
+            nickname = info.card || info.nickname
         }
         let userInfo = {
             user_id: Bot.uin,
@@ -229,17 +223,27 @@ export class update extends plugin {
         ]
 
         /** 制作转发内容 */
-        if (this.e.isGroup) {
+        if (this.e?.group?.makeForwardMsg) {
             forwardMsg = await this.e.group.makeForwardMsg(forwardMsg)
-        } else {
+        } else if(this.e?.friend?.makeForwardMsg) {
             forwardMsg = await this.e.friend.makeForwardMsg(forwardMsg)
+        } else {
+            return msg.join('\n')
         }
 
         /** 处理描述 */
-        forwardMsg.data = forwardMsg.data
-            .replace(/\n/g, '')
-            .replace(/<title color="#777777" size="26">(.+?)<\/title>/g, '___')
-            .replace(/___+/, `<title color="#777777" size="26">${title}</title>`)
+        if (typeof (forwardMsg.data) === 'object') {
+            let detail = forwardMsg.data?.meta?.detail
+            if (detail) {
+              detail.news = [{ text: title }]
+            }
+          } else {
+            forwardMsg.data = forwardMsg.data
+              .replace(/\n/g, '')
+              .replace(/<title color="#777777" size="26">(.+?)<\/title>/g, '___')
+              .replace(/___+/, `<title color="#777777" size="26">${title}</title>`)
+          }
+
 
         return forwardMsg
     }
