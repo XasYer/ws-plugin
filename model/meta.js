@@ -25,33 +25,36 @@ function heartbeat(socket, uin) {
     if (latestMsg) {
         time = latestMsg.time
     }
-    let online, good
+    let status
     if (Version.isTrss) {
-        online = true
-        good = true
+        status = {
+            online: true,
+            good: true,
+            stat: {}
+        }
     } else {
-        online = Bot.isOnline()
-        good = Bot.isOnline()
+        status = {
+            online: Bot.isOnline(),
+            good: Bot.isOnline(),
+            stat: {
+                packet_receivend: Bot.stat.recv_pkt_cnt,
+                packet_send: Bot.stat.sent_pkt_cnt,
+                packet_lost: Bot.stat.lost_pkt_cnt,
+                message_received: Bot.stat.recv_msg_cnt,
+                message_send: Bot.stat.sent_msg_cnt,
+                disconnect_times: 0,
+                lost_times: Bot.stat.lost_times,
+                last_message_time: time
+            }
+
+        }
     }
     let data = {
         time: Date.parse(new Date()) / 1000,
         self_id: uin,
         post_type: 'meta_event',
         meta_event_type: 'heartbeat',
-        status: {
-            online,
-            good,
-            // stat: {
-            //     packet_receivend: Bot.stat.recv_pkt_cnt,
-            //     packet_send: Bot.stat.sent_pkt_cnt,
-            //     packet_lost: Bot.stat.lost_pkt_cnt,
-            //     message_received: Bot.stat.recv_msg_cnt,
-            //     message_send: Bot.stat.sent_msg_cnt,
-            //     disconnect_times: 0,
-            //     lost_times: Bot.stat.lost_times,
-            //     last_message_time: time
-            // }
-        },
+        status,
         interval: Config.heartbeatInterval * 1000
     }
     socket.send(JSON.stringify(data))
