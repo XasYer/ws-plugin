@@ -20,6 +20,10 @@ export class update extends plugin {
                 {
                     reg: '^#ws(插件)?(强制)?更新$',
                     fnc: 'update'
+                },
+                {
+                    reg: '^#ws(插件)?更新日志$',
+                    fnc: 'updateLog'
                 }
             ]
         })
@@ -166,10 +170,7 @@ export class update extends plugin {
 
 
     async getLog(plugin = '') {
-        let cm = 'git log -20 --pretty=format:"%h||[%cd] %s" --date=format:"%F %T"'
-        if (plugin) {
-            cm = `cd "plugins/${plugin}" && ${cm}`
-        }
+        let cm = `cd "plugins/${plugin}" && git log -20 --pretty=format:"%h||[%cd] %s" --date=format:"%F %T"`
 
         let logAll
         try {
@@ -225,7 +226,7 @@ export class update extends plugin {
         /** 制作转发内容 */
         if (this.e?.group?.makeForwardMsg) {
             forwardMsg = await this.e.group.makeForwardMsg(forwardMsg)
-        } else if(this.e?.friend?.makeForwardMsg) {
+        } else if (this.e?.friend?.makeForwardMsg) {
             forwardMsg = await this.e.friend.makeForwardMsg(forwardMsg)
         } else {
             return msg.join('\n')
@@ -235,17 +236,20 @@ export class update extends plugin {
         if (typeof (forwardMsg.data) === 'object') {
             let detail = forwardMsg.data?.meta?.detail
             if (detail) {
-              detail.news = [{ text: title }]
+                detail.news = [{ text: title }]
             }
-          } else {
+        } else {
             forwardMsg.data = forwardMsg.data
-              .replace(/\n/g, '')
-              .replace(/<title color="#777777" size="26">(.+?)<\/title>/g, '___')
-              .replace(/___+/, `<title color="#777777" size="26">${title}</title>`)
-          }
-
-
+                .replace(/\n/g, '')
+                .replace(/<title color="#777777" size="26">(.+?)<\/title>/g, '___')
+                .replace(/___+/, `<title color="#777777" size="26">${title}</title>`)
+        }
         return forwardMsg
+    }
+
+    async updateLog() {
+        let log = await this.getLog('ws-plugin')
+        await this.reply(log)
     }
 
 }
