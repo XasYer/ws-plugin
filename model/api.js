@@ -1,6 +1,7 @@
 import { makeSendMsg, makeForwardMsg } from './makeMsg.js'
 import { getMsgMap, setMsgMap, getGuildLatestMsgId } from './msgMap.js'
 import { msgToOneBotMsg } from './tool.js'
+import { MsgToCQ } from './CQCode.js'
 import { Version } from '../components/index.js'
 
 async function getApiData(api, params = {}, name, self_id) {
@@ -8,18 +9,16 @@ async function getApiData(api, params = {}, name, self_id) {
     let ResponseData = null
     let publicApi = {
         'send_msg': async (params) => {
-            let sendMsg = await makeSendMsg(params)
-            if (sendMsg[0].length > 0) {
-                if (params.message_type == 'group' || params.group_id) {
-                    sendRet = await Bot.pickGroup(params.group_id).sendMsg(...sendMsg)
-                } else if (params.message_type == 'private' || params.user_id) {
-                    sendRet = await Bot.pickFriend(params.user_id).sendMsg(...sendMsg)
-                }
+            let { sendMsg, quote } = await makeSendMsg(params)
+            if (params.message_type == 'group' || params.group_id) {
+                sendRet = await Bot.pickGroup(params.group_id).sendMsg(sendMsg, quote)
+            } else if (params.message_type == 'private' || params.user_id) {
+                sendRet = await Bot.pickFriend(params.user_id).sendMsg(sendMsg, quote)
             }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_guild_channel_msg': async params => {
-            let sendMsg = (await makeSendMsg(params))[0]
+            let { sendMsg } = (await makeSendMsg(params))[0]
             sendMsg.unshift({
                 type: 'reply',
                 data: {
@@ -29,27 +28,41 @@ async function getApiData(api, params = {}, name, self_id) {
             await Bot[self_id].pickGroup(`qg_${params.guild_id}-${params.channel_id}`).sendMsg(sendMsg)
         },
         'send_private_msg': async (params) => {
-            let sendMsg = await makeSendMsg(params)
-            if (sendMsg[0].length > 0) {
-                sendRet = await Bot.pickFriend(params.user_id).sendMsg(...sendMsg)
-            }
+            let { sendMsg, quote } = await makeSendMsg(params)
+            sendRet = await Bot.pickFriend(params.user_id).sendMsg(sendMsg, quote)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_group_msg': async (params) => {
-            let sendMsg = await makeSendMsg(params)
-            if (sendMsg[0].length > 0) {
-                sendRet = await Bot.pickGroup(params.group_id).sendMsg(...sendMsg)
-            }
+            let { sendMsg, quote } = await makeSendMsg(params)
+            sendRet = await Bot.pickGroup(params.group_id).sendMsg(sendMsg, quote)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_group_forward_msg': async (params) => {
-            let sendMsg = await makeForwardMsg(params)
+            let forwardMsg = await makeForwardMsg(params)
+            let forward_id
+            if (typeof (forwardMsg.data) === 'object') {
+                let detail = forwardMsg.data?.meta?.detail
+                if (detail) forward_id = detail.resid
+            } else {
+                let match = forwardMsg.data.match(/m_resid="(.*?)"/);
+                if (match) forward_id = match[1];
+            }
             sendRet = await Bot.pickGroup(params.group_id).sendMsg(sendMsg)
+            sendRet.forward_id = forward_id
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_private_forward_msg': async (params) => {
-            let sendMsg = await makeForwardMsg(params)
-            sendRet = await Bot.pickFriend(params.user_id).sendMsg(sendMsg)
+            let forwardMsg = await makeForwardMsg(params)
+            let forward_id
+            if (typeof (forwardMsg.data) === 'object') {
+                let detail = forwardMsg.data?.meta?.detail
+                if (detail) forward_id = detail.resid
+            } else {
+                let match = forwardMsg.data.match(/m_resid="(.*?)"/);
+                if (match) forward_id = match[1];
+            }
+            sendRet = await Bot.pickFriend(params.group_id).sendMsg(sendMsg)
+            sendRet.forward_id = forward_id
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'set_group_ban': async (params) => {
@@ -57,7 +70,11 @@ async function getApiData(api, params = {}, name, self_id) {
         },
         'get_group_member_list': async (params) => {
             let list = await Bot.getGroupMemberList(params.group_id)
-            ResponseData = Array.from(list.values())
+            list = Array.from(list.values())
+            list.map(item => {
+                item.shut_up_timestamp = item.shutup_time
+            })
+            ResponseData = list
         },
         'get_group_member_info': async (params) => {
             try {
@@ -65,6 +82,7 @@ async function getApiData(api, params = {}, name, self_id) {
                 ResponseData.shut_up_timestamp = ResponseData.shutup_time
             } catch (error) {
                 console.log(error);
+                ResponseData = null
             }
         },
         'get_stranger_info': async (params) => {
@@ -76,6 +94,9 @@ async function getApiData(api, params = {}, name, self_id) {
                 await Bot.deleteMsg(msg.message_id)
             }
         },
+        'delete_friend': async params => {
+            ResponseData = await Bot.deleteFriend(params.user_id)
+        },
         'get_msg': async (params) => {
             ResponseData = await getMsgMap(params.message_id)
             if (ResponseData) {
@@ -83,6 +104,27 @@ async function getApiData(api, params = {}, name, self_id) {
                 ResponseData.real_id = ResponseData.seq
                 ResponseData.message_id = ResponseData.rand
                 ResponseData.message = msgToOneBotMsg(ResponseData.message)
+            }
+        },
+        'get_forward_msg': async params => {
+            try {
+                let result = await Bot.getForwardMsg(params.message_id)
+                let messages = []
+                for (const item of result) {
+                    messages.push({
+                        content: MsgToCQ(msgToOneBotMsg(item.message)),
+                        sender: {
+                            nickname: item.nickname,
+                            user_id: item.user_id
+                        },
+                        time: item.time
+                    })
+                }
+                ResponseData = {
+                    messages
+                }
+            } catch (error) {
+                console.log(error);
             }
         },
         'get_group_root_files': async (params) => {
@@ -191,31 +233,19 @@ async function getApiData(api, params = {}, name, self_id) {
             }
         },
         '_set_model_show': async params => {
-            //暂时不知道这个方法是干嘛的
+            //不会改
         },
         'get_online_clients': async params => {
-            //这个也不知道
+            //不会获取
             ResponseData = {
                 clients: []
             }
         },
         'get_version_info': async params => {
-            //不知道怎么获取
             ResponseData = {
-                app_full_name: 'icqq',
-                app_name: 'icqq',
-                app_version: 'v0.3.10',
-                coolq_directory: process.cwd(),
-                coolq_edition: 'pro',
-                'go-cqhttp': true,
-                plugin_build_configuration: 'release',
-                plugin_build_number: 99,
-                plugin_version: '4.15.0',
-                protocol_name: 6,
-                protocol_version: 'v11',
-                runtime_os: 'windows',
-                runtime_version: 'go1.20.3',
-                version: 'v1.0.1'
+                app_name: 'ws-plugin',
+                app_version: Version.version,
+                protocol_version: 'v11'
             }
         },
         'get_friend_list': async params => {
@@ -224,22 +254,30 @@ async function getApiData(api, params = {}, name, self_id) {
         },
         'get_group_list': async params => {
             let list = await Bot.getGroupList()
-            ResponseData = Array.from(list.values())
-        },
-        'get_guild_list': async params => {
-            //获取频道列表?
-            ResponseData = []
+            list = Array.from(list.values())
+            list.map(item => {
+                item.group_memo = item.group_name
+                item.group_create_time = item.create_time
+                item.group_level = item.grade
+            })
         },
         'get_group_info': async params => {
             ResponseData = await Bot.getGroupInfo(params.group_id)
-        }
+            ResponseData.group_memo = ResponseData.group_name
+            ResponseData.group_create_time = ResponseData.create_time
+            ResponseData.group_level = ResponseData.grade
+        },
+        'get_guild_list': async params => {
+            ResponseData = await Bot.getGuildList()
+        },
+
     }
     if (typeof publicApi[api] === 'function') {
         await publicApi[api](params)
         if (sendRet) {
             ResponseData = {
+                ...sendRet,
                 message_id: sendRet.rand,
-                time: sendRet.time
             }
             await setMsgMap(sendRet.rand, sendRet)
         }

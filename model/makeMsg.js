@@ -188,7 +188,7 @@ async function makeGSUidSendMsg(data, name) {
 /**
  * 制作需要发送的消息
  * @param {*} params 
- * @returns 
+ * @returns sendMsg , quote
  */
 async function makeSendMsg(params) {
     let msg = params.message
@@ -253,7 +253,7 @@ async function makeSendMsg(params) {
                 break
         }
     }
-    return [sendMsg, quote]
+    return { sendMsg, quote }
 }
 
 /**
