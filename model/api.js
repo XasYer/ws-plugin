@@ -18,7 +18,7 @@ async function getApiData(api, params = {}, name, self_id) {
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_guild_channel_msg': async params => {
-            let { sendMsg } = (await makeSendMsg(params))[0]
+            let { sendMsg } = await makeSendMsg(params)
             sendMsg.unshift({
                 type: 'reply',
                 data: {
@@ -26,6 +26,7 @@ async function getApiData(api, params = {}, name, self_id) {
                 }
             })
             await Bot[self_id].pickGroup(`qg_${params.guild_id}-${params.channel_id}`).sendMsg(sendMsg)
+            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'send_private_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params)
