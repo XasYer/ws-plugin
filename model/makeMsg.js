@@ -262,34 +262,26 @@ async function makeSendMsg(params) {
  */
 async function makeForwardMsg(params) {
     let forwardMsg = []
-    let msg = params.messages
-    for (let i = 0; i < msg.length; i++) {
-        let _msg = null
-        if (typeof msg[i].data.content == 'string') {
-            _msg = (await makeSendMsg({ message: msg[i].data.content }))[0]
-        } else if (msg[i].data.content.type == 'image') {
-            _msg = segment.image(msg[i].data.content.data.file)
-        } else if (Array.isArray(msg[i].data.content)) {
-            _msg = []
-            for (let j = 0; j < msg[i].data.content.length; j++) {
-                if (msg[i].data.content[j].type == 'text') {
-                    _msg.push(msg[i].data.content[j].data.text)
-                } else if (msg[i].data.content[j].type == 'image') {
-                    _msg.push(segment.image(msg[i].data.content[j].data.file))
-                } else {
-                    _msg.push('出现了未适配的消息的类型,建议联系开发者解决')
-                    logger.warn(`出现了未适配的消息的类型${msg[i]}`)
-                }
-            }
-        } else {
-            _msg = '出现了未适配的消息的类型,建议联系开发者解决'
-            logger.warn(`出现了未适配的消息的类型${msg[i]}`)
+    for (const msg of params.messages) {
+        if (typeof msg.data.content == 'string') {
+            msg.data.content = CQToMsg(msg.data.content)
         }
-        forwardMsg.push({
-            message: _msg,
-            nickname: msg[i].data.name,
-            user_id: Number(msg[i].data.uin)
-        })
+        if (msg.data.content.type == 'image') {
+            msg.data.content = [{
+                type: 'image',
+                data: {
+                    file: msg.data.content.file
+                }
+            }]
+        }
+        for (const i of msg.data.content) {
+            let { sendMsg } = await makeSendMsg({ message: [i] })
+            forwardMsg.push({
+                nickname: msg.data.name,
+                user_id: Number(msg.data.uin),
+                message: sendMsg
+            })
+        }
     }
     if (params.group_id) {
         forwardMsg = await Bot.pickGroup(params.group_id).makeForwardMsg(forwardMsg)
