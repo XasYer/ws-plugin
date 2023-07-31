@@ -78,13 +78,8 @@ async function getApiData(api, params = {}, name, self_id) {
             ResponseData = list
         },
         'get_group_member_info': async (params) => {
-            try {
-                ResponseData = await Bot.getGroupMemberInfo(params.group_id, params.user_id);
-                ResponseData.shut_up_timestamp = ResponseData.shutup_time
-            } catch (error) {
-                console.log(error);
-                ResponseData = null
-            }
+            ResponseData = await Bot.getGroupMemberInfo(params.group_id, params.user_id);
+            ResponseData.shut_up_timestamp = ResponseData.shutup_time
         },
         'get_stranger_info': async (params) => {
             ResponseData = await Bot.getStrangerInfo(params.user_id)
@@ -105,27 +100,25 @@ async function getApiData(api, params = {}, name, self_id) {
                 ResponseData.real_id = ResponseData.seq
                 ResponseData.message_id = ResponseData.rand
                 ResponseData.message = msgToOneBotMsg(ResponseData.message)
+            } else {
+                throw { message: 'get_msg API error' }
             }
         },
         'get_forward_msg': async params => {
-            try {
-                let result = await Bot.getForwardMsg(params.message_id)
-                let messages = []
-                for (const item of result) {
-                    messages.push({
-                        content: MsgToCQ(msgToOneBotMsg(item.message)),
-                        sender: {
-                            nickname: item.nickname,
-                            user_id: item.user_id
-                        },
-                        time: item.time
-                    })
-                }
-                ResponseData = {
-                    messages
-                }
-            } catch (error) {
-                console.log(error);
+            let result = await Bot.getForwardMsg(params.message_id)
+            let messages = []
+            for (const item of result) {
+                messages.push({
+                    content: MsgToCQ(msgToOneBotMsg(item.message)),
+                    sender: {
+                        nickname: item.nickname,
+                        user_id: item.user_id
+                    },
+                    time: item.time
+                })
+            }
+            ResponseData = {
+                messages
             }
         },
         'get_group_root_files': async (params) => {

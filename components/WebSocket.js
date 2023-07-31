@@ -69,13 +69,24 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 let data = event.data;
                 data = JSON.parse(data);
                 // console.log(data);
-                let ResponseData = await getApiData(data.action, data.params, socket.name, self_id);
-                let ret = {
-                    status: 'ok',
-                    retcode: 0,
-                    data: ResponseData,
-                    echo: data.echo
-                };
+                let ret
+                try {
+                    let ResponseData = await getApiData(data.action, data.params, socket.name, self_id);
+                    ret = {
+                        status: 'ok',
+                        retcode: 0,
+                        data: ResponseData,
+                        echo: data.echo
+                    }
+                } catch (error) {
+                    ret = {
+                        status: 'failed',
+                        retcode: -1,
+                        msg: error.message,
+                        wording: 'ws-plugin获取信息失败',
+                        echo: data.echo
+                    }
+                }
                 socket.send(JSON.stringify(ret));
             };
 
@@ -136,10 +147,10 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 socket.type = type
                 socket.name = name
                 logger.mark(`新的客户端连接,连接端口为${port}`);
-                lifecycle(socket,uin)
+                lifecycle(socket, uin)
                 if (Config.heartbeatInterval > 0) {
                     socket.timer = setInterval(async () => {
-                        heartbeat(socket,uin)
+                        heartbeat(socket, uin)
                     }, Config.heartbeatInterval * 1000)
                 }
                 socket.on('close', function () {
