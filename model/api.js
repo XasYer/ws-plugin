@@ -1,5 +1,5 @@
 import { makeSendMsg, makeForwardMsg } from './makeMsg.js'
-import { getMsgMap, setMsgMap, getGuildLatestMsgId } from './msgMap.js'
+import { getMsgMap, setMsgMap, getGuildLatestMsgId, getLatestMsg } from './msgMap.js'
 import { msgToOneBotMsg } from './tool.js'
 import { MsgToCQ } from './CQCode.js'
 import { Version } from '../components/index.js'
@@ -240,6 +240,26 @@ async function getApiData(api, params = {}, name, self_id) {
             //不会获取
             ResponseData = {
                 clients: []
+            }
+        },
+        'get_status': async params => {
+            ResponseData = {
+                online: Bot.isOnline(),
+                good: Bot.isOnline(),
+                app_initialized: true,
+                app_enabled: true,
+                plugins_good: true,
+                app_good: true,
+                stat: {
+                    packet_receivend: Bot.stat.recv_pkt_cnt,
+                    packet_send: Bot.stat.sent_pkt_cnt,
+                    packet_lost: Bot.stat.lost_pkt_cnt,
+                    message_received: Bot.stat.recv_msg_cnt,
+                    message_send: Bot.stat.sent_msg_cnt,
+                    disconnect_times: 0,
+                    lost_times: Bot.stat.lost_times,
+                    last_message_time: getLatestMsg()?.time || 0
+                }
             }
         },
         'get_version_info': async params => {
