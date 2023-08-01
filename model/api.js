@@ -48,7 +48,7 @@ async function getApiData(api, params = {}, name, self_id) {
                 let match = forwardMsg.data.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
-            sendRet = await Bot.pickGroup(params.group_id).sendMsg(sendMsg)
+            sendRet = await Bot.pickGroup(params.group_id).sendMsg(forwardMsg)
             sendRet.forward_id = forward_id
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
@@ -62,7 +62,7 @@ async function getApiData(api, params = {}, name, self_id) {
                 let match = forwardMsg.data.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
-            sendRet = await Bot.pickFriend(params.group_id).sendMsg(sendMsg)
+            sendRet = await Bot.pickFriend(params.group_id).sendMsg(forwardMsg)
             sendRet.forward_id = forward_id
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },

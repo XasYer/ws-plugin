@@ -79,6 +79,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                         echo: data.echo
                     }
                 } catch (error) {
+                    logger.error(error)
                     ret = {
                         status: 'failed',
                         retcode: -1,
