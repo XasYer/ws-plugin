@@ -250,6 +250,7 @@ async function getApiData(api, params = {}, name, self_id) {
                 item.group_create_time = item.create_time
                 item.group_level = item.grade
             })
+            ResponseData = list
         },
         // 获取群成员信息
         'get_group_member_info': async (params) => {
