@@ -79,7 +79,7 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                         echo: data.echo
                     }
                 } catch (error) {
-                    logger.error(error)
+                    logger.error('ws-plugin出现无关紧要的错误',error)
                     ret = {
                         status: 'failed',
                         retcode: -1,
