@@ -1,7 +1,7 @@
 # ws-plugin
 
 ## 介绍
-Yunzai-Bot 的扩展插件 ws-plugin 提供ontbot协议适配,通过ws连接onebot实现的bot
+Yunzai-Bot 的扩展插件 ws-plugin 提供ontbot协议适配,通过WebSocket连接onebot实现的bot
 
 ### 什么是onebot
 
@@ -108,8 +108,14 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 | send_group_msg        | [发送群聊消息]               |
 | send_msg              | [发送消息]                   |
 | delete_msg            | [撤回消息]                   |
-| get_msg               | [获取消息]                   |
+| set_group_kick        | [群组踢人]                   |
 | set_group_ban         | [群组单人禁言]               |
+| set_group_whole_ban   | [群组全员禁言]               |
+| set_group_admin       | [群组设置管理员]              |
+| set_group_card        | [设置群名片（群备注）]         |
+| set_group_name        | [设置群名]                   |
+| set_group_leave       | [退出群组]                   |
+| set_group_special_title| [设置群组专属头衔]           |
 | get_login_info        | [获取登录号信息]             |
 | get_stranger_info     | [获取陌生人信息]             |
 | get_friend_list       | [获取好友列表]               |
@@ -117,12 +123,20 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 | get_group_list        | [获取群列表]                 |
 | get_group_member_info | [获取群成员信息]              |
 | get_group_member_list | [获取群成员列表]              |
+| get_version_info      | [获取版本信息]              |
 
 [发送私聊消息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#send_private_msg-%E5%8F%91%E9%80%81%E7%A7%81%E8%81%8A%E6%B6%88%E6%81%AF
 [发送群聊消息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#send_group_msg-%E5%8F%91%E9%80%81%E7%BE%A4%E6%B6%88%E6%81%AF
 [发送消息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#send_msg-%E5%8F%91%E9%80%81%E6%B6%88%E6%81%AF
 [撤回消息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#delete_msg-%E6%92%A4%E5%9B%9E%E6%B6%88%E6%81%AF
-[获取消息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#get_msg-%E8%8E%B7%E5%8F%96%E6%B6%88%E6%81%AF
+[群组踢人]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_kick-%E7%BE%A4%E7%BB%84%E8%B8%A2%E4%BA%BA
+[群组单人禁言]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_ban-%E7%BE%A4%E7%BB%84%E5%8D%95%E4%BA%BA%E7%A6%81%E8%A8%80
+[群组全员禁言]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_whole_ban-%E7%BE%A4%E7%BB%84%E5%85%A8%E5%91%98%E7%A6%81%E8%A8%80
+[群组设置管理员]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_admin-%E7%BE%A4%E7%BB%84%E8%AE%BE%E7%BD%AE%E7%AE%A1%E7%90%86%E5%91%98
+[设置群名片（群备注）]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_card-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%90%8D%E7%89%87%E7%BE%A4%E5%A4%87%E6%B3%A8
+[设置群名]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_name-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%90%8D
+[退出群组]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_leave-%E9%80%80%E5%87%BA%E7%BE%A4%E7%BB%84
+[设置群组专属头衔]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_special_title-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E7%BB%84%E4%B8%93%E5%B1%9E%E5%A4%B4%E8%A1%94
 [群组单人禁言]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_ban-%E7%BE%A4%E7%BB%84%E5%8D%95%E4%BA%BA%E7%A6%81%E8%A8%80
 [获取登录号信息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#get_login_info-%E8%8E%B7%E5%8F%96%E7%99%BB%E5%BD%95%E5%8F%B7%E4%BF%A1%E6%81%AF
 [获取陌生人信息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#get_stranger_info-%E8%8E%B7%E5%8F%96%E9%99%8C%E7%94%9F%E4%BA%BA%E4%BF%A1%E6%81%AF
@@ -136,13 +150,25 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 
 | 拓展 API                    | 功能                   |
 | --------------------------- | ---------------------- |
+| set_group_portrait         | [设置群头像]           |
+| get_msg                    | [获取消息]             |
+| get_forward_msg            | [获取合并转发内容]     |
+| send_private_forward_msg   | [发送合并转发(私聊)]     |
+| send_group_forward_msg     | [发送合并转发(群聊)]     |
 | get_group_root_files       | [获取群根目录文件列表] |
 | get_group_files_by_folder  | [获取群子目录文件列表] |
 | get_group_file_url         | [获取群文件资源链接]   |
+| get_status                 | [获取状态]             |
 
+[设置群头像]: https://docs.go-cqhttp.org/api/#%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%A4%B4%E5%83%8F
+[获取消息]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E6%B6%88%E6%81%AF
+[获取合并转发内容]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E5%90%88%E5%B9%B6%E8%BD%AC%E5%8F%91%E5%86%85%E5%AE%B9
+[发送合并转发(私聊)]: https://docs.go-cqhttp.org/api/#%E5%8F%91%E9%80%81%E5%90%88%E5%B9%B6%E8%BD%AC%E5%8F%91-%E5%A5%BD%E5%8F%8B
+[发送合并转发(群聊)]: https://docs.go-cqhttp.org/api/#%E5%8F%91%E9%80%81%E5%90%88%E5%B9%B6%E8%BD%AC%E5%8F%91-%E7%BE%A4
 [获取群根目录文件列表]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E6%A0%B9%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8
 [获取群子目录文件列表]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E5%AD%90%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8
 [获取群文件资源链接]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E6%96%87%E4%BB%B6%E8%B5%84%E6%BA%90%E9%93%BE%E6%8E%A5
+[获取状态]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%8A%B6%E6%80%81
 
 </details>
 
@@ -174,13 +200,14 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 ## TODO
 
 1.  更详细的帮助和设置
-2.  支持锅巴
-3.  支持更多onebot api
+2.  支持更多onebot api
+3.  支持onebot v12
 
 ## 鸣谢
 
 * [miao-plugin](https://gitee.com/yoimiya-kokomi/miao-plugin) : 使用的ui代码及实现均来自miao-plugin
 * [xiaofei-plugin](https://gitee.com/xfdown/xiaofei-plugin) : 音乐自定义分享授权使用
+* [yenai-plugin](https://www.yenai.ren/) : components部分代码来源
 * [onebot](https://github.com/botuniverse/onebot) : 统一的聊天机器人应用接口标准
 * [Miao-Yunzai](https://github.com/yoimiya-kokomi/Miao-Yunzai) : 喵版Yunzai [Gitee](https://gitee.com/yoimiya-kokomi/Miao-Yunzai)
   / [Github](https://github.com/yoimiya-kokomi/Miao-Yunzai)
