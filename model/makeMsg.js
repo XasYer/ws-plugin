@@ -206,7 +206,7 @@ async function makeSendMsg(params) {
                 quote = (await Bot.getChatHistory(quote.message_id, 1)).pop()
                 break
             case 'image':
-                sendMsg.push(segment.image(msg[i].data.file))
+                sendMsg.push(segment.image(decodeURIComponent(msg[i].data.file)))
                 break
             case 'text':
                 sendMsg.push(msg[i].data.text)
