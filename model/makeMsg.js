@@ -270,7 +270,7 @@ async function makeForwardMsg(params) {
             msg.data.content = [{
                 type: 'image',
                 data: {
-                    file: msg.data.content.file
+                    file: msg.data.content.file || msg.data.content.data.file
                 }
             }]
         }
