@@ -25,7 +25,7 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 
 ```
 git clone --depth=1 https://gitee.com/xiaoye12123/ws-plugin.git ./plugins/ws-plugin/
-pnpm i
+pnpm install --filter=ws-plugin
 
 ```
 
@@ -116,6 +116,8 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 | set_group_name        | [设置群名]                   |
 | set_group_leave       | [退出群组]                   |
 | set_group_special_title| [设置群组专属头衔]           |
+| set_friend_add_request | [处理加好友请求]            |
+| set_group_add_request  | [处理加群请求/邀请]         |
 | get_login_info        | [获取登录号信息]             |
 | get_stranger_info     | [获取陌生人信息]             |
 | get_friend_list       | [获取好友列表]               |
@@ -137,6 +139,8 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 [设置群名]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_name-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%90%8D
 [退出群组]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_leave-%E9%80%80%E5%87%BA%E7%BE%A4%E7%BB%84
 [设置群组专属头衔]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_special_title-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E7%BB%84%E4%B8%93%E5%B1%9E%E5%A4%B4%E8%A1%94
+[处理加好友请求]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_friend_add_request-%E5%A4%84%E7%90%86%E5%8A%A0%E5%A5%BD%E5%8F%8B%E8%AF%B7%E6%B1%82
+[处理加群请求/邀请]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_add_request-%E5%A4%84%E7%90%86%E5%8A%A0%E7%BE%A4%E8%AF%B7%E6%B1%82%E9%82%80%E8%AF%B7
 [群组单人禁言]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_ban-%E7%BE%A4%E7%BB%84%E5%8D%95%E4%BA%BA%E7%A6%81%E8%A8%80
 [获取登录号信息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#get_login_info-%E8%8E%B7%E5%8F%96%E7%99%BB%E5%BD%95%E5%8F%B7%E4%BF%A1%E6%81%AF
 [获取陌生人信息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#get_stranger_info-%E8%8E%B7%E5%8F%96%E9%99%8C%E7%94%9F%E4%BA%BA%E4%BF%A1%E6%81%AF
@@ -149,23 +153,25 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 
 ### 从 go-cqhttp cv 过来的api
 
-| 拓展 API                    | 功能                   |
+| 拓展 API                    | 功能                    |
 | --------------------------- | ---------------------- |
-| set_group_portrait         | [设置群头像]           |
-| get_msg                    | [获取消息]             |
-| get_forward_msg            | [获取合并转发内容]     |
-| send_private_forward_msg   | [发送合并转发(私聊)]     |
-| send_group_forward_msg     | [发送合并转发(群聊)]     |
-| get_group_root_files       | [获取群根目录文件列表] |
-| get_group_files_by_folder  | [获取群子目录文件列表] |
-| get_group_file_url         | [获取群文件资源链接]   |
-| get_status                 | [获取状态]             |
+| set_group_portrait         | [设置群头像]             |
+| get_msg                    | [获取消息]               |
+| get_forward_msg            | [获取合并转发内容]        |
+| send_private_forward_msg   | [发送合并转发(私聊)]      |
+| send_group_forward_msg     | [发送合并转发(群聊)]      |
+| get_group_system_msg       | [获取群系统消息]          |
+| get_group_root_files       | [获取群根目录文件列表]     |
+| get_group_files_by_folder  | [获取群子目录文件列表]     |
+| get_group_file_url         | [获取群文件资源链接]       |
+| get_status                 | [获取状态]                |
 
 [设置群头像]: https://docs.go-cqhttp.org/api/#%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%A4%B4%E5%83%8F
 [获取消息]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E6%B6%88%E6%81%AF
 [获取合并转发内容]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E5%90%88%E5%B9%B6%E8%BD%AC%E5%8F%91%E5%86%85%E5%AE%B9
 [发送合并转发(私聊)]: https://docs.go-cqhttp.org/api/#%E5%8F%91%E9%80%81%E5%90%88%E5%B9%B6%E8%BD%AC%E5%8F%91-%E5%A5%BD%E5%8F%8B
 [发送合并转发(群聊)]: https://docs.go-cqhttp.org/api/#%E5%8F%91%E9%80%81%E5%90%88%E5%B9%B6%E8%BD%AC%E5%8F%91-%E7%BE%A4
+[获取群系统消息]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E7%B3%BB%E7%BB%9F%E6%B6%88%E6%81%AF
 [获取群根目录文件列表]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E6%A0%B9%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8
 [获取群子目录文件列表]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E5%AD%90%E7%9B%AE%E5%BD%95%E6%96%87%E4%BB%B6%E5%88%97%E8%A1%A8
 [获取群文件资源链接]: https://docs.go-cqhttp.org/api/#%E8%8E%B7%E5%8F%96%E7%BE%A4%E6%96%87%E4%BB%B6%E8%B5%84%E6%BA%90%E9%93%BE%E6%8E%A5
@@ -186,6 +192,8 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 | 通知事件  | [群消息撤回]      |
 | 通知事件  | [好友消息撤回]    |
 | 通知事件  | [群内戳一戳]      |
+| 请求事件  | [加好友请求]      |
+| 请求事件  | [加群请求/邀请]   |
 
 [群管理员变动]: https://github.com/botuniverse/onebot-11/blob/master/event/notice.md#%E7%BE%A4%E7%AE%A1%E7%90%86%E5%91%98%E5%8F%98%E5%8A%A8
 [群成员减少]: https://github.com/botuniverse/onebot-11/blob/master/event/notice.md#%E7%BE%A4%E6%88%90%E5%91%98%E5%87%8F%E5%B0%91
@@ -195,6 +203,8 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 [群消息撤回]: https://github.com/botuniverse/onebot-11/blob/master/event/notice.md#%E7%BE%A4%E6%B6%88%E6%81%AF%E6%92%A4%E5%9B%9E
 [好友消息撤回]: https://github.com/botuniverse/onebot-11/blob/master/event/notice.md#%E5%A5%BD%E5%8F%8B%E6%B6%88%E6%81%AF%E6%92%A4%E5%9B%9E
 [群内戳一戳]: https://github.com/botuniverse/onebot-11/blob/master/event/notice.md#%E7%BE%A4%E5%86%85%E6%88%B3%E4%B8%80%E6%88%B3
+[加好友请求]: https://github.com/botuniverse/onebot-11/blob/master/event/request.md#%E5%8A%A0%E5%A5%BD%E5%8F%8B%E8%AF%B7%E6%B1%82
+[加群请求/邀请]: https://github.com/botuniverse/onebot-11/blob/master/event/request.md#%E5%8A%A0%E7%BE%A4%E8%AF%B7%E6%B1%82%E9%82%80%E8%AF%B7
 
 </details>
 
