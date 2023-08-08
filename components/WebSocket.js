@@ -79,7 +79,9 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                         echo: data.echo
                     }
                 } catch (error) {
-                    logger.error('ws-plugin出现无关紧要的错误',error)
+                    if (!error.noLog) {
+                        logger.error('ws-plugin出现错误', error)
+                    }
                     ret = {
                         status: 'failed',
                         retcode: -1,
@@ -168,13 +170,27 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                     } else {
                         data = JSON.parse(event.data);
                     }
-                    let ResponseData = await getApiData(data.action, data.params, socket.name);
-                    let ret = {
-                        status: 'ok',
-                        retcode: 0,
-                        data: ResponseData,
-                        echo: data.echo
-                    };
+                    let ret
+                    try {
+                        let ResponseData = await getApiData(data.action, data.params, socket.name, self_id);
+                        ret = {
+                            status: 'ok',
+                            retcode: 0,
+                            data: ResponseData,
+                            echo: data.echo
+                        }
+                    } catch (error) {
+                        if (!error.noLog) {
+                            logger.error('ws-plugin出现错误', error)
+                        }
+                        ret = {
+                            status: 'failed',
+                            retcode: -1,
+                            msg: error.message,
+                            wording: 'ws-plugin获取信息失败',
+                            echo: data.echo
+                        }
+                    }
                     socket.send(JSON.stringify(ret));
                 });
                 socketList.push(socket);

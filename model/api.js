@@ -114,7 +114,7 @@ async function getApiData(api, params = {}, name, self_id) {
                 ResponseData.message_id = ResponseData.rand
                 ResponseData.message = msgToOneBotMsg(ResponseData.message)
             } else {
-                throw { message: 'get_msg API error' }
+                throw { message: 'get_msg API error', noLog: true }
             }
         },
         // 撤回消息
@@ -307,7 +307,7 @@ async function getApiData(api, params = {}, name, self_id) {
                             break;
                         case 'invite':
                             invited_requests.push({
-                                request_id:i.seq,
+                                request_id: i.seq,
                                 invitor_uin: i.user_id,
                                 invitor_nick: i.nickname,
                                 group_id: i.group_id,
