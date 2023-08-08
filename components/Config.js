@@ -222,10 +222,12 @@ class Config {
     let wsconfig = this.getDefOrConfig('ws-config')
     let msgconfig = this.getDefOrConfig('msg-config')
     let noticeconfig = this.getDefOrConfig('notice-config')
+    let requestconfig = this.getDefOrConfig('request-config')
     return {
       ...wsconfig,
       ...msgconfig,
-      ...noticeconfig
+      ...noticeconfig,
+      ...requestconfig
     }
   }
 
