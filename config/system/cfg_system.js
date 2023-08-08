@@ -122,5 +122,31 @@ export const cfgSchema = {
         fileName: 'notice-config'
       },
     }
+  },
+  request: {
+    title: '请求相关设置',
+    cfg: {
+      friendAdd: {
+        title: '好友申请',
+        key: '好友申请',
+        def: false,
+        desc: '好友申请是否上报',
+        fileName: 'request-config'
+      },
+      groupInvite: {
+        title: '群聊邀请',
+        key: '群邀请',
+        def: false,
+        desc: '群聊邀请是否上报 (邀请机器人入群)',
+        fileName: 'request-config'
+      },
+      groupAdd: {
+        title: '群聊申请',
+        key: '群申请',
+        def: false,
+        desc: '群聊申请是否上报 (申请加入群聊)',
+        fileName: 'request-config'
+      },
+    }
   }
 }

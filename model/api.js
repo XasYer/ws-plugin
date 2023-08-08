@@ -36,11 +36,11 @@ async function getApiData(api, params = {}, name, self_id) {
         // TODO _get_model_show
         // 设置在线机型
         '_set_model_show': async params => {
-            //不会改
+            // TODO 不会改
         },
         // 获取当前账号在线客户端列表
         'get_online_clients': async params => {
-            //不会获取
+            // TODO 不会获取
             ResponseData = {
                 clients: []
             }
@@ -225,9 +225,27 @@ async function getApiData(api, params = {}, name, self_id) {
         // --------------------------------------------------------
 
         // 处理加好友请求
-        // TODO set_friend_add_request 暂未更新请求上报
+        'set_friend_add_request': async params => {
+            let ret = (await Bot.getSystemMsg()).filter(i => i.request_type == 'friend' && i.flag == params.flag)
+            if (ret.length > 0) {
+                ret = ret[0]
+                if (ret.approve(params.approve)) {
+                    if (params.remark) {
+                        Bot.pickFriend(ret.user_id).setRemark(params.remark)
+                    }
+                }
+            }
+        },
         // 处理加群请求／邀请
-        // TODO set_group_add_request 暂未更新请求上报
+        'set_group_add_request': async params => {
+            let type = params.sub_type || params.type
+            let ret = (await Bot.getSystemMsg()).filter(i => i.request_type == 'group' && i.sub_type == type && i.flag == params.flag)
+            if (ret.length > 0) {
+                ret = ret[0]
+                ret.approve(params.approve)
+                // 不会写拒绝理由捏
+            }
+        },
 
         // --------------------------------------------------------
         // 群信息
@@ -269,7 +287,45 @@ async function getApiData(api, params = {}, name, self_id) {
         // 获取群荣誉信息
         // TODO get_group_honor_info
         // 获取群系统消息
-        // TODO get_group_system_msg 
+        'get_group_system_msg': async params => {
+            let invited_requests = []
+            let join_requests = []
+            for (const i of await Bot.getSystemMsg()) {
+                if (i.request_type == 'group') {
+                    switch (i.sub_type) {
+                        case 'add':
+                            join_requests.push({
+                                request_id: i.seq,
+                                requester_uin: i.user_id,
+                                requester_nick: i.nickname,
+                                message: i.comment,
+                                group_id: i.group_id,
+                                group_name: i.group_name,
+                                checked: false, //好像这个只能获取没处理的
+                                actor: 0
+                            })
+                            break;
+                        case 'invite':
+                            invited_requests.push({
+                                request_id:i.seq,
+                                invitor_uin: i.user_id,
+                                invitor_nick: i.nickname,
+                                group_id: i.group_id,
+                                group_name: i.group_name,
+                                checked: false, //同上
+                                actor: 0
+                            })
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+            ResponseData = {
+                invited_requests,
+                join_requests
+            }
+        },
         // 获取精华消息列表
         // TODO get_essence_msg_list
         // 获取群 @全体成员 剩余次数

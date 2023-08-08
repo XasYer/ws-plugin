@@ -126,6 +126,21 @@ class Config {
   get groupPoke() {
     return this.getDefOrConfig('notice-config').groupPoke
   }
+  
+  /** 好友申请是否上报 */
+  get friendAdd(){
+    return this.getDefOrConfig('request-config').friendAdd
+  }
+  
+  /** 群聊邀请是否上报 (邀请机器人入群) */
+  get groupInvite(){
+    return this.getDefOrConfig('request-config').groupInvite
+  }
+  
+  /** 群聊申请是否上报 (申请加入群聊) */
+  get groupAdd(){
+    return this.getDefOrConfig('request-config').groupAdd
+  }
 
   /** 默认配置和用户配置 */
   getDefOrConfig(name) {

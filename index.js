@@ -38,7 +38,7 @@ for (let i in files) {
     }
     apps[name] = ret[i].value[Object.keys(ret[i].value)[0]]
 }
-let path = ['./apps/message/message.js', './apps/notice/notice.js']
+let path = ['./apps/message/message.js', './apps/notice/notice.js', './apps/request/request.js']
 for (const item of path) {
     try {
         await import(`${item}`)

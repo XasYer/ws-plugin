@@ -149,6 +149,28 @@ export function supportGuoba() {
         },
         {
           component: 'Divider',
+          label: '请求设置'
+        },
+        {
+          field: 'request.friendAdd',
+          label: '好友申请',
+          bottomHelpMessage: '好友申请是否上报',
+          component: 'Switch',
+        },
+        {
+          field: 'request.groupInvite',
+          label: '群聊邀请',
+          bottomHelpMessage: '群聊邀请是否上报 (邀请机器人入群)',
+          component: 'Switch',
+        },
+        {
+          field: 'request.groupAdd',
+          label: '群聊申请',
+          bottomHelpMessage: '群聊申请是否上报 (申请加入群聊)',
+          component: 'Switch',
+        },
+        {
+          component: 'Divider',
           label: '连接设置'
         },
         {
@@ -180,7 +202,8 @@ export function supportGuoba() {
         return {
           ws: Config.getDefOrConfig('ws-config'),
           msg: Config.getDefOrConfig('msg-config'),
-          notice: Config.getDefOrConfig('notice-config')
+          notice: Config.getDefOrConfig('notice-config'),
+          request: Config.getDefOrConfig('request-config')
         }
       },
       // 设置配置的方法（前端点确定后调用的方法）
