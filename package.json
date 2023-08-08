@@ -1,6 +1,6 @@
 {
   "name": "ws-plugin",
-  "version": "1.0.0",
+  "version": "0.4.0",
   "description": "Yunzai-Bot 的扩展插件",
   "main": "index.js",
   "type": "module",
