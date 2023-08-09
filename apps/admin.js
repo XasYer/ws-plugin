@@ -182,24 +182,36 @@ export class setting extends plugin {
             // 设置模式
             let val = regRet[2] || ''
 
-            let cfgSchema = cfgSchemaMap[regRet[1]]
-            if (cfgSchema.input) {
-                val = cfgSchema.input(val)
+            if (regRet[1] == '全部') {
+                val = !/关闭/.test(val)
+                for (const i of keys) {
+                    if (typeof cfgSchemaMap[i].def == 'boolean') {
+                        if (cfgSchemaMap[i].key == '全部') {
+                            await redis.set('Yz:ws-plugin:setAll', val ? 1 : 0)
+                        } else {
+                            Config.modify(cfgSchemaMap[i].fileName, cfgSchemaMap[i].cfgKey, val)
+                        }
+                    }
+                }
             } else {
-                val = cfgSchema.type === 'num' ? (val * 1 || cfgSchema.def) : !/关闭/.test(val)
+                let cfgSchema = cfgSchemaMap[regRet[1]]
+                if (cfgSchema.input) {
+                    val = cfgSchema.input(val)
+                } else {
+                    val = cfgSchema.type === 'num' ? (val * 1 || cfgSchema.def) : !/关闭/.test(val)
+                }
+                Config.modify(cfgSchema.fileName, cfgSchema.cfgKey, val)
             }
-            Config.modify(cfgSchema.fileName, cfgSchema.cfgKey, val)
         }
 
         let schema = Config.getCfgSchema()
         let cfg = Config.getCfg()
-        let imgPlus = false
+        cfg.setAll = (await redis.get('Yz:ws-plugin:setAll')) == 1
 
         // 渲染图像
         return await Render.render('admin/index', {
             schema,
             cfg,
-            imgPlus,
             isMiao: Version.isMiao
         }, { e, scale: 1.4 })
     }

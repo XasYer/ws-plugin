@@ -148,5 +148,16 @@ export const cfgSchema = {
         fileName: 'request-config'
       },
     }
+  },
+  setAll: {
+    title: '一键操作',
+    cfg: {
+      setAll: {
+        title: '全部设置',
+        key: '全部',
+        def: false,
+        desc: '一键 开启/关闭 全部设置项'
+      }
+    }
   }
 }
