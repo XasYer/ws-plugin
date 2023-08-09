@@ -1,8 +1,20 @@
 import { socketList, Config } from '../../components/index.js'
+import { setMsgMap } from '../../model/index.js'
 
 Bot.on('notice', async e => {
-    if (socketList.length == 0) {
-        return false
+    if (socketList.length == 0) return false
+    let _reply = e.reply
+    e.reply = async function (massage, quote = false, data = {}) {
+        let ret = await _reply(massage, quote, data)
+        if (ret) {
+            await setMsgMap(ret.rand, {
+                message_id: ret.message_id,
+                time: ret.time,
+                seq: ret.seq,
+                rand: ret.rand,
+            })
+        }
+        return ret
     }
     let other = {}
     if (e.notice_type == 'group') {

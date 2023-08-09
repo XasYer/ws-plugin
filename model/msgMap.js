@@ -13,7 +13,8 @@ async function getMsgMap(key) {
 }
 
 async function setMsgMap(key, value) {
-    await redis.set(`Yz:ws-plugin:msg:${key}`, JSON.stringify(value), { EX: Config.msgStoreTime })
+    const time = Config.msgStoreTime
+    if (time > 0) await redis.set(`Yz:ws-plugin:msg:${key}`, JSON.stringify(value), { EX: Config.msgStoreTime })
     latestMsg = value
 }
 

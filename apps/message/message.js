@@ -1,5 +1,5 @@
 import { socketList, Config, Version, initWebSocket } from '../../components/index.js'
-import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId } from '../../model/index.js'
+import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId, setMsgMap } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
 
@@ -7,8 +7,19 @@ import cfg from '../../../../lib/config/config.js'
 Bot.on('message', async e => {
     // console.log(e);
     //如果没有已连接的Websocket
-    if (socketList.length == 0) {
-        return false
+    if (socketList.length == 0) return false
+    let _reply = e.reply
+    e.reply = async function (massage, quote = false, data = {}) {
+        let ret = await _reply(massage, quote, data)
+        if (ret) {
+            await setMsgMap(ret.rand, {
+                message_id: ret.message_id,
+                time: ret.time,
+                seq: ret.seq,
+                rand: ret.rand,
+            })
+        }
+        return ret
     }
     //深拷贝e
     let msg = _.cloneDeep(e);
