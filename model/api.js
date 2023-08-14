@@ -1,6 +1,5 @@
-import { makeSendMsg, makeForwardMsg } from './makeMsg.js'
+import { makeSendMsg, makeForwardMsg,msgToOneBotMsg } from './makeMsg.js'
 import { getMsgMap, setMsgMap, getGuildLatestMsgId, getLatestMsg } from './msgMap.js'
-import { msgToOneBotMsg } from './tool.js'
 import { MsgToCQ } from './CQCode.js'
 import { Version } from '../components/index.js'
 

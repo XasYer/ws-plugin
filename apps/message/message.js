@@ -90,7 +90,7 @@ Bot.on('message', async e => {
             message_id: e.rand,
             group_id: e.group_id,
             user_id: e.user_id,
-            font: 1234,
+            font: 0,
             sender: e.sender
         }
     } else if (msg.message_type == 'private') {
@@ -104,7 +104,7 @@ Bot.on('message', async e => {
             message_id: e.rand,
             group_id: e.group_id,
             user_id: e.user_id,
-            font: 1234,
+            font: 0,
             sender: e.sender
         }
     } else {

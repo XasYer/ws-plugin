@@ -1,7 +1,7 @@
 import { Config } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
-import { msgToOneBotMsg, SendMusicShare } from './tool.js'
+import { SendMusicShare } from './tool.js'
 import _ from 'lodash'
 import cfg from '../../../lib/config/config.js'
 import fetch from 'node-fetch'
@@ -71,41 +71,46 @@ async function makeGSUidReportMsg(e) {
             data: e.message_id
         })
     }
-    for (let i = 0; i < msg.length; i++) {
-        if (msg[i].type == 'at') {
-            message.push({
-                type: 'at',
-                data: msg[i].qq
-            })
-        } else if (msg[i].type == 'text') {
-            if (Config.noMsgInclude.length > 0 && Array.isArray(Config.noMsgInclude)) {
-                if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
-                    return false
+    for (const i of msg) {
+        switch (i.type) {
+            case 'at':
+                message.push({
+                    type: 'at',
+                    data: i.qq
+                })
+                break;
+            case 'text':
+                if (Config.noMsgInclude.length > 0 && Array.isArray(Config.noMsgInclude)) {
+                    if (Config.noMsgInclude.some(item => i.text.includes(item))) {
+                        return false
+                    }
                 }
-            }
-            message.push({
-                type: 'text',
-                data: msg[i].text
-            })
-        } else if (msg[i].type == 'image') {
-            message.push({
-                type: 'image',
-                data: msg[i].url
-            })
-        } else if (msg[i].type == 'file') {
-            if (e.isGroup) {
-                continue
-            }
-            let fileUrl = await e.friend.getFileUrl(e.file.fid);
-            let res = await fetch(fileUrl);
-            let arrayBuffer = await res.arrayBuffer();
-            let buffer = Buffer.from(arrayBuffer);
-            let base64 = buffer.toString('base64');
-            let name = msg[i].name
-            message.push({
-                type: 'file',
-                data: `${name}|${base64}`
-            })
+                message.push({
+                    type: 'text',
+                    data: i.text
+                })
+                break;
+            case 'image':
+                message.push({
+                    type: 'image',
+                    data: i.url
+                })
+                break;
+            case 'file':
+                if (e.isGroup) continue
+                let fileUrl = await e.friend.getFileUrl(e.file.fid);
+                let res = await fetch(fileUrl);
+                let arrayBuffer = await res.arrayBuffer();
+                let buffer = Buffer.from(arrayBuffer);
+                let base64 = buffer.toString('base64');
+                let name = i.name
+                message.push({
+                    type: 'file',
+                    data: `${name}|${base64}`
+                })
+                break;
+            default:
+                break;
         }
     }
     if (message.length == 0) {
@@ -144,78 +149,72 @@ async function makeGSUidReportMsg(e) {
  * @param {*} data 
  */
 async function makeGSUidSendMsg(data, name) {
-    let msg = data.content
-    if (msg[0].type.startsWith('log')) {
-        logger.info(msg[0].data);
-    } else {
-        let sendMsg = []
-        let target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
-        for (let k = 0; k < msg.length; k++) {
-            if (msg[k].type == 'image') {
-                sendMsg.push(segment.image(msg[k].data))
-            } else if (msg[k].type == 'text') {
-                sendMsg.push(msg[k].data)
-            } else if (msg[k].type == 'node') {
-                for (let i = 0; i < msg[k].data.length; i++) {
-                    let _sendMsg
-                    if (msg[k].data[i].type == 'text') {
-                        _sendMsg = msg[k].data[i].data
-                    } else if (msg[k].data[i].type == 'image') {
-                        _sendMsg = segment.image(msg[k].data[i].data)
-                    }
-                    sendMsg.push({
-                        message: [
-                            _sendMsg
-                        ],
+    let content = data.content
+    if (content[0].type.startsWith('log')) {
+        logger.info(content[0].data);
+        return []
+    }
+    let sendMsg = []
+    let target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
+    for (const msg of content) {
+        switch (msg.type) {
+            case 'image':
+                sendMsg.push(segment.image(msg.data))
+                break;
+            case 'text':
+                sendMsg.push(msg.data)
+                break;
+            case 'file':
+                let file = msg.data.split('|')
+                let buffer = Buffer.from(file[1], 'base64');
+                Bot.pickGroup(data.target_id).fs.upload(buffer, '/', file[0]);
+                break;
+            case 'node':
+                let arr = []
+                for (const i of msg.data) {
+                    arr.push({
+                        message: await makeGSUidSendMsg({ coutent: i, target_type: data.target_type, target_id: data.target_id }, name),
                         nickname: '小助手',
                         user_id: 2854196310
                     })
                 }
-                sendMsg.push(await Bot[target](data.target_id).makeForwardMsg(sendMsg))
-            } else if (msg[k].type == 'file') {
-                let file = msg[k].data.split('|')
-                let buffer = Buffer.from(file[1], 'base64');
-                Bot.pickGroup(data.target_id).fs.upload(buffer, '/', file[0]);
-            }
-        }
-        if (sendMsg.length > 0 && Array.isArray(sendMsg)) {
-            await Bot[target](data.target_id).sendMsg(sendMsg)
-            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+                sendMsg.push(await Bot[target](data.target_id).makeForwardMsg(arr))
+                break;
+            default:
+                break;
         }
     }
+    return sendMsg
 }
 
 /**
- * 制作需要发送的消息
+ * 制作onebot发送的消息
  * @param {*} params 
  * @returns sendMsg , quote
  */
 async function makeSendMsg(params) {
     let msg = params.message
-    let sendMsg = []
-    let quote = null
-    if (typeof msg == 'string') {
-        msg = CQToMsg(msg)
-    }
-    let target
-    let uid
-    for (let i = 0; i < msg.length; i++) {
-        switch (msg[i].type) {
+    if (typeof msg == 'string') msg = CQToMsg(msg)
+    let target, uid, sendMsg = [], quote = null
+    for (const i of msg) {
+        switch (i.type) {
             case 'reply':
-                quote = await getMsgMap(msg[i].data.id)
-                quote = (await Bot.getChatHistory(quote.message_id, 1)).pop()
+                quote = await getMsgMap(i.data.id)
+                quote = await Bot.getMsg(quote.message_id)
                 break
             case 'image':
-                sendMsg.push(segment.image(decodeURIComponent(msg[i].data.file)))
+                sendMsg.push(segment.image(decodeURIComponent(i.data.file)))
                 break
             case 'text':
-                sendMsg.push(msg[i].data.text)
+                sendMsg.push(i.data.text)
                 break
             case 'at':
-                sendMsg.push(segment.at(Number(msg[i].data.qq)))
+                let qq = i.data.qq + ''
+                if (qq.length > 3) qq = Number(qq)
+                sendMsg.push(segment.at(qq))
                 break
             case 'video':
-                sendMsg.push(segment.video(decodeURIComponent(msg[i].data.file)))
+                sendMsg.push(segment.video(decodeURIComponent(i.data.file)))
                 break
             case 'music':
                 if (params.message_type == 'group') {
@@ -225,31 +224,31 @@ async function makeSendMsg(params) {
                     target = 'pickFriend'
                     uid = params.user_id
                 }
-                if (msg[i].data.type == 'custom') {
-                    let data = msg[i].data
+                if (i.data.type == 'custom') {
+                    let data = i.data
                     data.message_type = params.message_type
                     data.user_id = params.user_id
                     data.group_id = params.group_id
                     await SendMusicShare(data)
                 } else {
-                    await Bot[target](uid).shareMusic(msg[i].data.type, msg[i].data.id)
+                    await Bot[target](uid).shareMusic(i.data.type, i.data.id)
                 }
                 break
             case 'poke':
-                await Bot.pickGroup(params.group_id).pokeMember(Number(msg[i].data.qq))
+                await Bot.pickGroup(params.group_id).pokeMember(Number(i.data.qq))
                 break
             case 'record':
-                sendMsg.push(segment.record(decodeURIComponent(msg[i].data.file)))
+                sendMsg.push(segment.record(decodeURIComponent(i.data.file)))
                 break
             case 'face':
-                sendMsg.push(segment.face(msg[i].data.id))
+                sendMsg.push(segment.face(i.data.id))
                 break
             case 'node':
                 sendMsg.push(await nodeToMsg(params))
                 break
             default:
                 sendMsg.push('出现了未适配的消息的类型')
-                logger.warn(`出现了未适配的消息的类型${msg[i]}`)
+                logger.warn(`出现了未适配的消息的类型${i}`)
                 break
         }
     }
@@ -289,6 +288,84 @@ async function makeForwardMsg(params) {
         forwardMsg = await Bot.pickFriend(params.user_id).makeForwardMsg(forwardMsg)
     }
     return forwardMsg
+}
+
+/**
+ * 转换成onebot消息
+ * @returns 
+ */
+function msgToOneBotMsg(msg, source = null) {
+    let reportMsg = []
+    if (source) {
+        reportMsg.push({
+            "type": "reply",
+            "data": {
+                "id": source.rand
+            }
+        })
+    }
+    for (let i = 0; i < msg.length; i++) {
+        switch (msg[i].type) {
+            case 'at':
+                reportMsg.push({
+                    "type": "at",
+                    "data": {
+                        "qq": msg[i].qq
+                    }
+                })
+                break
+            case 'text':
+                if (Array.isArray(Config.noMsgStart) && Config.noMsgInclude.length > 0) {
+                    if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
+                        return false
+                    }
+                }
+                reportMsg.push({
+                    "type": "text",
+                    "data": {
+                        "text": msg[i].text
+                    }
+                })
+                break
+            case 'image':
+                reportMsg.push({
+                    "type": "image",
+                    "data": {
+                        file: msg[i].file,
+                        subType: msg[i].asface ? 1 : 0,
+                        url: msg[i].url
+                    }
+                })
+                break
+            case 'json':
+                reportMsg.push({
+                    "type": 'json',
+                    "data": {
+                        "data": msg[i].data
+                    }
+                })
+                break
+            case 'face':
+                reportMsg.push({
+                    'type': 'face',
+                    'data': {
+                        'id': msg[i].id
+                    }
+                })
+                break
+            case 'record':
+                reportMsg.push({
+                    'type': 'record',
+                    'data': {
+                        'file': msg[i].file
+                    }
+                })
+                break
+            default:
+                break
+        }
+    }
+    return reportMsg
 }
 
 async function nodeToMsg(params) {
@@ -346,5 +423,6 @@ export {
     makeGSUidReportMsg,
     makeSendMsg,
     makeForwardMsg,
-    makeGSUidSendMsg
+    makeGSUidSendMsg,
+    msgToOneBotMsg
 }

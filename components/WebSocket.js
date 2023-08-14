@@ -281,7 +281,12 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 const decoder = new TextDecoder();
                 let data = decoder.decode(event.data);
                 data = JSON.parse(data)
-                await makeGSUidSendMsg(data, socket.name)
+                const sendMsg = await makeGSUidSendMsg(data, socket.name)
+                if (sendMsg.length > 0) {
+                    const target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
+                    await Bot[target](data.target_id).sendMsg(sendMsg)
+                    logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+                }
             }
             socket.onerror = (event) => {
                 logger.error(`${name}连接失败\n${event.error}`);
