@@ -84,28 +84,33 @@ Bot.on('message', async e => {
         msg.param = {
             time: e.time,
             self_id: e.self_id,
-            post_type: e.post_type,
-            message_type: e.message_type,
-            sub_type: e.sub_type,
+            post_type: e.post_type,         // 'message'
+            message_type: e.message_type,   // 'group'
+            sub_type: e.sub_type,           // 'normal' 'anonymous' 'notice'
             message_id: e.rand,
             group_id: e.group_id,
             user_id: e.user_id,
             font: 0,
-            sender: e.sender
+            sender: e.sender,               // 'user_id' 'nickname'
+            anonymous: e.anonymous ? {
+                id: e.anonymous.id,
+                name: e.anonymous.name,
+                flag: e.anonymous.flag
+            } : null
         }
     } else if (msg.message_type == 'private') {
         msg.isPrivate = true
         msg.param = {
             time: e.time,
             self_id: e.self_id,
-            post_type: e.post_type,
-            message_type: e.message_type,
-            sub_type: e.sub_type,
+            post_type: e.post_type,         // 'message'
+            message_type: e.message_type,   // 'private'
+            sub_type: e.sub_type,           // 'friend' 'group' 'other'
             message_id: e.rand,
             group_id: e.group_id,
             user_id: e.user_id,
             font: 0,
-            sender: e.sender
+            sender: e.sender                // 'user_id' 'nickname'
         }
     } else {
         return false

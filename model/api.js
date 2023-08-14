@@ -378,7 +378,10 @@ async function getApiData(api, params = {}, name, self_id) {
             await Bot.setGroupWholeBan(params.group_id, params.enable)
         },
         // 群匿名用户禁言
-        // TODO set_group_anonymous_ban 先摸一下
+        'set_group_anonymous_ban': async params => {
+            let flag = params.anonymous?.flag || params.anonymous_flag || params.flag
+            await Bot.setGroupAnonymousBan(params.group_id,flag,params.duration)
+        },
         // 设置精华消息
         'set_essence_msg': async params => {
             let message_id = (await getMsgMap(params.message_id))?.message_id

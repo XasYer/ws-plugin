@@ -110,6 +110,7 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 | delete_msg            | [撤回消息]                   |
 | set_group_kick        | [群组踢人]                   |
 | set_group_ban         | [群组单人禁言]               |
+| set_group_anonymous_ban| [群组匿名禁言]              |
 | set_group_whole_ban   | [群组全员禁言]               |
 | set_group_admin       | [群组设置管理员]              |
 | set_group_card        | [设置群名片（群备注）]         |
@@ -133,6 +134,7 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 [撤回消息]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#delete_msg-%E6%92%A4%E5%9B%9E%E6%B6%88%E6%81%AF
 [群组踢人]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_kick-%E7%BE%A4%E7%BB%84%E8%B8%A2%E4%BA%BA
 [群组单人禁言]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_ban-%E7%BE%A4%E7%BB%84%E5%8D%95%E4%BA%BA%E7%A6%81%E8%A8%80
+[群组匿名禁言]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_anonymous_ban-%E7%BE%A4%E7%BB%84%E5%8C%BF%E5%90%8D%E7%94%A8%E6%88%B7%E7%A6%81%E8%A8%80
 [群组全员禁言]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_whole_ban-%E7%BE%A4%E7%BB%84%E5%85%A8%E5%91%98%E7%A6%81%E8%A8%80
 [群组设置管理员]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_admin-%E7%BE%A4%E7%BB%84%E8%AE%BE%E7%BD%AE%E7%AE%A1%E7%90%86%E5%91%98
 [设置群名片（群备注）]: https://github.com/botuniverse/onebot-11/blob/master/api/public.md#set_group_card-%E8%AE%BE%E7%BD%AE%E7%BE%A4%E5%90%8D%E7%89%87%E7%BE%A4%E5%A4%87%E6%B3%A8
