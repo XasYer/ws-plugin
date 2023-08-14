@@ -2,7 +2,6 @@ import plugin from '../../../lib/plugins/plugin.js'
 import lodash from 'lodash'
 import { createRequire } from 'module'
 import { Restart } from '../../other/restart.js'
-import { Config } from '../components/index.js'
 
 const require = createRequire(import.meta.url)
 const { exec, execSync } = require('child_process')
