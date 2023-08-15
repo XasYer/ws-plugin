@@ -1,4 +1,4 @@
-import { makeSendMsg, makeForwardMsg,msgToOneBotMsg } from './makeMsg.js'
+import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
 import { getMsgMap, setMsgMap, getGuildLatestMsgId, getLatestMsg } from './msgMap.js'
 import { MsgToCQ } from './CQCode.js'
 import { Version } from '../components/index.js'
@@ -84,22 +84,22 @@ async function getApiData(api, params = {}, name, self_id) {
         // 发送私聊消息
         'send_private_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params)
-            sendRet = await Bot.sendPrivateMsg(params.user_id, sendMsg, quote)
+            if (sendMsg.length > 0) sendRet = await Bot.sendPrivateMsg(params.user_id, sendMsg, quote)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送群聊消息
         'send_group_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params)
-            sendRet = await Bot.sendGroupMsg(params.group_id, sendMsg, quote)
+            if (sendMsg.length > 0) sendRet = await Bot.sendGroupMsg(params.group_id, sendMsg, quote)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送消息
         'send_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params)
             if (params.message_type == 'group' || params.group_id) {
-                sendRet = await Bot.sendGroupMsg(params.group_id, sendMsg, quote)
+                if (sendMsg.length > 0) sendRet = await Bot.sendGroupMsg(params.group_id, sendMsg, quote)
             } else if (params.message_type == 'private' || params.user_id) {
-                sendRet = await Bot.sendPrivateMsg(params.user_id, sendMsg, quote)
+                if (sendMsg.length > 0) sendRet = await Bot.sendPrivateMsg(params.user_id, sendMsg, quote)
             }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
@@ -380,7 +380,7 @@ async function getApiData(api, params = {}, name, self_id) {
         // 群匿名用户禁言
         'set_group_anonymous_ban': async params => {
             let flag = params.anonymous?.flag || params.anonymous_flag || params.flag
-            await Bot.setGroupAnonymousBan(params.group_id,flag,params.duration)
+            await Bot.setGroupAnonymousBan(params.group_id, flag, params.duration)
         },
         // 设置精华消息
         'set_essence_msg': async params => {
