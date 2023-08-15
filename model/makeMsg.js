@@ -173,7 +173,7 @@ async function makeGSUidSendMsg(data, name) {
                 let arr = []
                 for (const i of msg.data) {
                     arr.push({
-                        message: await makeGSUidSendMsg({ coutent: i, target_type: data.target_type, target_id: data.target_id }, name),
+                        message: await makeGSUidSendMsg({ coutent: [i], target_type: data.target_type, target_id: data.target_id }, name),
                         nickname: '小助手',
                         user_id: 2854196310
                     })
