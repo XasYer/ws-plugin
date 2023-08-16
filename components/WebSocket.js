@@ -1,6 +1,6 @@
 import WebSocket, { WebSocketServer } from 'ws'
 import Config from './Config.js'
-import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap } from '../model/index.js'
 import Version from './Version.js'
 
 let socketList = []
@@ -281,10 +281,20 @@ function createWebSocket({ name, address, type, reconnectInterval, maxReconnectA
                 const decoder = new TextDecoder();
                 let data = decoder.decode(event.data);
                 data = JSON.parse(data)
-                const sendMsg = await makeGSUidSendMsg(data, socket.name)
+                const { sendMsg, quote } = await makeGSUidSendMsg(data, socket.name)
                 if (sendMsg.length > 0) {
-                    const target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
-                    await Bot[target](data.target_id).sendMsg(sendMsg)
+                    let sendRet
+                    switch (data.target_type) {
+                        case 'group':
+                            sendRet = await Bot.sendGroupMsg(data.target_id, sendMsg, quote)
+                            break;
+                        case 'direct':
+                            sendRet = await Bot.sendPrivateMsg(data.target_id, sendMsg, quote)
+                            break;
+                        default:
+                            break;
+                    }
+                    await setMsgMap(sendRet.rand, sendRet)
                     logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
                 }
             }

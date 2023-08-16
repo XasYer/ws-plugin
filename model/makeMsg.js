@@ -149,42 +149,48 @@ async function makeGSUidReportMsg(e) {
  * @param {*} data 
  */
 async function makeGSUidSendMsg(data, name) {
-    let content = data.content
+    let content = data.content, sendMsg = [], quote = null
     if (content[0].type.startsWith('log')) {
         logger.info(content[0].data);
-        return []
-    }
-    let sendMsg = []
-    let target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
-    for (const msg of content) {
-        switch (msg.type) {
-            case 'image':
-                sendMsg.push(segment.image(msg.data))
-                break;
-            case 'text':
-                sendMsg.push(msg.data)
-                break;
-            case 'file':
-                let file = msg.data.split('|')
-                let buffer = Buffer.from(file[1], 'base64');
-                Bot.pickGroup(data.target_id).fs.upload(buffer, '/', file[0]);
-                break;
-            case 'node':
-                let arr = []
-                for (const i of msg.data) {
-                    arr.push({
-                        message: await makeGSUidSendMsg({ content: [i], target_type: data.target_type, target_id: data.target_id }, name),
-                        nickname: '小助手',
-                        user_id: 2854196310
-                    })
-                }
-                sendMsg.push(await Bot[target](data.target_id).makeForwardMsg(arr))
-                break;
-            default:
-                break;
+    } else {
+        let target = data.target_type == 'group' ? 'pickGroup' : 'pickFriend'
+        for (const msg of content) {
+            switch (msg.type) {
+                case 'image':
+                    sendMsg.push(segment.image(msg.data))
+                    break;
+                case 'text':
+                    sendMsg.push(msg.data)
+                    break;
+                case 'at':
+                    sendMsg.push(segment.at(Number(msg.data)))
+                    break;
+                case 'reply':
+                    quote = await Bot.getMsg(msg.data)
+                    break;
+                case 'file':
+                    let file = msg.data.split('|')
+                    let buffer = Buffer.from(file[1], 'base64');
+                    Bot.pickGroup(data.target_id).fs.upload(buffer, '/', file[0]);
+                    break;
+                case 'node':
+                    let arr = []
+                    for (const i of msg.data) {
+                        const { sendMsg: message } = await makeGSUidSendMsg({ content: [i], target_type: data.target_type, target_id: data.target_id }, name)
+                        arr.push({
+                            message,
+                            nickname: '小助手',
+                            user_id: 2854196310
+                        })
+                    }
+                    sendMsg.push(await Bot[target](data.target_id).makeForwardMsg(arr))
+                    break;
+                default:
+                    break;
+            }
         }
     }
-    return sendMsg
+    return { sendMsg, quote }
 }
 
 /**
