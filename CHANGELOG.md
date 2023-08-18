@@ -1,3 +1,9 @@
+# 0.4.4
+
+* 增加api
+    * get_essence_msg_list 获取精华消息列表
+    * _get_group_notice 获取群公告
+
 # 0.4.3
 
 * 增加匿名以及群匿名用户禁言API

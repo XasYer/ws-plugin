@@ -2,6 +2,7 @@ import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
 import { getMsgMap, setMsgMap, getGuildLatestMsgId, getLatestMsg } from './msgMap.js'
 import { MsgToCQ } from './CQCode.js'
 import { Version } from '../components/index.js'
+import fetch from 'node-fetch'
 
 async function getApiData(api, params = {}, name, self_id) {
     let sendRet = null
@@ -326,7 +327,36 @@ async function getApiData(api, params = {}, name, self_id) {
             }
         },
         // 获取精华消息列表
-        // TODO get_essence_msg_list
+        'get_essence_msg_list': async params => {
+            ResponseData = []
+            let is_end = false, page_start = 0, page_limit = 50
+            while (!is_end) {
+                let res = await fetch(`https://qun.qq.com/cgi-bin/group_digest/digest_list?bkn=${Bot.bkn}&group_code=${params.group_id}&page_start=${page_start}&page_limit=${page_limit}`, {
+                    headers: {
+                        Cookie: Bot.cookies['qun.qq.com']
+                    }
+                }).then(r => r.json())
+                if (res.retcode !== 0) return
+                if (res.data?.is_end === false) {
+                    page_start++
+                } else if (res.data?.is_end === true) {
+                    is_end = true
+                }
+                for (const i of res.data.msg_list) {
+                    ResponseData.push({
+                        sender_id: i.sender_uin,
+                        sender_nick: i.sender_nick,
+                        sender_time: i.sender_time,
+                        operator_id: i.add_digest_uin,
+                        operator_nick: i.add_digest_nick,
+                        operator_time: add_digest_time,
+                        message_id: i.msg_random
+                    })
+                    const msg = (await Bot.pickGroup(params.group_id).getChatHistory(i.msg_seq, 1))[0]
+                    if (msg) await setMsgMap(msg.rand, msg)
+                }
+            }
+        },
         // 获取群 @全体成员 剩余次数
         'get_group_at_all_remain': async params => {
             let ret = await Bot.pickGroup(params.group_id)
@@ -402,10 +432,46 @@ async function getApiData(api, params = {}, name, self_id) {
         },
         // 发送群公告
         '_send_group_notice': async params => {
-            await Bot.sendGroupNotice(params.group_id, params.content)
+            // await Bot.sendGroupNotice(params.group_id, params.content)
+            await fetch(`https://web.qun.qq.com/cgi-bin/announce/add_qun_notice?bkn=${Bot.bkn}`, {
+                method: 'POST',
+                body: `qid=${params.group_id}&bkn=${Bot.bkn}&text=${params.content}&pinned=0&type=1&settings={"is_show_edit_card":1,"tip_window_type":1,"confirm_required":1}`,
+                headers: {
+                    Cookie: Bot.cookies['qun.qq.com']
+                }
+            })
         },
         // 获取群公告
-        // TODO _get_group_notice 不会
+        '_get_group_notice': async params => {
+            let res = await fetch(`https://web.qun.qq.com/cgi-bin/announce/get_t_list?bkn=${Bot.bkn}&qid=${params.group_id}&ft=23&s=-1&n=20`, {
+                headers: {
+                    Cookie: Bot.cookies['qun.qq.com']
+                }
+            }).then(r => r.json())
+            ResponseData = []
+            if (res.feeds) {
+                for (const i of res.feeds) {
+                    let item = {
+                        sender_id: i.u,
+                        publish_time: i.pubt,
+                        message: {
+                            text: i.msg.text
+                        },
+                        images: []
+                    }
+                    if (i.pics) {
+                        for (const pic of i.pics) {
+                            item.images.push({
+                                height: pic.h,
+                                width: pic.w,
+                                id: pic.id
+                            })
+                        }
+                    }
+                    ResponseData.push(item)
+                }
+            }
+        },
         // 群组踢人
         'set_group_kick': async params => {
             await Bot.setGroupKick(params.group_id, params.user_id, params.reject_add_request || false)
