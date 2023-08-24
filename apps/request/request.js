@@ -46,9 +46,9 @@ Bot.on('request', async e => {
         ...other
     }
     msg = JSON.stringify(msg)
-    socketList.forEach(socket => {
-        if (socket.type != 3) {
-            socket.send(msg)
+    socketList.forEach(i => {
+        if (i.status == 1 && i.type != 3) {
+            i.ws.send(msg)
         }
     })
 })

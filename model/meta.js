@@ -4,22 +4,21 @@ import { getLatestMsg } from './msgMap.js'
  * 生命周期
  * @param {*} socket 
  */
-function lifecycle(socket, uin) {
-    let data = {
+function lifecycle(uin) {
+    return JSON.stringify({
         meta_event_type: 'lifecycle',
         post_type: 'meta_event',
         self_id: uin,
         sub_type: 'connect',
         time: Date.parse(new Date()) / 1000
-    }
-    socket.send(JSON.stringify(data));
+    })
 }
 
 /**
  * 心跳
  * @param {*} socket 
  */
-function heartbeat(socket, uin) {
+function heartbeat(uin) {
     let latestMsg = getLatestMsg()
     let time = 0
     if (latestMsg) {
@@ -49,15 +48,14 @@ function heartbeat(socket, uin) {
 
         }
     }
-    let data = {
+    return JSON.stringify({
         time: Date.parse(new Date()) / 1000,
         self_id: uin,
         post_type: 'meta_event',
         meta_event_type: 'heartbeat',
         status,
         interval: Config.heartbeatInterval * 1000
-    }
-    socket.send(JSON.stringify(data))
+    })
 }
 
 export {

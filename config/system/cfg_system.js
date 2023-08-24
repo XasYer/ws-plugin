@@ -7,6 +7,13 @@ export const cfgSchema = {
         key: '心跳',
         type: 'num',
         def: 5,
+        input: (n) => {
+          if (n >= 0) {
+            return n * 1
+          } else {
+            return 5
+          }
+        },
         desc: '单位:秒,0为关闭心跳',
         fileName: 'ws-config'
       },

@@ -49,13 +49,13 @@ for (const item of path) {
 }
 
 if (!Version.isTrss) {
-    initWebSocket(Config.servers)
+    initWebSocket()
 } else {
-    Bot.on('connect', data => {
-        if (data.version.id == 'QQGuild') {
-            initWebSocket(Config.servers, data.appID, data.uin)
-        }
-    })
+    // Bot.on('connect', data => {
+    //     if (data.version?.id == 'QQGuild') {
+    //         initWebSocket(Config.servers, data.appID, data.uin)
+    //     }
+    // })
 }
 
 export { apps }

@@ -148,7 +148,7 @@ async function makeGSUidReportMsg(e) {
  * 制作gsuid发送消息
  * @param {*} data 
  */
-async function makeGSUidSendMsg(data, name) {
+async function makeGSUidSendMsg(data) {
     let content = data.content, sendMsg = [], quote = null
     if (content[0].type.startsWith('log')) {
         logger.info(content[0].data);
@@ -176,7 +176,7 @@ async function makeGSUidSendMsg(data, name) {
                 case 'node':
                     let arr = []
                     for (const i of msg.data) {
-                        const { sendMsg: message } = await makeGSUidSendMsg({ content: [i], target_type: data.target_type, target_id: data.target_id }, name)
+                        const { sendMsg: message } = await makeGSUidSendMsg({ content: [i], target_type: data.target_type, target_id: data.target_id })
                         arr.push({
                             message,
                             nickname: '小助手',

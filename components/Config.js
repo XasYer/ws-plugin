@@ -14,7 +14,7 @@ const Plugin_Path = `${Path}/plugins/${Plugin_Name}`
 class Config {
   constructor() {
     this.config = {}
-
+    this.oldConfig = {}
     /** 监听文件 */
     this.watcher = { config: {}, defSet: {} }
 
@@ -182,7 +182,7 @@ class Config {
   /** 监听配置文件 */
   watch(file, name, type = 'default_config') {
     let key = `${type}.${name}`
-
+    if (!this.oldConfig[key]) this.oldConfig[key] = _.cloneDeep(this.config[key])
     if (this.watcher[key]) return
 
     const watcher = chokidar.watch(file)
@@ -190,13 +190,40 @@ class Config {
       delete this.config[key]
       if (typeof Bot == 'undefined') return
       logger.mark(`[ws-Plugin][修改配置文件][${type}][${name}]`)
-      if (this[`change_${name}`]) {
-        this[`change_${name}`]()
-      }
+
       if (name == 'ws-config') {
-        setTimeout(() => {
-          modifyWebSocket(this.servers)
-        }, 500)
+        const oldConfig = this.oldConfig[key]
+        delete this.oldConfig[key]
+        const newConfig = this.getYaml(type, name)
+        const object = this.findDifference(oldConfig, newConfig)
+        // console.log(object);
+        for (const key in object) {
+          if (Object.hasOwnProperty.call(object, key)) {
+            const value = object[key];
+            const arr = key.split('.')
+            if (arr[0] !== 'servers') continue
+            let data = newConfig.servers[arr[1]]
+            if (typeof data === 'undefined') data = oldConfig.servers[arr[1]]
+            const target = {
+              type: null,
+              data
+            }
+            if (typeof value['newValue'] === 'object' && typeof value['oldValue'] === 'undefined') {
+              target.type = 'add'
+            }
+            else if (typeof value['newValue'] === 'undefined' && typeof value['oldValue'] === 'object') {
+              target.type = 'del'
+            }
+            else if (value['newValue'] === true && (value['oldValue'] === false || typeof value['oldValue'] === 'undefined')) {
+              target.type = 'close'
+            }
+            else if (value['newValue'] === false && (value['oldValue'] === true || typeof value['oldValue'] === 'undefined')) {
+              target.type = 'open'
+            }
+            modifyWebSocket(target)
+          }
+        }
+
       }
     })
 
@@ -241,6 +268,7 @@ class Config {
   modify(name, key, value, type = 'config') {
     let path = `${Plugin_Path}/config/${type}/${name}.yaml`
     new YamlReader(path).set(key, value)
+    this.oldConfig[key] = _.cloneDeep(this.config[key])
     delete this.config[`${type}.${name}`]
   }
 
@@ -263,6 +291,14 @@ class Config {
     }
   }
 
+  setArr(name, key, item, value, type = 'config') {
+    let path = `${Plugin_Path}/config/${type}/${name}.yaml`
+    let yaml = new YamlReader(path)
+    let arr = yaml.get(key).slice();
+    arr[item] = value
+    yaml.set(key, arr)
+  }
+
   delServersArr(value, name = 'ws-config', type = 'config') {
     let path = `${Plugin_Path}/config/${type}/${name}.yaml`
     let yaml = new YamlReader(path)
@@ -271,6 +307,34 @@ class Config {
     let index = yaml.jsonData[key].findIndex(item => item.name === value);
     yaml.delete(`${key}.${index}`)
   }
+
+  /**
+   * @description 对比两个对象不同的值
+   * @param {*} oldObj 
+   * @param {*} newObj 
+   * @param {*} parentKey 
+   * @returns 
+   */
+  findDifference(obj1, obj2, parentKey = '') {
+    const result = {};
+    for (const key in obj1) {
+      const fullKey = parentKey ? `${parentKey}.${key}` : key;
+      if (_.isObject(obj1[key]) && _.isObject(obj2[key])) {
+        const diff = this.findDifference(obj1[key], obj2[key], fullKey);
+        if (!_.isEmpty(diff)) {
+          Object.assign(result, diff);
+        }
+      } else if (!_.isEqual(obj1[key], obj2[key])) {
+        result[fullKey] = { oldValue: obj1[key], newValue: obj2[key] };
+      }
+    }
+    for (const key in obj2) {
+      if (!obj1.hasOwnProperty(key)) {
+        const fullKey = parentKey ? `${parentKey}.${key}` : key;
+        result[fullKey] = { oldValue: undefined, newValue: obj2[key] };
+      }
+    }
+    return result;
+  }
 }
 export default new Config()
- 

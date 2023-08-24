@@ -119,30 +119,23 @@ Bot.on('message', async e => {
     if (!msg) {
         return false
     }
-    socketList.forEach(async socket => {
-        if (Number(socket.type) != 3) {
-            await SendOneBotMsg(socket, msg)
-        } else {
-            await SendGSUidMsg(socket, msg)
+    socketList.forEach(async i => {
+        if (i.status == 1) {
+            let reportMsg = null
+            switch (Number(i.type)) {
+                case 1:
+                case 2:
+                    reportMsg = await makeOneBotReportMsg(msg)
+                    break;
+                case 3:
+                    reportMsg = await makeGSUidReportMsg(msg)
+                default:
+                    break;
+            }
+            if (reportMsg) i.ws.send(reportMsg)
         }
     })
 })
-
-async function SendOneBotMsg(socket, e) {
-    let Message = await makeOneBotReportMsg(e)
-    if (!Message) {
-        return
-    }
-    socket.send(Message)
-}
-
-async function SendGSUidMsg(socket, e) {
-    let bytes = await makeGSUidReportMsg(e)
-    if (!bytes) {
-        return
-    }
-    socket.send(bytes)
-}
 
 function onlyReplyAt(e) {
     if (!e.message) return false

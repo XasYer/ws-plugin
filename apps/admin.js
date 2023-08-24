@@ -1,5 +1,5 @@
 import plugin from '../../../lib/plugins/plugin.js'
-import { Config, clearWebSocket, initWebSocket, Render, Version, socketList, serverList, closeList } from '../components/index.js'
+import { Config, clearWebSocket, initWebSocket, Render, Version, socketList } from '../components/index.js'
 import lodash from 'lodash'
 
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
@@ -256,54 +256,42 @@ export class setting extends plugin {
 
     async openWs(msg) {
         let servers = Config.servers
-        let target = null
         for (let i = 0; i < servers.length; i++) {
             if (servers[i].name == msg) {
                 servers[i].close = false
-                target = servers[i]
-                break
+                try {
+                    Config.setArr('ws-config', 'servers', i, servers[i])
+                    this.reply('操作成功~')
+                    return true
+                } catch (error) {
+                    logger.error(error)
+                    this.reply('操作失败...')
+                    return true
+                }
             }
         }
-        if (!target) {
-            this.reply(`没有连接名字为${msg}的连接`)
-            return true
-        } else {
-            try {
-                Config.modify('ws-config', 'servers', servers)
-                this.reply('操作成功~')
-                return true
-            } catch (error) {
-                logger.error(error)
-                this.reply('操作失败~')
-                return true
-            }
-        }
+        this.reply(`没有连接名字为${msg}的连接`)
+        return true
     }
 
     async closeWs(msg) {
         let servers = Config.servers
-        let target = null
         for (let i = 0; i < servers.length; i++) {
             if (servers[i].name == msg) {
                 servers[i].close = true
-                target = servers[i]
-                break
+                try {
+                    Config.setArr('ws-config', 'servers', i, servers[i])
+                    this.reply('操作成功~')
+                    return true
+                } catch (error) {
+                    logger.error(error)
+                    this.reply('操作失败...')
+                    return true
+                }
             }
         }
-        if (!target) {
-            this.reply(`没有连接名字为${msg}的连接`)
-            return true
-        } else {
-            try {
-                Config.modify('ws-config', 'servers', servers)
-                this.reply('操作成功~')
-                return true
-            } catch (error) {
-                logger.error(error)
-                this.reply('操作失败~')
-                return true
-            }
-        }
+        this.reply(`没有连接名字为${msg}的连接`)
+        return true
     }
 
     async checkOpenWs() {
@@ -326,27 +314,21 @@ export class setting extends plugin {
 
     async delWs(msg) {
         let servers = Config.servers
-        let target = null
         for (let i = 0; i < servers.length; i++) {
             if (servers[i].name == msg) {
-                target = servers[i]
-                break
+                try {
+                    Config.delServersArr(servers[i].name)
+                    this.reply('操作成功~')
+                    return true
+                } catch (error) {
+                    logger.error(error)
+                    this.reply('操作失败~')
+                    return true
+                }
             }
         }
-        if (!target) {
-            this.reply(`没有连接名字为${msg}的连接`)
-            return true
-        } else {
-            try {
-                Config.delServersArr(target.name)
-                this.reply('操作成功~')
-                return true
-            } catch (error) {
-                logger.error(error)
-                this.reply('操作失败~')
-                return true
-            }
-        }
+        this.reply(`没有连接名字为${msg}的连接`)
+        return true
     }
 
     async help() {
@@ -389,63 +371,42 @@ export class setting extends plugin {
 
     async reset() {
         clearWebSocket()
-        initWebSocket(Config.servers)
+        initWebSocket()
         this.reply('操作成功~')
         return true
     }
 
     async view() {
-        let servers = Config.servers
-        let msg = []
-        let status = []
-        if (socketList.length != 0) {
-            socketList.forEach(item => {
-                status.push({
-                    name: item.name,
-                    state: item.readyState
-                })
-            })
-        }
-        if (closeList.length != 0) {
-            closeList.forEach(item => {
-                status.push({
-                    name: item.name,
-                    state: '断线重连中...'
-                })
-            })
-        }
-        if (serverList.length != 0) {
-            serverList.forEach(item => {
-                status.push({
-                    name: item.name,
-                    state: '运行中'
-                })
-            })
-        }
-        if (Array.isArray(servers)) {
-            servers.forEach(item => {
-                if (msg.length != 0) {
-                    msg.push('\n----------------\n')
-                }
-                let statu = null
-                if (item.close) {
-                    statu = '已关闭连接'
-                } else {
-                    for (let i = 0; i < status.length; i++) {
-                        if (status[i].name == item.name) {
-                            if (status[i].state == 1) {
-                                statu = '正常'
+        const msg = []
+        for (const i of Config.servers) {
+            if (msg.length != 0) msg.push('\n----------------\n')
+            let status = '已关闭连接'
+            for (const s of socketList) {
+                if (s.name == i.name) {
+                    switch (s.status) {
+                        case 0:
+                            status = '已关闭连接'
+                            break;
+                        case 1:
+                            if (s.type == 2) {
+                                status = '运行中'
                             } else {
-                                statu = status[i].state
+                                status = '已连接'
                             }
-                        }
+                            break
+                        case 3:
+                            if (s.type == 2) {
+                                status = '已停止运行'
+                            } else {
+                                status = '断线重连中'
+                            }
+                            break
+                        default:
+                            break;
                     }
                 }
-                msg.push(`连接名字: ${item.name}\n连接类型: ${item.type}\n当前状态: ${statu}`)
-                if (!this.e.isGroup) {
-                    msg.push(`\n连接地址: ${item.address}`)
-                }
-            })
+            }
+            msg.push(`连接名字: ${i.name}\n连接类型: ${i.type}\n当前状态: ${status}`)
         }
         if (msg.length > 0) {
             await this.reply(msg)
