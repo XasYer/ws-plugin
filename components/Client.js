@@ -172,9 +172,11 @@ export default class Client {
                 // 处理 /event 请求
             }
         })
-        this.ws.send = (msg) => {
-            for (const i of arr) {
-                i.send(msg)
+        this.ws = {
+            send: (msg) => {
+                for (const i of arr) {
+                    i.send(msg)
+                }
             }
         }
         this.wss = new WebSocketServer({ noServer: true })
