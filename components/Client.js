@@ -114,7 +114,7 @@ export default class Client {
         this.express = express()
         this.server = http.createServer(express)
         const arr = []
-        server.on("upgrade", (req, socket, head) => {
+        this.server.on("upgrade", (req, socket, head) => {
             if (this.accessToken) {
                 const token = req.headers['authorization']?.replace('Token ', '')
                 if (this.accessToken != token) {
@@ -178,7 +178,7 @@ export default class Client {
             }
         }
         this.wss = new WebSocketServer({ noServer: true })
-        server.listen(port, host, () => {
+        this.server.listen(port, host, () => {
             this.status = 1
             logger.mark(`CQ WebSocket 服务器已启动: ${host}:${port}`)
         })
