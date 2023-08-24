@@ -125,7 +125,7 @@ export default class Client {
             if (req.url === '/') {
                 this.wss.handleUpgrade(req, socket, head, conn => {
                     conn.id = req.headers["sec-websocket-key"]
-                    const time = null
+                    let time = null
                     conn.send(lifecycle(this.uin))
                     if (Config.heartbeatInterval > 0) {
                         time = setInterval(async () => {
