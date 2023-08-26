@@ -110,6 +110,7 @@ export default class Client {
         const parts = this.address.split(':');
         this.host = parts[0];
         this.port = parts[1];
+        this.arr = []
         this.express = express()
         this.server = http.createServer(this.express)
         this.server.on("upgrade", (req, socket, head) => {
