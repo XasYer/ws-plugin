@@ -106,14 +106,12 @@ export default class Client {
         })
     }
 
-
     createServer() {
         const parts = this.address.split(':');
-        const host = parts[0];
-        const port = parts[1];
+        this.host = parts[0];
+        this.port = parts[1];
         this.express = express()
-        this.server = http.createServer(express)
-        const arr = []
+        this.server = http.createServer(this.express)
         this.server.on("upgrade", (req, socket, head) => {
             if (this.accessToken) {
                 const token = req.headers['authorization']?.replace('Token ', '')
@@ -137,8 +135,10 @@ export default class Client {
                         logger.error(`${this.name} 接受 WebSocket 连接时出现错误: ${event}`)
                     })
                     conn.on("close", () => {
-                        logger.warn(`${this.name} 关闭 WebSocket 连接`);
-                        arr = arr.filter(i => i != req.headers["sec-websocket-key"])
+                        if (this.stopReconnect = false) {
+                            logger.warn(`${this.name} 关闭 WebSocket 连接`);
+                        }
+                        this.arr = this.arr.filter(i => i != req.headers["sec-websocket-key"])
                         clearInterval(time)
                     })
                     conn.on("message", async event => {
@@ -164,7 +164,7 @@ export default class Client {
                         }
                         conn.send(JSON.stringify(ret));
                     })
-                    arr.push(conn)
+                    this.arr.push(conn)
                 })
             } else if (req.url === '/api' || req.url === '/api/') {
                 // 处理 /api 请求
@@ -174,15 +174,22 @@ export default class Client {
         })
         this.ws = {
             send: (msg) => {
-                for (const i of arr) {
+                for (const i of this.arr) {
                     i.send(msg)
+                }
+            },
+            close: () => {
+                this.server.close()
+                logger.warn(`CQ WebSocket 服务器已关闭: ${this.host}:${this.port}`)
+                for (const i of this.arr) {
+                    i.close()
                 }
             }
         }
         this.wss = new WebSocketServer({ noServer: true })
-        this.server.listen(port, host, () => {
+        this.server.listen(this.port, this.host, () => {
             this.status = 1
-            logger.mark(`CQ WebSocket 服务器已启动: ${host}:${port}`)
+            logger.mark(`CQ WebSocket 服务器已启动: ${this.host}:${this.port}`)
         })
     }
 
@@ -254,14 +261,7 @@ export default class Client {
     close() {
         this.stopReconnect = true
         if (this.status == 1) {
-            if (this.server) {
-                this.server.close()
-                for (const i of arr) {
-                    i?.close()
-                }
-            } else {
-                this.ws.close()
-            }
+            this.ws?.close()
             this.status = 3
         }
     }
