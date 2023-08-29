@@ -39,6 +39,11 @@ class Config {
     return cfg.masterQQ
   }
 
+  /** 黑名单群 */
+  get blackGroup(){
+    return cfg.getOther().blackGroup
+  }
+
   /** 心跳 */
   get heartbeatInterval() {
     return this.getDefOrConfig('ws-config').heartbeatInterval

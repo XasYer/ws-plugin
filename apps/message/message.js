@@ -6,8 +6,27 @@ import cfg from '../../../../lib/config/config.js'
 
 Bot.on('message', async e => {
     // console.log(e);
-    //如果没有已连接的Websocket
+    // 如果没有已连接的Websocket
     if (socketList.length == 0) return false
+    // 判断是否启用
+    const groupList = Config.noGroup
+    if (Array.isArray(groupList) && groupList.length > 0) {
+        if (groupList.some(item => item == e.group_id)) return false
+    }
+    // 黑名单群
+    const blackGroup = Config.blackGroup
+    if (Array.isArray(blackGroup) && blackGroup.length > 0) {
+        if (blackGroup.some(item => item == e.group_id)) return false
+    }
+    // 判断前缀
+    if (msg.message?.[0]?.type === 'text') {
+        if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
+            if (Config.noMsgStart.some(item => msg.message[0].text.startsWith(item))) {
+                return false
+            }
+        }
+    }
+
     let _reply = e.reply
     e.reply = async function (massage, quote = false, data = {}) {
         let ret = await _reply(massage, quote, data)
@@ -45,20 +64,6 @@ Bot.on('message', async e => {
         msg.message = message
         // return false
     }
-    //判断是否启用
-    let groupList = Config.noGroup
-    if (Array.isArray(groupList) && groupList.length > 0) {
-        if (groupList.some(item => item == e.group_id)) return false
-    }
-    //判断前缀
-    if (msg.message?.[0]?.type === 'text') {
-        if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
-            if (Config.noMsgStart.some(item => msg.message[0].text.startsWith(item))) {
-                return false
-            }
-        }
-    }
-
     //增加isGroup e.isPrivate
     if (msg.guild_id) {
         msg.isGuild = true
