@@ -80,29 +80,34 @@ export default class Client {
             }
             this.ws.send(JSON.stringify(ret));
         })
-        this.ws.on('close', async () => {
-            logger.warn(`${this.name}连接已关闭`);
+        this.ws.on('close', async code => {
+            logger.warn(`${this.name} 连接已关闭`);
             clearInterval(this.timer)
             if (Config.disconnectToMaster && this.reconnectCount == 1 && this.status == 1) {
-                await this.sendMasterMsg(`${this.name}已断开连接...`)
+                await this.sendMasterMsg(`${this.name} 已断开连接...`)
             } else if (Config.firstconnectToMaster && this.reconnectCount == 1 && this.status == 0) {
-                await this.sendMasterMsg(`${this.name}连接失败...`)
+                await this.sendMasterMsg(`${this.name} 连接失败...`)
             }
             this.status = 3
             if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
-                logger.warn('开始尝试重新连接第' + this.reconnectCount + '次');
-                this.reconnectCount++
-                setTimeout(() => {
-                    this.createWs()
-                }, this.reconnectInterval * 1000);
+                if (code === 1005) {
+                    logger.warn(`${this.name} 连接异常,停止重连`);
+                    this.status = 0
+                } else {
+                    logger.warn(`${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
+                    this.reconnectCount++
+                    setTimeout(() => {
+                        this.createWs()
+                    }, this.reconnectInterval * 1000);
+                }
             } else {
                 this.stopReconnect = false
                 this.status = 0
-                logger.warn('达到最大重连次数或关闭连接,停止重连');
+                logger.warn(`${this.name} 达到最大重连次数或关闭连接,停止重连`);
             }
         })
         this.ws.on('error', (event) => {
-            logger.error(`${this.name}连接失败\n${event}`);
+            logger.error(`${this.name} 连接失败\n${event}`);
         })
     }
 
@@ -232,7 +237,7 @@ export default class Client {
             }
         })
 
-        this.ws.on('close', async () => {
+        this.ws.on('close', async code => {
             logger.warn(`${this.name}连接已关闭`);
             if (Config.disconnectToMaster && this.reconnectCount == 1 && this.status == 1) {
                 await this.sendMasterMsg(`${this.name}已断开连接...`)
@@ -241,11 +246,16 @@ export default class Client {
             }
             this.status = 3
             if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
-                logger.warn('开始尝试重新连接第' + this.reconnectCount + '次');
-                this.reconnectCount++
-                setTimeout(() => {
-                    this.createGSUidWs()
-                }, this.reconnectInterval * 1000);
+                if (code === 1005) {
+                    logger.warn(`${this.name} 连接异常,停止重连`);
+                    this.status = 0
+                } else {
+                    logger.warn('开始尝试重新连接第' + this.reconnectCount + '次');
+                    this.reconnectCount++
+                    setTimeout(() => {
+                        this.createGSUidWs()
+                    }, this.reconnectInterval * 1000);
+                }
             } else {
                 this.stopReconnect = false
                 this.status = 0
