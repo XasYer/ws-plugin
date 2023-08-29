@@ -40,7 +40,7 @@ class Config {
   }
 
   /** 黑名单群 */
-  get blackGroup(){
+  get blackGroup() {
     return cfg.getOther().blackGroup
   }
 
@@ -65,6 +65,10 @@ class Config {
 
   get noMsgInclude() {
     return this.getDefOrConfig('msg-config').noMsgInclude
+  }
+
+  get howToMaster() {
+    return this.getDefOrConfig('msg-config').howToMaster
   }
 
   /**掉线时否通知主人 */

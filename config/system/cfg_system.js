@@ -52,6 +52,21 @@ export const cfgSchema = {
         desc: '首次连接时是否通知主人成功还是失败',
         fileName: 'msg-config'
       },
+      howToMaster: {
+        title: '通知哪个主人',
+        key: '主人',
+        type: 'num',
+        input: (n) => {
+          if (n >= 0) {
+            return n * 1
+          } else {
+            return 1
+          }
+        },
+        def: 1,
+        desc: `通知主人列表的第几个主人,为0时通知全部主人`,
+        fileName: 'msg-config'
+      },
       msgStoreTime: {
         title: '消息存储时间',
         key: '存储',
@@ -64,7 +79,7 @@ export const cfgSchema = {
           }
         },
         def: 600,
-        desc: '用于撤回和回复消息,仅限于ws-plugin和用户发送,如果超过时间去获取就会获取不到,单位秒,0不存储',
+        desc: '用于撤回和回复消息,如果超过时间去获取就会获取不到,单位秒,0不存储',
         fileName: 'msg-config'
       }
     }

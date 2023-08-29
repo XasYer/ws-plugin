@@ -277,20 +277,27 @@ export default class Client {
         }
     }
 
-    async sendMasterMsg(msg, init = true) {
-        let result = await Bot.sendPrivateMsg(Config.masterQQ[0], msg)
-        if (!result && init) {
-            const timer = setInterval(async () => {
-                result = await this.sendMasterMsg(msg, false)
-                if (result) {
-                    clearInterval(timer)
-                    logger.mark(`[ws-plugin] 连接名字:${this.name} 发送主人消息 处理完成`)
-                }
-            }, 5000)
-        } else if (init) {
-            logger.mark(`[ws-plugin] 连接名字:${this.name} 发送主人消息 处理完成`)
+    async sendMasterMsg(msg) {
+        let target = []
+        if (Config.howToMaster > 0) {
+            target.push(Config.masterQQ[Config.howToMaster - 1])
+        } else if (Config.howToMaster == 0) {
+            target.push(...Config.masterQQ)
         }
-        return result
+        for (const i of target) {
+            let result = await Bot.sendPrivateMsg(i, msg)
+            if (result) {
+                logger.mark(`[ws-plugin] 连接名字:${this.name} 通知主人:${i} 处理完成`)
+            } else {
+                const timer = setInterval(async () => {
+                    result = await Bot.sendPrivateMsg(i, msg)
+                    if (result) {
+                        clearInterval(timer)
+                        logger.mark(`[ws-plugin] 连接名字:${this.name} 通知主人:${i} 处理完成`)
+                    }
+                }, 5000)
+            }
+        }
     }
 
 }
