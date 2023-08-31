@@ -4,6 +4,7 @@ import lodash from 'lodash'
 
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
 let sysCfgReg = new RegExp(`^#ws设置\\s*(${keys.join('|')})?\\s*(.*)$`)
+const groupReg = '^#ws(查看|删除|添加)?(禁用|启用)群([0-9]*)$'
 
 export class setting extends plugin {
     constructor() {
@@ -29,7 +30,7 @@ export class setting extends plugin {
                     permission: 'master'
                 },
                 {
-                    reg: '^#ws(查看)?(禁用|启用)群[0-9]*$',
+                    reg: groupReg,
                     fnc: 'modifyGroup',
                     permission: 'master'
                 }
@@ -38,77 +39,165 @@ export class setting extends plugin {
     }
 
     async modifyGroup() {
-        let reg = new RegExp('^#ws(查看)?(禁用|启用)群([0-9]*)$')
+        let reg = new RegExp(groupReg)
         let regRet = reg.exec(this.e.msg)
         if (!regRet) {
             return true
         }
-        let groupList = Config.noGroup
+        const type = regRet[2]
+        const target = type == '禁用' ? 'noGroup' : 'yesGroup'
+        const cfg = {
+            noGroup: Config.noGroup,
+            yesGroup: Config.yesGroup
+        }
+        const group_id = regRet[3] || this.e.group_id
+        let sendMsg = []
         if (regRet[1]) {
-            let sendMsg = []
-            if (Array.isArray(groupList) && groupList.length > 0) {
-                sendMsg.push('以下为禁用群聊的群号\n')
-                sendMsg.push(groupList.join('\n'))
-            }
-            if (sendMsg.length > 0) {
-                this.reply(sendMsg)
-            } else {
-                this.reply('暂无禁用群聊')
-            }
-        } else {
-            let group_id = this.e.group_id
-            if (regRet[3]) {
-                group_id = Number(regRet[3])
-            }
-            if (!group_id) {
-                this.reply('群号捏?')
-                return true
-            }
-            switch (regRet[2]) {
-                case '禁用':
-                    let isExist = false
-                    if (Array.isArray(groupList) && groupList.length > 0) {
-                        for (const item of groupList) {
-                            if (item === group_id) {
-                                isExist = true
-                                break
-                            }
-                        }
+            switch (regRet[1]) {
+                case '查看':
+                    if (Array.isArray(cfg[target]) && cfg[target].length > 0) {
+                        sendMsg.push(`以下为${type}群聊的群号\n`)
+                        sendMsg.push(cfg[target].join('\n'))
                     } else {
-                        groupList = []
+                        sendMsg.push(`暂无${type}群聊`)
                     }
-                    if (isExist) {
-                        this.reply('达咩,已经禁止这个群聊了')
-                        return true
-                    }
-                    groupList.push(group_id)
-                    break
-                case '启用':
+                    break;
+                case '删除':
                     let index = -1
-                    if (Array.isArray(groupList) && groupList.length > 0) {
-                        for (let i = 0; i < groupList.length; i++) {
-                            if (groupList[i] == group_id) {
+                    if (Array.isArray(cfg[target]) && cfg[target].length > 0) {
+                        for (let i = 0; i < cfg[target].length; i++) {
+                            if (cfg[target][i] == group_id) {
                                 index = i
                             }
                         }
                     }
                     if (index == -1) {
-                        this.reply('达咩,没有禁止这个群聊')
-                        return true
+                        sendMsg.push(`操作失败~在${type}群中没有这个群聊,当前${type}群列表:\n`)
+                        sendMsg.push(cfg[target].join('\n'))
+                    } else {
+                        cfg[target].splice(index, 1)
+                        sendMsg.push(`操作成功~从${type}群中删除了[${group_id}]!\n当前${type}列表:\n`)
+                        sendMsg.push(cfg[target].join('\n'))
                     }
-                    groupList.splice(index, 1)
+                    break;
+                case '添加':
+                    let isExist = false
+                    if (Array.isArray(cfg[target]) && cfg[target].length > 0) {
+                        for (const item of cfg[target]) {
+                            if (item == group_id) {
+                                isExist = true
+                                break
+                            }
+                        }
+                    } else {
+                        cfg[target] = []
+                    }
+                    if (isExist) {
+                        sendMsg.push(`操作失败~${type}群中已经添加了[${group_id}]\n当前${type}群列表:\n`)
+                        sendMsg.push(cfg[target].join('\n'))
+                    } else {
+                        cfg[target].push(group_id)
+                        sendMsg.push(`操作成功~向${type}群中添加了[${group_id}]!\n当前${type}群列表:\n`)
+                        sendMsg.push(cfg[target].join('\n'))
+                    }
+                default:
+                    break;
+            }
+        } else {
+            let isExist = false
+            switch (type) {
+                case '禁用':
+                    // 先看白名单有没有这个群
+                    if (Array.isArray(cfg['yesGroup']) && cfg['yesGroup'].length > 0) {
+                        for (const i of cfg['yesGroup']) {
+                            if (i == group_id) {
+                                isExist = true
+                            }
+                        }
+                    }
+                    // 如果在白名单中则删除白名单
+                    if (isExist) {
+                        cfg['yesGroup'] = cfg['yesGroup'].filter(i => i != group_id)
+                        sendMsg.push(`操作成功~从白名单中删除了[${group_id}]!\n当前白名单列表:\n`)
+                        sendMsg.push(cfg['yesGroup'].join('\n'))
+                    }
+                    // 否则添加为黑名单 
+                    else {
+                        // 再看看黑名单有没有这个群
+                        if (Array.isArray(cfg['noGroup']) && cfg['noGroup'].length > 0) {
+                            for (const item of cfg['noGroup']) {
+                                if (item == group_id) {
+                                    isExist = true
+                                    break
+                                }
+                            }
+                        } else {
+                            cfg['noGroup'] = []
+                        }
+                        if (isExist) {
+                            sendMsg.push(`操作失败~黑名单中已经添加了[${group_id}]\n当前黑名单列表:\n`)
+                            sendMsg.push(cfg['noGroup'].join('\n'))
+                        } else {
+                            cfg['noGroup'].push(group_id)
+                            sendMsg.push(`操作成功~向黑名单中添加了[${group_id}]!\n当前黑名单列表:\n`)
+                            sendMsg.push(cfg['noGroup'].join('\n'))
+                        }
+                    }
+                    break
+                case '启用':
+                    // 先看黑名单有没有这个群
+                    if (Array.isArray(cfg['noGroup']) && cfg['noGroup'].length > 0) {
+                        for (const item of cfg['noGroup']) {
+                            if (item == group_id) {
+                                isExist = true
+                                break
+                            }
+                        }
+                    } else {
+                        cfg['noGroup'] = []
+                    }
+                    // 如果在黑名单中则删除黑名单
+                    if (isExist) {
+                        cfg['noGroup'] = cfg['noGroup'].filter(i => i != group_id)
+                        sendMsg.push(`操作成功~从黑名单中删除了[${group_id}]!\n当前黑名单列表:\n`)
+                        sendMsg.push(cfg['noGroup'].join('\n'))
+                    }
+                    // 否则添加为黑名单 
+                    else {
+                        // 再看看白名单有没有这个群
+                        if (Array.isArray(cfg['yesGroup']) && cfg['yesGroup'].length > 0) {
+                            for (const item of cfg['yesGroup']) {
+                                if (item == group_id) {
+                                    isExist = true
+                                    break
+                                }
+                            }
+                        } else {
+                            cfg['yesGroup'] = []
+                        }
+                        if (isExist) {
+                            sendMsg.push(`操作失败~白名单中已经添加了[${group_id}]\n当前白名单列表:\n`)
+                            sendMsg.push(cfg['yesGroup'].join('\n'))
+                        } else {
+                            cfg['yesGroup'].push(group_id)
+                            sendMsg.push(`操作成功~向白名单中添加了[${group_id}]!\n当前白名单列表:\n`)
+                            sendMsg.push(cfg['yesGroup'].join('\n'))
+                        }
+                    }
                     break
                 default:
                     break
             }
-            try {
-                Config.modify('msg-config', 'noGroup', groupList)
-                this.reply(`操作成功~`)
-            } catch (error) {
-                this.reply('操作失败...')
-                logger.error(error)
-            }
         }
+        try {
+            for (const key in cfg) {
+                Config.modify('msg-config', key, cfg[key])
+            }
+        } catch (error) {
+            sendMsg = ['操作失败...']
+            logger.error(error)
+        }
+        this.reply(sendMsg)
         return true
     }
 

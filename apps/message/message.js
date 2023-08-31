@@ -1,4 +1,4 @@
-import { socketList, Config, Version, initWebSocket } from '../../components/index.js'
+import { socketList, Config, Version } from '../../components/index.js'
 import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId, setMsgMap } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
@@ -8,25 +8,36 @@ Bot.on('message', async e => {
     // console.log(e);
     // 如果没有已连接的Websocket
     if (socketList.length == 0) return false
-    // 判断是否启用
-    const groupList = Config.noGroup
-    if (Array.isArray(groupList) && groupList.length > 0) {
-        if (groupList.some(item => item == e.group_id)) return false
-    }
-    // 黑名单群
-    const blackGroup = Config.blackGroup
-    if (Array.isArray(blackGroup) && blackGroup.length > 0) {
-        if (blackGroup.some(item => item == e.group_id)) return false
-    }
-    // 判断前缀
-    if (e.message?.[0]?.type === 'text') {
-        if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
-            if (Config.noMsgStart.some(item => e.message[0].text.startsWith(item))) {
-                return false
-            }
+    if (e.group_id) {
+        // 判断云崽白名单
+        const whiteGroup = Config.whiteGroup
+        if (Array.isArray(whiteGroup) && whiteGroup.length > 0) {
+            if (!whiteGroup.some(i => i == e.group_id)) return false
+        }
+        // 判断插件白名单
+        const yesGroup = Config.yesGroup
+        if (Array.isArray(yesGroup) && yesGroup.length > 0) {
+            if (!yesGroup.some(i => i == e.group_id)) return false
+        }
+        // 判断云崽黑名单
+        const blackGroup = Config.blackGroup
+        if (Array.isArray(blackGroup) && blackGroup.length > 0) {
+            if (blackGroup.some(i => i == e.group_id)) return false
+        }
+        // 判断插件黑名单
+        const noGroup = Config.noGroup
+        if (Array.isArray(noGroup) && noGroup.length > 0) {
+            if (noGroup.some(i => i == e.group_id)) return false
         }
     }
-
+    // 判断插件前缀
+    if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
+        if (e.message?.[0]?.type === 'text') {
+            if (Config.noMsgStart.some(i => e.message[0].text.startsWith(i))) return false
+        } else {
+            return false
+        }
+    }
     let _reply = e.reply
     e.reply = async function (massage, quote = false, data = {}) {
         let ret = await _reply(massage, quote, data)
@@ -51,12 +62,12 @@ Bot.on('message', async e => {
             message.push(...content)
         }
         if (e.attachments) {
-            e.attachments.forEach(item => {
-                if (item.content_type.startsWith('image')) {
+            e.attachments.forEach(i => {
+                if (i.content_type.startsWith('image')) {
                     message.push({
                         type: 'image',
-                        file: item.filename,
-                        url: item.url
+                        file: i.filename,
+                        url: i.url
                     })
                 }
             })
@@ -120,10 +131,9 @@ Bot.on('message', async e => {
     } else {
         return false
     }
+    // 判断云崽前缀
     msg = onlyReplyAt(msg)
-    if (!msg) {
-        return false
-    }
+    if (!msg) return false
     socketList.forEach(async i => {
         if (i.status == 1) {
             let reportMsg = null

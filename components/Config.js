@@ -39,9 +39,14 @@ class Config {
     return cfg.masterQQ
   }
 
-  /** 黑名单群 */
+  /** 云崽黑名单群 */
   get blackGroup() {
     return cfg.getOther().blackGroup
+  }
+
+  /** 云崽白名单群 */
+  get whiteGroup(){
+    return cfg.getOther().whiteGroup
   }
 
   /** 心跳 */
@@ -94,6 +99,10 @@ class Config {
   /**禁用群聊列表 */
   get noGroup() {
     return this.getDefOrConfig('msg-config').noGroup
+  }
+
+  get yesGroup(){
+    return this.getDefOrConfig('msg-config').yesGroup
   }
 
   /**群管理员变动是否上报 */

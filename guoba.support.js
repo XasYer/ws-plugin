@@ -67,6 +67,18 @@ export function supportGuoba() {
           }
         },
         {
+          field: 'msg.yesGroup',
+          label: '白名单群聊',
+          bottomHelpMessage: '只上报数组内的群消息',
+          component: 'Select',
+          componentProps: {
+            allowAdd: true,
+            allowDel: true,
+            mode: 'multiple',
+            options: groupList
+          }
+        },
+        {
           field: 'msg.disconnectToMaster',
           label: '断开连接',
           bottomHelpMessage: '断开连接时否通知主人',

@@ -3,6 +3,28 @@ import { setMsgMap } from '../../model/index.js'
 
 Bot.on('notice', async e => {
     if (socketList.length == 0) return false
+    if (e.group_id) {
+        // 判断云崽白名单
+        const whiteGroup = Config.whiteGroup
+        if (Array.isArray(whiteGroup) && whiteGroup.length > 0) {
+            if (!whiteGroup.some(i => i == e.group_id)) return false
+        }
+        // 判断插件白名单
+        const yesGroup = Config.yesGroup
+        if (Array.isArray(yesGroup) && yesGroup.length > 0) {
+            if (!yesGroup.some(i => i == e.group_id)) return false
+        }
+        // 判断云崽黑名单
+        const blackGroup = Config.blackGroup
+        if (Array.isArray(blackGroup) && blackGroup.length > 0) {
+            if (blackGroup.some(i => i == e.group_id)) return false
+        }
+        // 判断插件黑名单
+        const noGroup = Config.noGroup
+        if (Array.isArray(noGroup) && noGroup.length > 0) {
+            if (noGroup.some(i => i == e.group_id)) return false
+        }
+    }
     let _reply = e.reply
     e.reply = async function (massage, quote = false, data = {}) {
         let ret = await _reply(massage, quote, data)

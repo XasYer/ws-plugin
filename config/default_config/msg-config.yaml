@@ -21,6 +21,9 @@ firstconnectToMaster: false
 #消息存储时间,用于撤回和回复消息,单位秒
 msgStoreTime: 600
 
-#不需要开启的群
+#黑名单群
 noGroup:
   - 123456
+
+#白名单群
+yesGroup: []
