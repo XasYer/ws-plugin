@@ -1,8 +1,9 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap, qqnt } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from "express"
 import http from "http"
+import fetch from 'node-fetch'
 
 export default class Client {
     constructor({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, uin = Bot.uin }) {
@@ -266,7 +267,138 @@ export default class Client {
         this.ws.on('error', (event) => {
             logger.error(`${this.name}连接失败\n${event}`);
         })
+    }
 
+    async createQQNT() {
+        const token = this.address.split(':')
+        const bot = {
+            host: token[0],
+            port: token[1],
+            token: token[2]
+        }
+        bot.api = async (method, api, body) => {
+            return await fetch(`http://${bot.host}:${bot.port}/api/${api}`, {
+                method,
+                body,
+                headers: {
+                    Authorization: 'Bearer ' + bot.token
+                }
+            })
+        }
+        this.ws = {
+            close: () => {
+                bot.ws?.close()
+            }
+        }
+        const reconnect = () => {
+            if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
+                this.status = 3
+                logger.warn(`${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
+                this.reconnectCount++
+                setTimeout(() => {
+                    this.createQQNT()
+                }, this.reconnectInterval * 1000);
+            } else {
+                this.stopReconnect = false
+                this.status = 0
+                logger.warn(`${this.name} 达到最大重连次数或关闭连接,停止重连`);
+            }
+        }
+        let info
+        try {
+            info = await bot.api('get', 'getSelfProfile')
+        } catch (error) {
+            logger.error(`${this.name} 请先启动QQNT`)
+            reconnect()
+            return
+        }
+        if (info.status === 200) {
+            try {
+                info = await info.json()
+            } catch (error) {
+                logger.error(`${this.name} 未知错误`)
+                reconnect()
+            }
+            bot.info = {
+                ...info,
+                user_id: info.uin,
+                self_id: info.uin,
+                nickname: info.nick,
+                username: info.nick
+            }
+            bot.self_id = info.uin
+            this.uin = bot.self_id
+        } else {
+            logger.error(`${this.name}(${this.uin}) Token错误`)
+            return
+        }
+        bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)
+        bot.send = (type, payload) => bot.ws.send(JSON.stringify({ type, payload }))
+        bot.ws.on('open', () => bot.send('meta::connect', { token: bot.token }))
+        bot.ws.on('message', data => qqnt.toQQNTMsg(bot.self_id, data))
+        bot.ws.on('close', (code) => {
+            delete Bot[bot.self_id]
+            this.status = 3
+            switch (code) {
+                case 1005:
+                    this.status = 0
+                    logger.error(`${this.name}(${this.uin}) 主动断开连接`)
+                    return
+                case 1006:
+                    logger.error(`${this.name}(${this.uin}) QQNT被关闭`)
+                    reconnect()
+                    return
+                default:
+                    return
+            }
+        })
+        const friendList = await bot.api('get', 'bot/friends').then(r => r.json())
+        const fl = new Map()
+        for (const i of friendList) {
+            fl.set(i.uin, {
+                ...i,
+                user_id: i.uin,
+                nickname: i.nick
+            })
+        }
+        const gl = new Map()
+        for (const i of (await bot.api('get', 'bot/groups').then(r => r.json()))) {
+            gl.set(i.groupCode, {
+                ...i,
+                group_id: i.groupCode,
+                group_name: i.groupName,
+                max_member_count: i.maxMember,
+                member_count: i.memberCount,
+            })
+        }
+        Bot[bot.self_id] = {
+            adapter: {
+                id: "QQ",
+                name: "QQNTRedProtocol"
+            },
+            ws: bot.ws,
+            uin: bot.self_id,
+            nickname: bot.nickname,
+            self_id: bot.self_id,
+            stat: { start_time: Date.now() / 1000 },
+            version: {
+                id: "QQ",
+                name: "QQNTRedProtocol"
+            },
+            get api() { return bot.api },
+            get send() { return bot.send },
+            pickFriend: user_id => qqnt.pickFriend(bot.self_id, user_id),
+            get pickUser() { return qqnt.pickFriend },
+            pickMember: (group_id, user_id) => qqnt.pickMember(bot.self_id, group_id, user_id),
+            pickGroup: group_id => qqnt.pickGroup(bot.self_id, group_id),
+            fl,
+            gl,
+            gml: new Map,
+        }
+        logger.mark(`${logger.blue(`[${bot.self_id}]`)} ${this.name} 已连接`)
+        this.status = 1
+        Bot.em(`connect.${bot.self_id}`, Bot[bot.self_id])
+        return true
     }
 
     close() {

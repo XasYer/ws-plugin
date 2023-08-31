@@ -197,7 +197,7 @@ export class setting extends plugin {
             sendMsg = ['操作失败...']
             logger.error(error)
         }
-        this.reply(sendMsg)
+        if (sendMsg.length > 0) this.reply(sendMsg)
         return true
     }
 

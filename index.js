@@ -48,14 +48,14 @@ for (const item of path) {
     }
 }
 
-if (!Version.isTrss) {
-    initWebSocket()
-} else {
-    // Bot.on('connect', data => {
-    //     if (data.version?.id == 'QQGuild') {
-    //         initWebSocket(Config.servers, data.appID, data.uin)
-    //     }
-    // })
-}
+// if (!Version.isTrss) {
+initWebSocket()
+// } else {
+// Bot.on('connect', data => {
+//     if (data.version?.id == 'QQGuild') {
+//         initWebSocket(Config.servers, data.appID, data.uin)
+//     }
+// })
+// }
 
 export { apps }

@@ -17,6 +17,9 @@ function createWebSocket(data) {
         case 3:
             client.createGSUidWs()
             break
+        case 4:
+            client.createQQNT()
+            break
         default:
             return;
     }
@@ -25,7 +28,7 @@ function createWebSocket(data) {
 }
 
 function modifyWebSocket(target) {
-    if (Version.isTrss) return
+    // if (Version.isTrss) return
     switch (target.type) {
         case 'add':
         case 'open':
@@ -53,7 +56,7 @@ function clearWebSocket() {
 
 
 function initWebSocket() {
-    if (Version.isTrss) return
+    // if (Version.isTrss) return
     for (const i of Config.servers) {
         createWebSocket(i)
     }

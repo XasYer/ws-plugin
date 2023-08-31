@@ -47,8 +47,15 @@ Bot.on('request', async e => {
     }
     msg = JSON.stringify(msg)
     socketList.forEach(i => {
-        if (i.status == 1 && i.type != 3) {
-            i.ws.send(msg)
+        if (i.status == 1) {
+            switch (Number(i.type)) {
+                case 1:
+                case 2:
+                    i.ws.send(msg)
+                    break;
+                default:
+                    break;
+            }
         }
     })
 })
