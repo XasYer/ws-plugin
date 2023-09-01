@@ -9,15 +9,19 @@ function createWebSocket(data) {
     const client = new Client(data)
     switch (Number(data.type)) {
         case 1:
+            if (Version.isTrss) return
             client.createWs()
             break;
         case 2:
+            if (Version.isTrss) return
             client.createServer()
             break
         case 3:
+            if (Version.isTrss) return
             client.createGSUidWs()
             break
         case 4:
+            if (!Version.isTrss) return
             client.createQQNT()
             break
         default:

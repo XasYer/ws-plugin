@@ -215,13 +215,21 @@ export class setting extends plugin {
                 } else {
                     this.setContext('checkAddWs', this.e.isGroup)
                     await this.reply([
-                        '请一次性发送以下参数:\n',
-                        '-----------------------\n',
-                        '连接名字,连接地址,连接类型,重连间隔,最大重连次数,access-token(没有可不加)\n',
-                        '-----------------------\n',
-                        '用逗号分割,例如:\nNoneBot2,ws://127.0.0.1:8080/onebot/v11/ws,1,5,0\n',
-                        '如果对参数不懂意思,可以发送#ws连接说明'
+                        '请输入以下参数,用逗号分割\n',
+                        '---------------------------------\n',
+                        '连接名字,连接类型\n',
+                        '---------------------------------\n',
+                        '连接名字: 用来区分每个连接\n',
+                        '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:qqnt连接'
                     ])
+                    // await this.reply([
+                    //     '请一次性发送以下参数:\n',
+                    //     '-----------------------\n',
+                    //     '连接名字,连接地址,连接类型,重连间隔,最大重连次数,access-token(没有可不加)\n',
+                    //     '-----------------------\n',
+                    //     '用逗号分割,例如:\nNoneBot2,ws://127.0.0.1:8080/onebot/v11/ws,1,5,0\n',
+                    //     '如果对参数不懂意思,可以发送#ws连接说明'
+                    // ])
                 }
                 break
             case '删除':
@@ -257,6 +265,113 @@ export class setting extends plugin {
             default:
                 break
         }
+    }
+
+    async checkAddWs() {
+        if (!this.e.msg) {
+            return false
+        }
+        const msg = this.e.msg.split(/,|，/g)
+        let cache = await redis.get('ws-plugin:addWs:' + this.e.user_id)
+        let addWsMsg
+        if (cache) {
+            await redis.del('ws-plugin:addWs:' + this.e.user_id)
+            addWsMsg = JSON.parse(cache)
+            addWsMsg.push(...msg)
+        } else {
+            addWsMsg = [...msg]
+        }
+        if (addWsMsg.length < 2) {
+            await this.reply('格式有误,请检查后重新发送#ws添加连接')
+            this.finish('checkAddWs', this.e.isGroup)
+            return false
+        }
+        if (addWsMsg.length == 2) {
+            switch (addWsMsg[1]) {
+                case '1':
+                    await this.reply([
+                        '请继续发送以下参数,用逗号分割\n',
+                        '---------------------------------\n',
+                        '连接地址,重连间隔(默认5),最大重连次数(默认0),access-token(默认空)\n',
+                        '---------------------------------\n',
+                        '连接地址: 需要连接的ws地址,比如ws://127.0.0.1:8080/onebot/v11/ws\n',
+                        '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
+                        '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连\n',
+                        'access-token: 访问秘钥'
+                    ])
+                    this.setContext('checkAddWs', this.e.isGroup)
+                    await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
+                    break;
+                case '2':
+                    await this.reply([
+                        '请继续发送以下参数,用逗号分割\n',
+                        '---------------------------------\n',
+                        '连接地址,access-token(默认空)\n',
+                        '---------------------------------\n',
+                        '连接地址: 需要启动的ws地址,比如127.0.0.1:8080\n',
+                        'access-token: 访问秘钥'
+                    ])
+                    this.setContext('checkAddWs', this.e.isGroup)
+                    await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
+                    break;
+                case '3':
+                    await this.reply([
+                        '请继续发送以下参数,用逗号分割\n',
+                        '---------------------------------\n',
+                        '连接地址,重连间隔(默认5),最大重连次数(默认0),access-token(默认空)\n',
+                        '---------------------------------\n',
+                        '连接地址: 需要连接的ws地址,比如ws://127.0.0.1:8765/ws/yunzai\n',
+                        '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
+                        '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连\n',
+                        'access-token: 访问秘钥'
+                    ])
+                    this.setContext('checkAddWs', this.e.isGroup)
+                    await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
+                    break;
+                case '4':
+                    await this.reply([
+                        '请继续发送以下参数,用逗号分割\n',
+                        '---------------------------------\n',
+                        '连接地址,重连间隔(默认5),最大重连次数(默认0)\n',
+                        '---------------------------------\n',
+                        '连接地址: Host:Port:Token\n',
+                        '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
+                        '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连',
+                    ])
+                    this.setContext('checkAddWs', this.e.isGroup)
+                    await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
+                    break;
+                default:
+                    await this.reply('格式有误,请检查后重新发送#ws添加连接')
+                    this.finish('checkAddWs', this.e.isGroup)
+                    await redis.del('ws-plugin:addWs:' + this.e.user_id)
+                    break;
+            }
+        } else {
+            const config = {
+                name: addWsMsg[0],
+                address: addWsMsg[2],
+                type: addWsMsg[1],
+            }
+            switch (addWsMsg[1]) {
+                case '1':
+                case '3':
+                case '4':
+                    config['reconnectInterval'] = addWsMsg[3] || '5'
+                    config['maxReconnectAttempts'] = addWsMsg[4] || '0'
+                    config['accessToken'] = addWsMsg[5]
+                    break;
+                case '2':
+                    config['accessToken'] = addWsMsg[3]
+                    break
+                default:
+                    break;
+            }
+            await this.addWs(config)
+            this.finish('checkAddWs', this.e.isGroup)
+            await redis.del('ws-plugin:addWs:' + this.e.user_id)
+        }
+        return false
     }
 
     async setting(e) {
@@ -306,19 +421,24 @@ export class setting extends plugin {
     }
 
     async addWs(msg) {
-        if (msg.length != 5 && msg.length != 6) {
-            await this.reply('格式有误,请检查后重新发送')
+        if (Array.isArray(msg) && msg.length != 5 && msg.length != 6) {
+            await this.reply('格式有误,请检查后重新发送#ws添加连接')
             return false
         } else {
-            let value = {
-                name: msg[0],
-                address: msg[1],
-                type: msg[2],
-                reconnectInterval: msg[3],
-                maxReconnectAttempts: msg[4],
-            }
-            if (msg[5]) {
-                value.accessToken = msg[5]
+            let value
+            if (Array.isArray(msg)) {
+                value = {
+                    name: msg[0],
+                    address: msg[1],
+                    type: msg[2],
+                    reconnectInterval: msg[3],
+                    maxReconnectAttempts: msg[4],
+                }
+                if (msg[5]) {
+                    value.accessToken = msg[5]
+                }
+            } else {
+                value = msg
             }
             let old = Config.servers
             if (Array.isArray(old) && old.length > 0) {
@@ -431,22 +551,6 @@ export class setting extends plugin {
             '6.access-token:访问密钥'
         ])
         return true
-    }
-
-    async checkAddWs() {
-        if (!this.e.msg) {
-            return false
-        }
-        let msg = this.e.msg
-        if (msg == '#ws连接说明') {
-            await this.help()
-            this.setContext('checkAddWs', this.e.isGroup)
-            return false
-        }
-        msg = msg.split(/,|，/g)
-        await this.addWs(msg)
-        this.finish('checkAddWs', this.e.isGroup)
-        return false
     }
 
     async checkDelWs() {
