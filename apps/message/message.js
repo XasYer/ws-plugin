@@ -38,18 +38,20 @@ Bot.on('message', async e => {
             return false
         }
     }
-    let _reply = e.reply
-    e.reply = async function (massage, quote = false, data = {}) {
-        let ret = await _reply(massage, quote, data)
-        if (ret) {
-            await setMsgMap(ret.rand, {
-                message_id: ret.message_id,
-                time: ret.time,
-                seq: ret.seq,
-                rand: ret.rand,
-            })
+    if (e.reply) {
+        const _reply = e.reply
+        e.reply = async function (massage, quote = false, data = {}) {
+            const ret = await _reply(massage, quote, data)
+            if (ret) {
+                await setMsgMap(ret.rand, {
+                    message_id: ret.message_id,
+                    time: ret.time,
+                    seq: ret.seq,
+                    rand: ret.rand,
+                })
+            }
+            return ret
         }
-        return ret
     }
     //深拷贝e
     let msg = _.cloneDeep(e);

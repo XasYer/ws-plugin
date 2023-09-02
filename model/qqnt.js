@@ -115,7 +115,19 @@ function pickFriend(self_id, user_id) {
     return {
         ...i,
         sendMsg: msg => sendFriendMsg(i, msg),
+        recallMsg: async message_id => recallFriendMsg(i, message_id)
     }
+}
+
+async function recallFriendMsg(data, message_id) {
+    data.bot.api('POST', 'message/recall', JSON.stringify({
+        peer: {
+            chatType: 1,
+            peerUin: data.user_id,
+            guildId: null,
+        },
+        msgIds: [message_id]
+    }))
 }
 
 function pickMember(self_id, group_id, user_id) {
@@ -170,33 +182,45 @@ function pickGroup(self_id, group_id) {
         sendMsg: async msg => await sendGroupMsg(i, msg),
         pickMember: user_id => pickMember(self_id, group_id, user_id),
         getMemberMap: async () => await getMemberMap(self_id, group_id),
+        recallMsg: async message_id => await recallGroupMsg(i, message_id)
     }
+}
+
+async function recallGroupMsg(data, message_id) {
+    data.bot.api('POST', 'message/recall', JSON.stringify({
+        peer: {
+            chatType: 2,
+            peerUin: data.group_id,
+            guildId: null,
+        },
+        msgIds: [message_id]
+    }))
 }
 
 async function sendGroupMsg(data, msg) {
     const { msg: elements, log } = await makeMsg(data, msg)
     logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送群消息：${log}`)
-    data.bot.send('message::send', {
+    const result = await data.bot.api('POST', 'message/send', JSON.stringify({
         peer: {
             chatType: 2,
             peerUin: data.group_id
         },
         elements
-    })
-    return { message_id: Date.now() }
+    })).then(r => r.json())
+    return { message_id: result.msgId }
 }
 
 async function sendFriendMsg(data, msg) {
     const { msg: elements, log } = await makeMsg(data, msg)
     logger.info(`${logger.blue(`[${data.self_id} => ${data.user_id}]`)} 发送好友消息：${log}`)
-    data.bot.send('message::send', {
+    const result = await data.bot.api('POST', 'message/send', JSON.stringify({
         peer: {
             chatType: 1,
             peerUin: data.user_id
         },
         elements
-    })
-    return { message_id: Date.now() }
+    })).then(r => r.json())
+    return { message_id: result.msgId }
 }
 
 async function makeMsg(data, msg) {
