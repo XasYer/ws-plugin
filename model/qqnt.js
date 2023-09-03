@@ -343,6 +343,7 @@ async function makeMsg(data, msg) {
                         "faceType": 1
                     }
                 }]
+                log += `[表情: ${i.id}]`
                 break
             // case "video":
             //     break
@@ -370,6 +371,7 @@ async function makeMsg(data, msg) {
                             "senderUid": msg.user_id
                         }
                     }]
+                    log += `[回复: ${i.id}]`
                 } else {
                     i = []
                 }
@@ -467,4 +469,4 @@ const qqnt = {
     getToken
 }
 
-export default qqnt 
+export default qqnt
