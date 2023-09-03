@@ -279,8 +279,9 @@ async function makeForwardMsg(params) {
                 }
             }]
         }
-        for (const i of msg.data.content) {
-            let { sendMsg } = await makeSendMsg({ message: [i] })
+        for (let i of msg.data.content) {
+            if (!Array.isArray(i)) i = [i]
+            let { sendMsg } = await makeSendMsg({ message: i })
             forwardMsg.push({
                 nickname: msg.data.name,
                 user_id: Number(msg.data.uin),
