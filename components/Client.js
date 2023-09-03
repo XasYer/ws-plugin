@@ -324,6 +324,9 @@ export default class Client {
                 logger.error(`${this.name} 未知错误`)
                 reconnect()
             }
+            if (!Bot.uin.includes(info.uin)) {
+                Bot.uin.push(info.uin)
+            }
             bot.info = {
                 ...info,
                 user_id: info.uin,
@@ -331,8 +334,10 @@ export default class Client {
                 nickname: info.nick,
                 username: info.nick
             }
+            bot.nickname = info.nick
             bot.self_id = info.uin
             this.uin = bot.self_id
+            bot.uin = bot.self_id
         } else {
             logger.error(`${this.name}(${this.uin}) Token错误`)
             return
@@ -381,11 +386,15 @@ export default class Client {
                 id: "QQ",
                 name: "QQNTRedProtocol"
             },
+            avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${bot.uin}`,
             ws: bot.ws,
             uin: bot.self_id,
             nickname: bot.nickname,
             self_id: bot.self_id,
-            stat: { start_time: Date.now() / 1000 },
+            stat: {
+                start_time: Date.now() / 1000,
+                recv_msg_cnt: 0
+            },
             version: {
                 id: "QQ",
                 name: "QQNTRedProtocol"

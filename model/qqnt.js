@@ -6,8 +6,19 @@ function toQQNTMsg(self_id, data) {
     data = JSON.parse(data)
     switch (data.type) {
         case 'meta::connect':
+            setTimeout(() => {
+                Bot[self_id].version = {
+                    ...data.payload,
+                    id: 'QQ'
+                }
+            }, 5000)
             break
         case 'message::recv':
+            if (Bot[self_id]?.stat?.recv_msg_cnt) {
+                Bot[self_id].stat.recv_msg_cnt++
+            } else {
+                Bot[self_id].stat.recv_msg_cnt = 1
+            }
             makeMessage(self_id, data.payload[0])
             break
         default:
@@ -87,8 +98,8 @@ function makeMessage(self_id, payload) {
                 e.raw_message += `[表情: ${i.faceElement.faceIndex}]`
                 break
             case 7:
-                e.message.push({ type: "reply", id: i.replyElement.sourceMsgIdInRecords })
-                e.raw_message += `[回复：${i.replyElement.sourceMsgIdInRecords}]`
+                // e.message.push({ type: "reply", id: i.replyElement.replayMsgId })
+                // e.raw_message += `[回复：${i.replyElement.replayMsgId}]`
                 break
             case 8:
                 switch (i.grayTipElement.subElementType) {
@@ -285,8 +296,20 @@ async function makeMsg(data, msg) {
                 i = [img]
                 log += `[图片: ${img.picElement.md5HexStr}]`
                 break
-            // case "record":
-            //     break
+            case "record":
+                const record = await makeRecord(data, i.file)
+                i = [record]
+                log += `[语音: ${record.pttElement.md5HexStr}]`
+                break
+            case "face":
+                i = [{
+                    "elementType": 6,
+                    "faceElement": {
+                        "faceIndex": i.id,
+                        "faceType": 1
+                    }
+                }]
+                break
             // case "video":
             //     break
             // case "file":
@@ -329,9 +352,8 @@ async function makeMsg(data, msg) {
     return { msg: msgs, log }
 }
 
-async function makeImg(data, msg) {
+async function upload(data, msg, contentType) {
     let buffer
-    let contentType = 'image/png'
     if (msg.match(/^base64:\/\//)) {
         buffer = Buffer.from(msg.replace(/^base64:\/\//, ""), 'base64')
     } else if (msg.startsWith('http')) {
@@ -341,12 +363,33 @@ async function makeImg(data, msg) {
         buffer = Buffer.from(arrayBuffer)
     } else if (msg.startsWith('file:///')) {
         buffer = fs.readFileSync(msg.replace('file:///', ''))
-        contentType = 'image/' + msg.substring(msg.lastIndexOf('.') + 1)
+        contentType = contentType.split('/')[0] + msg.substring(msg.lastIndexOf('.') + 1)
     }
     const blob = new Blob([buffer], { type: contentType })
     const formData = new FormData()
     formData.append('file', blob, 'ws-plugin.' + contentType.split('/')[1])
     const file = await data.bot.api('POST', 'upload', formData).then(r => r.json())
+    file.contentType = contentType
+    return file
+}
+
+async function makeRecord(data, msg) {
+    const file = await upload(data, msg, 'audio/mp3')
+    return {
+        elementType: 4,
+        pttElement: {
+            md5HexStr: file.md5,
+            fileSize: file.fileSize,
+            fileName: file.md5 + '.' + file.ntFilePath.substring(file.ntFilePath.lastIndexOf('.') + 1),
+            filePath: file.ntFilePath,
+            waveAmplitudes: [8, 0, 40, 0, 56, 0],
+            duration: 320
+        }
+    }
+}
+
+async function makeImg(data, msg) {
+    const file = await upload(data, msg, 'image/png')
     return {
         elementType: 2,
         picElement: {
