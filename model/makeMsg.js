@@ -269,7 +269,7 @@ async function makeForwardMsg(params) {
     let forwardMsg = []
     for (const msg of params.messages) {
         if (typeof msg.data.content == 'string') {
-            msg.data.content = CQToMsg(msg.data.content)
+            msg.data.content = [CQToMsg(msg.data.content)]
         }
         if (msg.data.content.type == 'image') {
             msg.data.content = [{
