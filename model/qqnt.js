@@ -1,6 +1,7 @@
 import fetch, { FormData, Blob } from 'node-fetch'
 import fs from 'fs'
 import os from 'os'
+import { setMsgMap, getMsgMap } from './msgMap.js'
 
 function toQQNTMsg(self_id, data) {
     data = JSON.parse(data)
@@ -169,7 +170,13 @@ function makeMessage(self_id, payload) {
                     payload.chatType == 1 ? this.sendFriendMsg(e, errMsg) : this.sendGroupMsg(e, errMsg)
                 }
                 return logger.error(`解码数据失败：${logger.red(JSON.stringify(copyPayload))}`)
-            }else {
+            } else {
+                setMsgMap(e.message_id, {
+                    message_id: e.message_id,
+                    seq: e.seq,
+                    rand: e.rand,
+                    user_id: e.user_id
+                })
                 Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
             }
             break;
@@ -352,16 +359,21 @@ async function makeMsg(data, msg) {
                     }
                 }]
                 break
-            // case "reply":
-            //     i = [{
-            //         "elementType": 7,
-            //         "replyElement": {
-            //             "replayMsgSeq": "",
-            //             "sourceMsgIdInRecords": i.id,
-            //             "senderUid": ""
-            //         }
-            //     },]
-            //     break
+            case "reply":
+                const msg = await getMsgMap(i.id)
+                if (msg) {
+                    i = [{
+                        "elementType": 7,
+                        "replyElement": {
+                            "replayMsgSeq": msg.seq,
+                            "sourceMsgIdInRecords": i.id,
+                            "senderUid": msg.user_id
+                        }
+                    }]
+                } else {
+                    i = []
+                }
+                break
             case "node":
                 const array = []
                 for (const { message } of i.data) {
@@ -455,4 +467,4 @@ const qqnt = {
     getToken
 }
 
-export default qqnt
+export default qqnt 
