@@ -276,6 +276,14 @@ export default class Client {
 
     async createQQNT() {
         const token = this.address.split(':')
+        if (!token[2]) {
+            if (this.accessToken) {
+                token[2] = this.accessToken
+            } else {
+                token[2] = await qqnt.getToken()
+                if (!token[2]) return
+            }
+        }
         const bot = {
             host: token[0],
             port: token[1],
@@ -339,7 +347,7 @@ export default class Client {
             this.uin = bot.self_id
             bot.uin = bot.self_id
         } else {
-            logger.error(`${this.name}(${this.uin}) Token错误`)
+            logger.error(`${this.name} Token错误`)
             return
         }
         bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)

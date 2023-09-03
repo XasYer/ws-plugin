@@ -332,9 +332,10 @@ export class setting extends plugin {
                     await this.reply([
                         '请继续发送以下参数,用逗号分割\n',
                         '---------------------------------\n',
-                        '连接地址,重连间隔(默认5),最大重连次数(默认0)\n',
+                        '连接地址,Token(为空尝试自动获取),重连间隔(默认5),最大重连次数(默认0)\n',
                         '---------------------------------\n',
-                        '连接地址: Host:Port:Token\n',
+                        '连接地址: Host:Port,比如127.0.0.1:16530\n',
+                        'Token: Chronocat 连接 Token',
                         '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
                         '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连',
                     ])
@@ -356,11 +357,15 @@ export class setting extends plugin {
             switch (addWsMsg[1]) {
                 case '1':
                 case '3':
-                case '4':
                     config['reconnectInterval'] = addWsMsg[3] || '5'
                     config['maxReconnectAttempts'] = addWsMsg[4] || '0'
                     config['accessToken'] = addWsMsg[5]
                     break;
+                case '4':
+                    config['accessToken'] = addWsMsg[3]
+                    config['reconnectInterval'] = addWsMsg[4] || '5'
+                    config['maxReconnectAttempts'] = addWsMsg[5] || '0'
+                    break
                 case '2':
                     config['accessToken'] = addWsMsg[3]
                     break

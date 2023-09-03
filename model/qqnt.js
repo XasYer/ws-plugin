@@ -1,6 +1,6 @@
 import fetch, { FormData, Blob } from 'node-fetch'
 import fs from 'fs'
-
+import os from 'os'
 
 function toQQNTMsg(self_id, data) {
     data = JSON.parse(data)
@@ -404,11 +404,28 @@ async function makeImg(data, msg) {
     }
 }
 
+async function getToken() {
+    let path
+    if (os.platform() === 'win32') {
+        path = os.homedir() + '/AppData/Roaming/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
+    } else if (os.platform() === 'linux') {
+        path = os.homedir() + '/Roaming/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
+    }
+    try {
+        return fs.readFileSync(path, 'utf8');
+    } catch (error) {
+        logger.error('QQNT自动获取Token失败,请尝试手动获取')
+        logger.error(error)
+        return false
+    }
+}
+
 const qqnt = {
     toQQNTMsg,
     pickFriend,
     pickGroup,
-    pickMember
+    pickMember,
+    getToken
 }
 
 export default qqnt 
