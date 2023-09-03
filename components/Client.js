@@ -194,10 +194,15 @@ export default class Client {
             }
         }
         this.wss = new WebSocketServer({ noServer: true })
-        this.server.listen(this.port, this.host, () => {
-            this.status = 1
-            logger.mark(`CQ WebSocket 服务器已启动: ${this.host}:${this.port}`)
-        })
+        try {
+            this.server.listen(this.port, this.host, () => {
+                this.status = 1
+                logger.mark(`CQ WebSocket 服务器已启动: ${this.host}:${this.port}`)
+            })
+        } catch (error) {
+            logger.error(error)
+            logger.error(`${this.name} CQ WebSocket 服务器失败: ${this.host}:${this.port}`)
+        }
     }
 
     createGSUidWs() {
