@@ -34,8 +34,6 @@ Bot.on('message', async e => {
     if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
         if (e.message?.[0]?.type === 'text') {
             if (Config.noMsgStart.some(i => e.message[0].text.startsWith(i))) return false
-        } else {
-            return false
         }
     }
     if (e.reply) {
