@@ -26,8 +26,9 @@ function makeMessage(self_id, payload) {
     e.rand = payload.msgRandom
     e.sender = {
         user_id: payload.senderUin,
-        nickname: payload.senderNickName,
+        nickname: payload.sendNickName,
     }
+    e.nickname = payload.sendNickName
     e.self_id = self_id
     e.message = []
     e.raw_message = ''
@@ -88,21 +89,58 @@ function makeMessage(self_id, payload) {
             case 7:
                 e.message.push({ type: "reply", id: i.replyElement.sourceMsgIdInRecords })
                 e.raw_message += `[回复：${i.replyElement.sourceMsgIdInRecords}]`
+                break
+            case 8:
+                switch (i.grayTipElement.subElementType) {
+                    case 4:
+                        e.post_type = 'notice'
+                        e.notice_type = 'group'
+                        e.sub_type = 'increase'
+                        e.nickname = i.grayTipElement.groupElement.memberNick
+                        break;
+                    case 12:
+                        e.post_type = 'notice'
+                        e.notice_type = 'group'
+                        e.sub_type = 'increase'
+                        const reg = new RegExp(/jp="([0-9]+)".*jp="([0-9]+)"/g)
+                        const regRet = reg.exec(i.grayTipElement.xmlElement.content)
+                        if (regRet) {
+                            e.user_id = regRet[2]
+                        }
+                        break
+                    default:
+                        break;
+                }
+                break
             default:
                 break;
         }
     }
     if (payload.chatType == 2) {
-        e.message_type = 'group'
-        e.sub_type = 'normal'
+        if (!e.sub_type) {
+            e.message_type = 'group'
+            e.sub_type = 'normal'
+        }
         e.group_id = payload.peerUin
         e.group_name = payload.peerName
         logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
     } else if (payload.chatType == 1) {
-        e.message_type = 'private'
+        if (!e.sub_type) {
+            e.message_type = 'private'
+            e.sub_type = 'friend'
+        }
         logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
     }
-    Bot.em(`${e.post_type}.${e.message_type}`, e)
+    switch (e.post_type) {
+        case 'message':
+            Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
+            break;
+        case 'notice':
+            Bot.em(`${e.post_type}.${e.notice_type}.${e.sub_type}`, e)
+            break
+        default:
+            break;
+    }
 }
 
 function pickFriend(self_id, user_id) {
@@ -115,7 +153,7 @@ function pickFriend(self_id, user_id) {
     return {
         ...i,
         sendMsg: msg => sendFriendMsg(i, msg),
-        recallMsg: async message_id => recallFriendMsg(i, message_id)
+        recallMsg: async message_id => await recallFriendMsg(i, message_id)
     }
 }
 
