@@ -409,7 +409,7 @@ async function getToken() {
     if (os.platform() === 'win32') {
         path = os.homedir() + '/AppData/Roaming/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
     } else if (os.platform() === 'linux') {
-        path = os.homedir() + '/Roaming/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
+        path = os.homedir() + '/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
     }
     try {
         return fs.readFileSync(path, 'utf8');
