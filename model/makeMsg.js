@@ -259,6 +259,7 @@ async function makeSendMsg(params) {
                 json = json.replace(/&#91;/g, '[')
                 json = json.replace(/&#93;/g, ']')
                 sendMsg.push(segment.json(json))
+                break
             default:
                 sendMsg.push(MsgToCQ([i]))
                 logger.warn(`出现了未适配的消息的类型${JSON.stringify(i)}`)
