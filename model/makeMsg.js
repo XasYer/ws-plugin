@@ -252,9 +252,16 @@ async function makeSendMsg(params) {
             case 'node':
                 sendMsg.push(await nodeToMsg(params))
                 break
+            case 'json':
+                let json = i.data.data
+                json = json.replace(/&#44;/g, ',')
+                json = json.replace(/&amp;/g, '&')
+                json = json.replace(/&#91;/g, '[')
+                json = json.replace(/&#93;/g, ']')
+                sendMsg.push(segment.json(json))
             default:
-                sendMsg.push('出现了未适配的消息的类型')
-                logger.warn(`出现了未适配的消息的类型${i}`)
+                sendMsg.push(MsgToCQ(i))
+                logger.warn(`出现了未适配的消息的类型${JSON.stringify(i)}`)
                 break
         }
     }
