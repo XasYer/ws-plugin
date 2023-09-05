@@ -201,7 +201,7 @@ async function makeGSUidSendMsg(data) {
 async function makeSendMsg(params) {
     let msg = params.message
     if (typeof msg == 'string') msg = CQToMsg(msg)
-    let target, uid, sendMsg = [], quote = null, node = null
+    let target, uid, sendMsg = [], quote = null
     for (const i of msg) {
         switch (i.type) {
             case 'reply':
@@ -250,14 +250,11 @@ async function makeSendMsg(params) {
                 sendMsg.push(segment.face(i.data.id))
                 break
             case 'node':
-                if (node) {
-                    node.messages.push({ data: i.data })
-                } else {
-                    node = {
-                        ...params,
-                        messages: [{ data: i.data }]
-                    }
+                let data = {
+                    ...params,
+                    messages: [{ data: i.data }]
                 }
+                sendMsg.push(await makeForwardMsg(data))
                 break
             case 'json':
                 let json = i.data.data
@@ -272,9 +269,6 @@ async function makeSendMsg(params) {
                 logger.warn(`出现了未适配的消息的类型${JSON.stringify(i)}`)
                 break
         }
-    }
-    if (node) {
-        sendMsg.push(await makeForwardMsg(node))
     }
     return { sendMsg, quote }
 }
@@ -297,7 +291,19 @@ async function makeForwardMsg(params) {
                 }
             }]
         }
+        let node = null
         for (let i of msg.data.content) {
+            if (i.type == 'node') {
+                if (node) {
+                    node.messages.push({ data: i.data })
+                } else {
+                    node = {
+                        ...params,
+                        messages: [{ data: i.data }]
+                    }
+                }
+                continue
+            }
             if (!Array.isArray(i)) i = [i]
             const data = {
                 ...params,
@@ -309,6 +315,9 @@ async function makeForwardMsg(params) {
                 user_id: Number(msg.data.uin),
                 message: sendMsg
             })
+        }
+        if (node) {
+            forwardMsg.push(await makeForwardMsg(node))
         }
     }
     if (params.group_id) {
