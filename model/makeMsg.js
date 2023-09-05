@@ -252,7 +252,7 @@ async function makeSendMsg(params) {
             case 'node':
                 let data = {
                     ...params,
-                    messages: [i.data]
+                    messages: [{ data: i.data }]
                 }
                 sendMsg.push(await makeForwardMsg(data))
                 break
