@@ -1,6 +1,11 @@
+# 0.4.16
+
+* QQNT 发送语音修改为使用ffmpeg,请自行配置ffmpeg,否则可能无法发送语音
+    * 更新后需要重新安装依赖 pnpm install --filter=ws-plugin
+
 # 0.4.15
 
-* qqnt 优化进群通知,增加禁言通知
+* QQNT 优化进群通知,增加禁言通知
 
 # 0.4.14
 

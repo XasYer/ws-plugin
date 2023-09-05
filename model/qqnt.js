@@ -1,6 +1,12 @@
 import fetch, { FormData, Blob } from 'node-fetch'
 import fs from 'fs'
 import { setMsgMap, getMsgMap } from './msgMap.js'
+import { createHash, randomUUID } from 'crypto'
+import { resolve, join } from 'path'
+import { exec } from 'child_process'
+import { writeFile, readFile } from 'fs/promises'
+import { createRequire } from 'module'
+const require = createRequire(import.meta.url)
 
 function toQQNTMsg(self_id, data) {
     data = JSON.parse(data)
@@ -346,9 +352,17 @@ async function makeMsg(data, msg) {
                 log += `[图片: ${img.picElement.md5HexStr}]`
                 break
             case "record":
-                const record = await makeRecord(data, i.file)
-                i = [record]
-                log += `[语音: ${record.pttElement.md5HexStr}]`
+                // const record = await makeRecord(data, i.file)
+                const record = await uploadAudio(i.file)
+                if (record) {
+                    i = [record]
+                    log += `[语音: ${record.pttElement.md5HexStr}]`
+                    setTimeout(() => {
+                        fs.unlinkSync(record.pttElement.filePath)
+                    }, 3000)
+                } else {
+                    i = []
+                }
                 break
             case "face":
                 i = [{
@@ -476,6 +490,106 @@ async function getToken() {
         return false
     }
 }
+
+const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
+if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
+const NOOP = () => { }
+
+async function uploadAudio(file) {
+    let buffer
+    if (file.match(/^base64:\/\//)) {
+        buffer = Buffer.from(file.replace(/^base64:\/\//, ""), 'base64')
+    } else if (file.startsWith('http')) {
+        const http = await fetch(file)
+        const arrayBuffer = await http.arrayBuffer()
+        buffer = Buffer.from(arrayBuffer)
+    } else if (file.startsWith('file:///')) {
+        buffer = fs.readFileSync(file.replace('file:///', ''))
+    }
+    const head = buffer.subarray(0, 7).toString()
+    let filePath
+    let duration = 0
+    if (!head.includes('SILK')) {
+        const tmpPath = await saveTmp(buffer)
+        duration = await getDuration(tmpPath)
+        const res = await audioTrans(tmpPath)
+        filePath = res.silkFile
+        buffer = await readFile(filePath)
+    } else {
+        filePath = await saveTmp(buffer)
+    }
+
+    const hash = createHash('md5')
+    hash.update(buffer.toString('binary'), 'binary')
+    const md5 = hash.digest('hex')
+    return {
+        elementType: 4,
+        pttElement: {
+            md5HexStr: md5,
+            fileSize: buffer.length,
+            fileName: md5 + '.amr',
+            filePath: filePath,
+            waveAmplitudes: [8, 0, 40, 0, 56, 0],
+            duration: duration
+        }
+    }
+}
+
+function audioTrans(tmpPath) {
+    const { encode } = require('node-silk-encode')
+    return new Promise((resolve, reject) => {
+        const pcmFile = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
+        exec(`ffmpeg -y -i "${tmpPath}" -ar 24000 -ac 1 -f s16le "${pcmFile}"`, async () => {
+            fs.unlink(tmpPath, NOOP)
+            fs.access(pcmFile, fs.constants.F_OK, (err) => {
+                if (err) {
+                    reject('音频转码失败, 请确保你的 ffmpeg 已正确安装')
+                }
+            })
+
+            const silkFile = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
+            await encode(pcmFile, silkFile, '24000')
+            fs.unlink(pcmFile, NOOP)
+            fs.access(silkFile, fs.constants.F_OK, (err) => {
+                if (err) {
+                    reject('音频转码失败')
+                }
+            })
+
+            resolve({
+                silkFile
+            })
+        })
+    })
+}
+
+function getDuration(file) {
+    return new Promise((resolve, reject) => {
+        exec(`ffmpeg -i ${file}`, function (err, stdout, stderr) {
+            const outStr = stderr.toString()
+            const regDuration = /Duration\: ([0-9\:\.]+),/
+            const rs = regDuration.exec(outStr)
+            if (rs === null) {
+                reject("获取音频时长失败, 请确保你的 ffmpeg 已正确安装")
+            } else if (rs[1]) {
+                const time = rs[1]
+                const parts = time.split(":")
+                const seconds = (+parts[0]) * 3600 + (+parts[1]) * 60 + (+parts[2])
+                const round = seconds.toString().split('.')[0]
+                resolve(+ round)
+            }
+        })
+    })
+}
+
+async function saveTmp(data, ext = null) {
+    ext = ext ? '.' + ext : ''
+    const filename = randomUUID({ disableEntropyCache: true }) + ext
+    const tmpPath = resolve(TMP_DIR, filename)
+    await writeFile(tmpPath, data)
+    return tmpPath
+}
+
 
 const qqnt = {
     toQQNTMsg,
