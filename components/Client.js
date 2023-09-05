@@ -230,15 +230,28 @@ export default class Client {
                 let sendRet
                 switch (data.target_type) {
                     case 'group':
-                        sendRet = await Bot.sendGroupMsg(data.target_id, sendMsg, quote)
+                        if (Version.isTrss) {
+                            await Bot[data.bot_self_id].pickGroup(data.target_id).sendMsg(sendMsg)
+                        } else {
+                            sendRet = await Bot.sendGroupMsg(data.target_id, sendMsg, quote)
+                        }
                         break;
                     case 'direct':
-                        sendRet = await Bot.sendPrivateMsg(data.target_id, sendMsg, quote)
+                        if (Version.isTrss) {
+                            await Bot[data.bot_self_id].pickFriend(data.target_id).sendMsg(sendMsg)
+                        } else {
+                            sendRet = await Bot.sendPrivateMsg(data.target_id, sendMsg, quote)
+                        }
                         break;
+                    case 'channel':
+                        if (Version.isTrss) {
+                            await Bot[data.bot_self_id].pickGroup(data.target_id).sendMsg(sendMsg)
+                        }
+                        break
                     default:
                         break;
                 }
-                await setMsgMap(sendRet.rand, sendRet)
+                if (sendRet) await setMsgMap(sendRet.rand, sendRet)
                 logger.mark(`[ws-plugin] 连接名字:${this.name} 处理完成`)
             }
         })

@@ -1,4 +1,4 @@
-import { Config } from '../components/index.js'
+import { Config, Version } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
 import { SendMusicShare } from './tool.js'
@@ -47,7 +47,7 @@ async function makeGSUidReportMsg(e) {
     //前缀处理
     if (msg[0].type == 'text') {
         if (Config.noMsgStart.length > 0 && Array.isArray(Config.noMsgStart)) {
-            if (Config.noMsgStart.some(item => e.msg.startsWith(item))) {
+            if (Config.noMsgStart.some(item => msg[0].text.startsWith(item))) {
                 return false
             }
         }
@@ -97,7 +97,7 @@ async function makeGSUidReportMsg(e) {
                 })
                 break;
             case 'file':
-                if (e.isGroup) continue
+                if (e.isGroup || Version.isTrss) break
                 let fileUrl = await e.friend.getFileUrl(e.file.fid);
                 let res = await fetch(fileUrl);
                 let arrayBuffer = await res.arrayBuffer();
@@ -130,18 +130,20 @@ async function makeGSUidReportMsg(e) {
         bot_id: 'Yunzai_Bot',
         bot_self_id: e.self_id + "",
         msg_id: e.message_id,
-        user_type: e.isGroup ? 'group' : 'direct',
         user_id: e.user_id + "",
         user_pm: user_pm,
         content: message
     };
     if (e.isGroup) {
+        MessageReceive.user_type = 'group'
         MessageReceive.group_id = e.group_id + ""
+    } else if(e.isGuild) {
+        MessageReceive.user_type = 'channel'
+        MessageReceive.group_id = e.group_id + ""
+    } else {
+        MessageReceive.user_type = 'direct'
     }
-    let data = JSON.stringify(MessageReceive)
-    const encoder = new TextEncoder();
-    const bytes = encoder.encode(data);
-    return bytes
+    return Buffer.from(JSON.stringify(MessageReceive))
 }
 
 /**

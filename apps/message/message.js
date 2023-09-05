@@ -54,7 +54,8 @@ Bot.on('message', async e => {
     //深拷贝e
     let msg = _.cloneDeep(e);
     let message = []
-    if (Version.isTrss) {
+    //增加isGroup e.isPrivate
+    if (msg.guild_id) {
         setGuildLatestMsgId(e.message_id)
         //处理成message
         if (e.content) {
@@ -73,10 +74,7 @@ Bot.on('message', async e => {
             })
         }
         msg.message = message
-        // return false
-    }
-    //增加isGroup e.isPrivate
-    if (msg.guild_id) {
+
         msg.isGuild = true
         msg.param = {
             time: Math.floor(new Date(msg.timestamp).getTime() / 1000),

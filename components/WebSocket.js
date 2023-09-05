@@ -17,7 +17,7 @@ function createWebSocket(data) {
             client.createServer()
             break
         case 3:
-            if (Version.isTrss) return
+            // if (Version.isTrss) return
             client.createGSUidWs()
             break
         case 4:

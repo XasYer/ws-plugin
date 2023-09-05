@@ -1,3 +1,8 @@
+# 0.4.14
+
+* 增加 TRSS-Yunzai 连接 gsuid_core
+* 优化CQ:node
+
 # 0.4.13
 
 * QQNT 增加发送回复消息

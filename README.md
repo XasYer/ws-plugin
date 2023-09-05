@@ -23,7 +23,8 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 #### [TRSS-Yunzai](https://gitee.com/TimeRainStarSky/Yunzai)
 
 支持以下通信方式
-  1.  作为适配器连接QQNT
+  1. 作为适配器连接QQNT
+  2. [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
 
 ## 安装与更新
 
