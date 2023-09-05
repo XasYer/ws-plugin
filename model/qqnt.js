@@ -28,10 +28,6 @@ function toQQNTMsg(self_id, data) {
 }
 
 function makeMessage(self_id, payload) {
-
-    const copyPayload = JSON.parse(JSON.stringify(payload))
-    copyPayload.content = 'user_id is null'
-
     const e = {}
     e.bot = Bot[self_id]
     e.post_type = 'message'
@@ -169,7 +165,12 @@ function makeMessage(self_id, payload) {
                     const errMsg = [{ type: 'text', text: `ErrMsg：${e.raw_message}(๑•́ ₃ •̀๑)\n啾咪啊！出错了呢！请再发一次命令吧~（期待的眨眨眼）` }]
                     payload.chatType == 1 ? this.sendFriendMsg(e, errMsg) : this.sendGroupMsg(e, errMsg)
                 }
-                return logger.error(`解码数据失败：${logger.red(JSON.stringify(copyPayload))}`)
+                return logger.error(`解码数据失败：${logger.red(JSON.stringify({
+                    msg: e.raw_message,
+                    message_id: e.message_id,
+                    message_type: e.message_type,
+                    content: 'user_id is null'
+                }))}`)
             } else {
                 setMsgMap(e.message_id, {
                     message_id: e.message_id,
