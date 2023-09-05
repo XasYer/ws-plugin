@@ -334,7 +334,7 @@ export default class Client {
         try {
             info = await bot.api('get', 'getSelfProfile')
         } catch (error) {
-            logger.error(`${this.name} 请先启动QQNT`)
+            logger.error(`${this.name} 请检查是否安装Chronocat并启动QQNT`)
             reconnect()
             return
         }

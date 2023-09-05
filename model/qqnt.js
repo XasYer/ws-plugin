@@ -456,7 +456,7 @@ async function getToken() {
     try {
         return fs.readFileSync(path, 'utf8');
     } catch (error) {
-        logger.error('QQNT自动获取Token失败,请尝试手动获取')
+        logger.error('QQNT自动获取Token失败,请检查是否已安装Chronocat并尝试手动获取')
         logger.error(error)
         return false
     }
