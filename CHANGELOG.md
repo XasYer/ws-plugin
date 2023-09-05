@@ -1,3 +1,7 @@
+# 0.4.15
+
+* qqnt 优化进群通知,增加禁言通知
+
 # 0.4.14
 
 * 增加 TRSS-Yunzai 连接 gsuid_core

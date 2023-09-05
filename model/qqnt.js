@@ -104,19 +104,34 @@ function makeMessage(self_id, payload) {
             case 8:
                 switch (i.grayTipElement.subElementType) {
                     case 4:
-                        e.post_type = 'notice'
-                        e.notice_type = 'group'
-                        e.sub_type = 'increase'
-                        e.nickname = i.grayTipElement.groupElement.memberNick
+                        if (i.grayTipElement.groupElement.memberAdd) {
+                            // i.grayTipElement.groupElement.type = 4
+                            e.post_type = 'notice'
+                            e.notice_type = 'group'
+                            e.sub_type = 'increase'
+                            e.nickname = i.grayTipElement.groupElement.memberAdd.otherAdd.name
+                            e.user_id = i.grayTipElement.groupElement.memberAdd.otherAdd.uin
+                        }
+                        if (i.grayTipElement.groupElement.shutUp) {
+                            // i.grayTipElement.groupElement.type = 8
+                            e.post_type = 'notice'
+                            e.notice_type = 'group'
+                            e.sub_type = 'ban'
+                            e.duration = i.grayTipElement.groupElement.shutUp.duration
+                            e.user_id = i.grayTipElement.groupElement.shutUp.member.uin
+                            e.operator_id = i.grayTipElement.groupElement.shutUp.admin.uin
+                        }
                         break;
                     case 12:
-                        e.post_type = 'notice'
-                        e.notice_type = 'group'
-                        e.sub_type = 'increase'
-                        const reg = new RegExp(/jp="([0-9]+)".*jp="([0-9]+)"/g)
+                        const reg = new RegExp('^<gtip align=".*"><qq uin=".+" col=".*" jp="([0-9]+)" /><nor txt="(.+)"/><qq uin=".*" col=".*" jp="([0-9]+)" /> <nor txt="(.+)"/> </gtip>$')
                         const regRet = reg.exec(i.grayTipElement.xmlElement.content)
                         if (regRet) {
-                            e.user_id = regRet[2]
+                            if (regRet[2] == '邀请' && regRet[4] == '加入了群聊。') {
+                                e.post_type = 'notice'
+                                e.notice_type = 'group'
+                                e.sub_type = 'increase'
+                                e.user_id = regRet[3]
+                            }
                         }
                         break
                     default:
