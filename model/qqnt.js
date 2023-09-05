@@ -379,7 +379,7 @@ async function makeMsg(data, msg) {
             case "node":
                 const array = []
                 for (const { message } of i.data) {
-                    const { msg: node } = awaitmakeMsg(data, message)
+                    const { msg: node } = await makeMsg(data, message)
                     array.push(...node)
                 }
                 i = array
