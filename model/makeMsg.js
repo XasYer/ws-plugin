@@ -317,7 +317,11 @@ async function makeForwardMsg(params) {
             })
         }
         if (node) {
-            forwardMsg.push(await makeForwardMsg(node))
+            forwardMsg.push({
+                nickname: msg.data.name,
+                user_id: Number(msg.data.uin),
+                message: await makeForwardMsg(node)
+            })
         }
     }
     if (params.group_id) {
