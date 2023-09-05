@@ -1,6 +1,5 @@
 import fetch, { FormData, Blob } from 'node-fetch'
 import fs from 'fs'
-import os from 'os'
 import { setMsgMap, getMsgMap } from './msgMap.js'
 
 function toQQNTMsg(self_id, data) {
@@ -448,10 +447,11 @@ async function makeImg(data, msg) {
 
 async function getToken() {
     let path
-    if (os.platform() === 'win32') {
-        path = os.homedir() + '/AppData/Roaming/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
-    } else if (os.platform() === 'linux') {
-        path = os.homedir() + '/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
+    if (process.platform === 'win32') {
+        path = process.env.APPDATA + '/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
+    } else {
+        logger.error('非Windows系统请自行获取Token')
+        return false
     }
     try {
         return fs.readFileSync(path, 'utf8');
