@@ -6,6 +6,7 @@ import { resolve, join } from 'path'
 import { exec } from 'child_process'
 import { writeFile, readFile } from 'fs/promises'
 import { createRequire } from 'module'
+import schedule from "node-schedule"
 const require = createRequire(import.meta.url)
 
 async function toQQNTMsg(bot, data) {
@@ -547,6 +548,14 @@ async function uploadFile(file) {
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
 const NOOP = () => { }
+
+const job = schedule.scheduleJob('0 0 4 * * ?', function () {
+    logger.mark('[ws-plugin] 执行定时任务: 删除Temp')
+    const files = fs.readdirSync(TMP_DIR)
+    for (const file of files) {
+        fs.unlinkSync(join(TMP_DIR, file))
+    }
+});
 
 async function getNtPath(bot) {
     let dataPath = await redis.get('ws-plugin:qqnt:dataPath')
