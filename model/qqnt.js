@@ -380,7 +380,7 @@ async function makeMsg(data, msg) {
             case "video":
                 const video = await uploadVideo(data.bot, i.file)
                 i = [video]
-                log += [`视频: ${video.videoElement.videoMd5}`]
+                log += `[视频: ${video.videoElement.videoMd5}]`
                 break
             case "file":
                 const file = await uploadFile(i.file)
