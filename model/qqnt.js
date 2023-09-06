@@ -36,7 +36,12 @@ function makeMessage(self_id, payload) {
     const e = {}
     e.bot = Bot[self_id]
     e.post_type = 'message'
-    e.message_id = payload.msgId
+    try {
+        e.message_id = payload.msgId
+    } catch (error) {
+        logger.error('没有message_id')
+        return
+    }
     e.user_id = payload.senderUin
     e.time = payload.msgTime
     e.seq = payload.msgSeq
@@ -183,7 +188,7 @@ function makeMessage(self_id, payload) {
                 }
                 if (isMatch) {
                     const errMsg = [{ type: 'text', text: `ErrMsg：${e.raw_message}(๑•́ ₃ •̀๑)\n啾咪啊！出错了呢！请再发一次命令吧~（期待的眨眨眼）` }]
-                    payload.chatType == 1 ? this.sendFriendMsg(e, errMsg) : this.sendGroupMsg(e, errMsg)
+                    payload.chatType == 1 ? sendFriendMsg(e, errMsg) : sendGroupMsg(e, errMsg)
                 }
                 return logger.error(`解码数据失败：${logger.red(JSON.stringify({
                     msg: e.raw_message,
@@ -359,9 +364,9 @@ async function makeMsg(data, msg) {
                 if (record) {
                     i = [record]
                     log += `[语音: ${record.pttElement.md5HexStr}]`
-                    setTimeout(() => {
-                        fs.unlinkSync(record.pttElement.filePath)
-                    }, 3000)
+                    // setTimeout(() => {
+                    //     fs.unlinkSync(record.pttElement.filePath)
+                    // }, 3000)
                 } else {
                     i = []
                 }
@@ -381,9 +386,9 @@ async function makeMsg(data, msg) {
             case "file":
                 const file = await uploadFile(i.file)
                 i = [file]
-                setTimeout(() => {
-                    fs.unlinkSync(file.fileElement.filePath)
-                }, 3000)
+                // setTimeout(() => {
+                //     fs.unlinkSync(file.fileElement.filePath)
+                // }, 3000)
                 log += `[文件: ${file.fileElement.fileMd5}]`
                 break
             case "at":
