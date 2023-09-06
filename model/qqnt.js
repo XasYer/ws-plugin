@@ -1,7 +1,7 @@
 import fetch, { FormData, Blob } from 'node-fetch'
 import fs from 'fs'
 import { setMsgMap, getMsgMap } from './msgMap.js'
-import { createHash, randomUUID } from 'crypto'
+import crypto, { createHash, randomUUID } from 'crypto'
 import { resolve, join } from 'path'
 import { exec } from 'child_process'
 import { writeFile, readFile } from 'fs/promises'
@@ -219,7 +219,8 @@ function pickFriend(self_id, user_id) {
     return {
         ...i,
         sendMsg: msg => sendFriendMsg(i, msg),
-        recallMsg: async message_id => await recallFriendMsg(i, message_id)
+        recallMsg: async message_id => await recallFriendMsg(i, message_id),
+        sendFile: async file => await sendFriendMsg(i, [{ type: 'file', file }])
     }
 }
 
@@ -286,7 +287,8 @@ function pickGroup(self_id, group_id) {
         sendMsg: async msg => await sendGroupMsg(i, msg),
         pickMember: user_id => pickMember(self_id, group_id, user_id),
         getMemberMap: async () => await getMemberMap(self_id, group_id),
-        recallMsg: async message_id => await recallGroupMsg(i, message_id)
+        recallMsg: async message_id => await recallGroupMsg(i, message_id),
+        sendFile: async file => await sendGroupMsg(i, [{ type: 'file', file }])
     }
 }
 
@@ -376,8 +378,14 @@ async function makeMsg(data, msg) {
                 break
             // case "video":
             //     break
-            // case "file":
-            //     break
+            case "file":
+                const file = await uploadFile(i.file)
+                i = [file]
+                setTimeout(() => {
+                    fs.unlinkSync(file.fileElement.filePath)
+                }, 3000)
+                log += `[文件: ${file.fileElement.fileMd5}]`
+                break
             case "at":
                 log += `[提及: ${i.qq}]`
                 i = [{
@@ -488,6 +496,46 @@ async function getToken() {
         logger.error('QQNT自动获取Token失败,请检查是否已安装Chronocat并尝试手动获取')
         logger.error(error)
         return false
+    }
+}
+
+async function uploadFile(file) {
+    let buffer, name, path = process.cwd() + '/plugins/ws-plugin/Temp/'
+    if (file.startsWith('http')) {
+        const http = await fetch(file)
+        const arrayBuffer = await http.arrayBuffer()
+        buffer = Buffer.from(arrayBuffer)
+        name = file.substring(file.lastIndexOf('/') + 1)
+        path = path + name
+        fs.writeFileSync(path, buffer);
+    } else if (file.startsWith('file:///')) {
+        buffer = fs.readFileSync(file.replace('file:///', ''))
+        name = file.substring(file.lastIndexOf('/') + 1)
+        path = path + name
+        fs.copyFileSync(file, path)
+    } else if (Buffer.isBuffer(file)) {
+        buffer = file
+        name = 'buffer'
+        path = path + name
+        fs.writeFileSync(path, buffer);
+    } else {
+        buffer = fs.readFileSync(file)
+        name = file.substring(file.lastIndexOf('/') + 1)
+        path = path + name
+        fs.copyFileSync(file, path)
+    }
+    const size = buffer.length
+    const hash = crypto.createHash('md5');
+    hash.update(buffer);
+    const md5 = hash.digest('hex')
+    return {
+        elementType: 3,
+        fileElement: {
+            fileMd5: md5,
+            fileName: name,
+            filePath: path,
+            fileSize: size,
+        }
     }
 }
 
