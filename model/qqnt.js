@@ -584,15 +584,15 @@ async function uploadVideo(bot, file) {
     const video = await getVideoInfo(file)
 
     let oriPath = `${ntPath}/Video`
-    if (!oriPath) fs.mkdirSync(oriPath)
+    if (!fs.existsSync(oriPath)) fs.mkdirSync(oriPath)
     oriPath = `${oriPath}/${date}`
-    if (!oriPath) fs.mkdirSync(oriPath)
+    if (!fs.existsSync(oriPath)) fs.mkdirSync(oriPath)
     oriPath = `${oriPath}/Ori`
-    if (!oriPath) fs.mkdirSync(oriPath)
+    if (!fs.existsSync(oriPath)) fs.mkdirSync(oriPath)
     oriPath = `${oriPath}/${video.videoMd5}.${type}`
 
     let thumbPath = `${ntPath}/Video/${date}/Thumb`
-    if (!thumbPath) fs.mkdirSync(thumbPath)
+    if (!fs.existsSync(thumbPath)) fs.mkdirSync(thumbPath)
     thumbPath = `${thumbPath}/${video.videoMd5}_0.png`
 
     fs.copyFileSync(file, oriPath)
