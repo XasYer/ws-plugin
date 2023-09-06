@@ -8,24 +8,25 @@ import { writeFile, readFile } from 'fs/promises'
 import { createRequire } from 'module'
 const require = createRequire(import.meta.url)
 
-function toQQNTMsg(self_id, data) {
+async function toQQNTMsg(bot, data) {
     data = JSON.parse(data)
     switch (data.type) {
         case 'meta::connect':
+            await getNtPath(bot)
             setTimeout(() => {
-                Bot[self_id].version = {
+                Bot[bot.self_id].version = {
                     ...data.payload,
                     id: 'QQ'
                 }
             }, 5000)
             break
         case 'message::recv':
-            if (Bot[self_id]?.stat?.recv_msg_cnt) {
-                Bot[self_id].stat.recv_msg_cnt++
+            if (Bot[bot.self_id]?.stat?.recv_msg_cnt) {
+                Bot[bot.self_id].stat.recv_msg_cnt++
             } else {
-                Bot[self_id].stat.recv_msg_cnt = 1
+                Bot[bot.self_id].stat.recv_msg_cnt = 1
             }
-            makeMessage(self_id, data.payload[0])
+            makeMessage(bot.self_id, data.payload[0])
             break
         default:
             break;
@@ -33,15 +34,10 @@ function toQQNTMsg(self_id, data) {
 }
 
 function makeMessage(self_id, payload) {
+    if (!payload) return
     const e = {}
     e.bot = Bot[self_id]
     e.post_type = 'message'
-    try {
-        e.message_id = payload.msgId
-    } catch (error) {
-        logger.error('没有message_id')
-        return
-    }
     e.user_id = payload.senderUin
     e.time = payload.msgTime
     e.seq = payload.msgSeq
@@ -381,8 +377,11 @@ async function makeMsg(data, msg) {
                 }]
                 log += `[表情: ${i.id}]`
                 break
-            // case "video":
-            //     break
+            case "video":
+                const video = await uploadVideo(data.bot, i.file)
+                i = [video]
+                log += [`视频: ${video.videoElement.videoMd5}`]
+                break
             case "file":
                 const file = await uploadFile(i.file)
                 i = [file]
@@ -547,6 +546,153 @@ async function uploadFile(file) {
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
 const NOOP = () => { }
+
+async function getNtPath(bot) {
+    let dataPath = await redis.get('ws-plugin:qqnt:dataPath')
+    if (!dataPath) {
+        const buffer = fs.readFileSync('./plugins/ws-plugin/resources/common/cont/logo.png')
+        const blob = new Blob([buffer], { type: 'image/png' })
+        const formData = new FormData()
+        formData.append('file', blob, '1.png')
+        const file = await bot.api('POST', 'upload', formData).then(r => r.json())
+        fs.unlinkSync(file.ntFilePath)
+        const index = file.ntFilePath.indexOf('nt_data');
+        dataPath = file.ntFilePath.slice(0, index + 'nt_data'.length);
+        await redis.set('ws-plugin:qqnt:dataPath', dataPath)
+    }
+    return dataPath
+}
+
+async function uploadVideo(bot, file) {
+    let type = 'mp4'
+    if (file.match(/^base64:\/\//)) {
+        const buffer = Buffer.from(file.replace(/^base64:\/\//, ""), 'base64')
+        file = join(TMP_DIR, randomUUID({ disableEntropyCache: true }) + '.' + type)
+        fs.writeFileSync(file, buffer)
+    } else {
+        file = file.replace('file:///', '')
+        type = file.substring(file.lastIndexOf('.') + 1)
+        const Temp = join(TMP_DIR, randomUUID({ disableEntropyCache: true }) + '.' + type)
+        fs.copyFileSync(file, Temp)
+        file = Temp
+    }
+    const ntPath = await getNtPath(bot)
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    const date = `${year}-${month.toString().padStart(2, '0')}`;
+    const video = await getVideoInfo(file)
+
+    let oriPath = `${ntPath}/Video`
+    if (!oriPath) fs.mkdirSync(oriPath)
+    oriPath = `${oriPath}/${date}`
+    if (!oriPath) fs.mkdirSync(oriPath)
+    oriPath = `${oriPath}/Ori`
+    if (!oriPath) fs.mkdirSync(oriPath)
+    oriPath = `${oriPath}/${video.videoMd5}.${type}`
+
+    let thumbPath = `${ntPath}/Video/${date}/Thumb`
+    if (!thumbPath) fs.mkdirSync(thumbPath)
+    thumbPath = `${thumbPath}/${video.videoMd5}_0.png`
+
+    fs.copyFileSync(file, oriPath)
+    fs.unlinkSync(file)
+    const thumb = await getThumbInfo(oriPath, thumbPath)
+    return {
+        elementType: 5,
+        videoElement: {
+            filePath: oriPath,
+            fileName: video.videoMd5 + '.' + type,
+            videoMd5: video.videoMd5,
+            thumbMd5: thumb.thumbMd5,
+            fileTime: video.fileTime,
+            thumbSize: thumb.thumbSize,
+            fileSize: video.fileSize,
+            thumbWidth: thumb.thumbWidth,
+            thumbHeight: thumb.thumbHeight
+        }
+    }
+}
+
+async function getVideoInfo(file) {
+    const fileTime = await getVideoTime(file)
+    const videoMd5 = await getVideoMd5(file)
+    const fileSize = fs.readFileSync(file).length
+    return {
+        fileTime,
+        videoMd5,
+        fileSize
+    }
+}
+
+function getVideoMd5(file) {
+    return new Promise((resolve, reject) => {
+        const stream = fs.createReadStream(file);
+        const hash = crypto.createHash('md5');
+        stream.on('data', chunk => {
+            hash.update(chunk);
+        });
+        stream.on('end', () => {
+            const md5 = hash.digest('hex');
+            resolve(md5)
+        });
+    })
+}
+
+function getVideoTime(file) {
+    return new Promise((resolve, reject) => {
+        exec(`ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "${file}"`, (error, stdout, stderr) => {
+            if (error) {
+                reject('获取视频长度失败, 请确保你的 ffmpeg 已正确安装')
+            }
+            const durationInSeconds = parseFloat(stdout);
+            resolve(parseInt(durationInSeconds))
+        });
+    })
+}
+
+async function getThumbInfo(file, thumbPath) {
+
+    const tempPath = join(TMP_DIR, randomUUID({ disableEntropyCache: true }) + '.jpg')
+
+    const { thumbMd5, thumbSize } = await extractThumbnail(file, tempPath);
+
+    const { thumbWidth, thumbHeight } = getImageSize(tempPath);
+
+    fs.copyFileSync(tempPath, thumbPath)
+    fs.unlinkSync(tempPath)
+
+    return { thumbMd5, thumbWidth, thumbHeight, thumbSize };
+}
+
+function extractThumbnail(inputFile, outputFile) {
+    return new Promise((resolve, reject) => {
+        exec(`ffmpeg -i "${inputFile}" -ss 00:00:00.000 -vframes 1 -vf "scale=iw/3:ih/3" "${outputFile}"
+        `, async () => {
+            fs.access(outputFile, fs.constants.F_OK, (err) => {
+                if (err) {
+                    reject('获取视频封面失败, 请确保你的 ffmpeg 已正确安装')
+                }
+            })
+
+            const buffer = fs.readFileSync(outputFile);
+            const hash = crypto.createHash('md5');
+            hash.update(buffer);
+            resolve({
+                thumbMd5: hash.digest('hex'),
+                thumbSize: buffer.length
+            })
+        })
+    })
+}
+
+function getImageSize(file) {
+    const buffer = fs.readFileSync(file);
+    const start = buffer.indexOf(Buffer.from([0xff, 0xc0]));
+    const thumbHeight = buffer.readUInt16BE(start + 5);
+    const thumbWidth = buffer.readUInt16BE(start + 7);
+    return { thumbWidth, thumbHeight };
+}
 
 async function uploadAudio(file) {
     let buffer

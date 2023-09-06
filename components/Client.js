@@ -366,7 +366,7 @@ export default class Client {
         bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)
         bot.send = (type, payload) => bot.ws.send(JSON.stringify({ type, payload }))
         bot.ws.on('open', () => bot.send('meta::connect', { token: bot.token }))
-        bot.ws.on('message', data => qqnt.toQQNTMsg(bot.self_id, data))
+        bot.ws.on('message', data => qqnt.toQQNTMsg(bot, data))
         bot.ws.on('close', (code) => {
             delete Bot[bot.self_id]
             this.status = 3
