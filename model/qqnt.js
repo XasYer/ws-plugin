@@ -39,6 +39,7 @@ function makeMessage(self_id, payload) {
     e.bot = Bot[self_id]
     e.post_type = 'message'
     e.user_id = payload.senderUin
+    e.message_id = payload.msgId
     e.time = payload.msgTime
     e.seq = payload.msgSeq
     e.rand = payload.msgRandom
