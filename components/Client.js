@@ -386,16 +386,18 @@ export default class Client {
         const friendList = await bot.api('get', 'bot/friends').then(r => r.json())
         const fl = new Map()
         for (const i of friendList) {
-            fl.set(i.uin, {
+            fl.set(Number(i.uin), {
                 ...i,
+                bot_id: bot.self_id,
                 user_id: i.uin,
                 nickname: i.nick
             })
         }
         const gl = new Map()
         for (const i of (await bot.api('get', 'bot/groups').then(r => r.json()))) {
-            gl.set(i.groupCode, {
+            gl.set(Number(i.groupCode), {
                 ...i,
+                bot_id: bot.self_id,
                 group_id: i.groupCode,
                 group_name: i.groupName,
                 max_member_count: i.maxMember,
@@ -423,7 +425,7 @@ export default class Client {
             get api() { return bot.api },
             get send() { return bot.send },
             pickFriend: user_id => qqnt.pickFriend(bot.self_id, user_id),
-            get pickUser() { return qqnt.pickFriend },
+            get pickUser() { return Bot[bot.self_id].pickFriend },
             pickMember: (group_id, user_id) => qqnt.pickMember(bot.self_id, group_id, user_id),
             pickGroup: group_id => qqnt.pickGroup(bot.self_id, group_id),
             fl,

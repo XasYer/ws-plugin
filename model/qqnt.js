@@ -214,7 +214,7 @@ function makeMessage(self_id, payload) {
 
 function pickFriend(self_id, user_id) {
     const i = {
-        ...Bot[self_id].fl.get(user_id),
+        ...Bot[self_id].fl.get(Number(user_id)),
         self_id: self_id,
         bot: Bot[self_id],
         user_id: user_id,
@@ -240,7 +240,7 @@ async function recallFriendMsg(data, message_id) {
 
 function pickMember(self_id, group_id, user_id) {
     const i = {
-        ...Bot[self_id].fl.get(user_id),
+        ...Bot[self_id].fl.get(Number(user_id)),
         self_id: self_id,
         bot: Bot[self_id],
         group_id: group_id,
@@ -280,7 +280,7 @@ async function getMemberMap(self_id, group_id) {
 
 function pickGroup(self_id, group_id) {
     const i = {
-        ...Bot[self_id].gl.get(group_id),
+        ...Bot[self_id].gl.get(Number(group_id)),
         self_id: self_id,
         bot: Bot[self_id],
         group_id: group_id,
@@ -347,7 +347,7 @@ async function makeMsg(data, msg) {
                 i = [{
                     "elementType": 1,
                     "textElement": {
-                        "content": i.text
+                        "content": i.text + ''
                     }
                 }]
                 break
@@ -442,7 +442,8 @@ async function upload(data, msg, contentType) {
         buffer = Buffer.from(msg.replace(/^base64:\/\//, ""), 'base64')
     } else if (msg.startsWith('http')) {
         const img = await fetch(msg)
-        contentType = img.headers.get('content-type');
+        const type = img.headers.get('content-type');
+        if (type) contentType = type
         const arrayBuffer = await img.arrayBuffer()
         buffer = Buffer.from(arrayBuffer)
     } else if (msg.startsWith('file:///')) {
@@ -655,8 +656,8 @@ function getVideoTime(file) {
             if (error) {
                 reject('获取视频长度失败, 请确保你的 ffmpeg 已正确安装')
             }
-            const durationInSeconds = parseFloat(stdout);
-            resolve(parseInt(durationInSeconds))
+            const durationInSeconds = parseInt(stdout);
+            resolve(durationInSeconds)
         });
     })
 }
