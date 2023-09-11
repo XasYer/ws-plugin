@@ -7,6 +7,7 @@ import { exec } from 'child_process'
 import { writeFile, readFile } from 'fs/promises'
 import { createRequire } from 'module'
 import schedule from "node-schedule"
+import os from 'os'
 const require = createRequire(import.meta.url)
 
 async function toQQNTMsg(bot, data) {
@@ -40,7 +41,8 @@ function makeMessage(self_id, payload) {
     e.bot = Bot[self_id]
     e.post_type = 'message'
     e.user_id = payload.senderUin
-    e.message_id = payload.msgId
+    // e.message_id = payload.msgId
+    e.message_id = `${payload.peerUin}:${payload.msgSeq}`
     e.time = payload.msgTime
     e.seq = payload.msgSeq
     e.rand = payload.msgRandom
@@ -83,6 +85,7 @@ function makeMessage(self_id, payload) {
                     size: i.fileElement.fileSize,
                 })
                 e.raw_message += `[文件: ${i.fileElement.fileName}]`
+                break
             case 4:
                 e.message.push({
                     type: 'record',
@@ -107,8 +110,22 @@ function makeMessage(self_id, payload) {
                 e.raw_message += `[表情: ${i.faceElement.faceIndex}]`
                 break
             case 7:
-                // e.message.push({ type: "reply", id: i.replyElement.replayMsgId })
+                // e.message.push({
+                //     type: 'reply',
+                //     id: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
+                //     seq: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
+                // })
+                // let replyMsg = i.replyElement.sourceMsgTextElems.reduce((acc, item) => acc + item.textElemContent, '')
+                // e.source = {
+                //     message_id: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
+                //     seq: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
+                //     time: e.time,
+                //     rand: e.rand,
+                //     user_id: i.replyElement.senderUid,
+                //     message: replyMsg
+                // }
                 // e.raw_message += `[回复：${i.replyElement.replayMsgId}]`
+                // e.message.push({ type: "reply", id: i.replyElement.replayMsgId })
                 break
             case 8:
                 switch (i.grayTipElement.subElementType) {
@@ -196,10 +213,12 @@ function makeMessage(self_id, payload) {
                 }))}`)
             } else {
                 setMsgMap(e.message_id, {
-                    message_id: e.message_id,
+                    // message_id: e.message_id,
+                    message_id: payload.msgId,
                     seq: e.seq,
                     rand: e.rand,
-                    user_id: e.user_id
+                    user_id: e.user_id,
+                    time: e.time
                 })
                 Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
             }
@@ -406,15 +425,16 @@ async function makeMsg(data, msg) {
             case "reply":
                 const msg = await getMsgMap(i.id)
                 if (msg) {
+                    log += `[回复: ${i.id}]`
                     i = [{
                         "elementType": 7,
                         "replyElement": {
                             "replayMsgSeq": msg.seq,
-                            "sourceMsgIdInRecords": i.id,
-                            "senderUid": msg.user_id
+                            "sourceMsgIdInRecords": msg.message_id,
+                            "senderUid": msg.user_id,
+                            "replyMsgTime": msg.time
                         }
                     }]
-                    log += `[回复: ${i.id}]`
                 } else {
                     i = []
                 }
@@ -491,8 +511,9 @@ async function makeImg(data, msg) {
 
 async function getToken() {
     let path
-    if (process.platform === 'win32') {
-        path = process.env.APPDATA + '/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN'
+    if (os.platform() === 'win32') {
+        const user = os.userInfo().username
+        path = `C:/Users/${user}/AppData/Roaming/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN`
     } else {
         logger.error('非Windows系统请自行获取Token')
         return false

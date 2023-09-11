@@ -395,14 +395,28 @@ export default class Client {
         }
         const gl = new Map()
         for (const i of (await bot.api('get', 'bot/groups').then(r => r.json()))) {
-            gl.set(Number(i.groupCode), {
+            const data = {
                 ...i,
                 bot_id: bot.self_id,
                 group_id: i.groupCode,
                 group_name: i.groupName,
                 max_member_count: i.maxMember,
                 member_count: i.memberCount,
-            })
+            }
+            switch (i.memberRole) {
+                case 2:
+                    // 普通群员
+                    break;
+                case 3:
+                    data.is_admin = true
+                    break
+                case 4:
+                    data.is_owner = true
+                    break
+                default:
+                    break;
+            }
+            gl.set(Number(i.groupCode), data)
         }
         Bot[bot.self_id] = {
             adapter: {
