@@ -28,7 +28,58 @@ async function toQQNTMsg(bot, data) {
             } else {
                 Bot[bot.self_id].stat.recv_msg_cnt = 1
             }
-            makeMessage(bot.self_id, data.payload[0])
+            const payload = data.payload[0]
+            const e = makeMessage(bot.self_id, payload)
+            if (e.message_type = 'group') {
+                logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
+            } else if (e.message_type = 'private') {
+                logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
+            }
+            switch (e.post_type) {
+                case 'message':
+                    if (!e.user_id) {
+                        // 判断是否是#开头 ，是否包含 面板 ，体力
+                        const regList = [
+                            '^#(\\S*)\\s?([\\s\\S]*)$',
+                            '^#*(\\*|星铁|星轨|穹轨|星穹|崩铁|星穹铁道|崩坏星穹铁道|铁道)?(多|全|全部|a|A|q|d)?(体力|树脂|查询体力|便笺|便签|mr|tl|sz)$',
+                            '^.*(面板|记录|统计|分析).*$'
+                        ]
+                        let isMatch = false
+                        for (const reg of regList) {
+                            const regExp = new RegExp(reg)
+                            if (regExp.test(e.raw_message)) {
+                                isMatch = true
+                                break
+                            }
+                        }
+                        if (isMatch) {
+                            const errMsg = [{ type: 'text', text: `ErrMsg：${e.raw_message}(๑•́ ₃ •̀๑)\n啾咪啊！出错了呢！请再发一次命令吧~（期待的眨眨眼）` }]
+                            payload.chatType == 1 ? sendFriendMsg(e, errMsg) : sendGroupMsg(e, errMsg)
+                        }
+                        return logger.error(`解码数据失败：${logger.red(JSON.stringify({
+                            msg: e.raw_message,
+                            message_id: e.message_id,
+                            message_type: e.message_type,
+                            content: 'user_id is null'
+                        }))}`)
+                    } else {
+                        setMsgMap(e.message_id, {
+                            // message_id: e.message_id,
+                            message_id: payload.msgId,
+                            seq: e.seq,
+                            rand: e.rand,
+                            user_id: e.user_id,
+                            time: e.time
+                        })
+                        Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
+                    }
+                    break;
+                case 'notice':
+                    Bot.em(`${e.post_type}.${e.notice_type}.${e.sub_type}`, e)
+                    break
+                default:
+                    break;
+            }
             break
         default:
             break;
@@ -115,17 +166,17 @@ function makeMessage(self_id, payload) {
                 //     id: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
                 //     seq: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
                 // })
-                // let replyMsg = i.replyElement.sourceMsgTextElems.reduce((acc, item) => acc + item.textElemContent, '')
-                // e.source = {
-                //     message_id: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
-                //     seq: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
-                //     time: e.time,
-                //     rand: e.rand,
-                //     user_id: i.replyElement.senderUid,
-                //     message: replyMsg
-                // }
-                // e.raw_message += `[回复：${i.replyElement.replayMsgId}]`
-                // e.message.push({ type: "reply", id: i.replyElement.replayMsgId })
+                let replyMsg = i.replyElement.sourceMsgTextElems.reduce((acc, item) => acc + item.textElemContent, '')
+                const id = `${payload.peerUin}:${i.replyElement.replayMsgSeq}`
+                e.source = {
+                    message_id: id,
+                    seq: id,
+                    time: id,
+                    rand: e.rand,
+                    user_id: i.replyElement.senderUid,
+                    message: replyMsg
+                }
+                e.raw_message += `[回复: ${id}]`
                 break
             case 8:
                 switch (i.grayTipElement.subElementType) {
@@ -175,60 +226,13 @@ function makeMessage(self_id, payload) {
         }
         e.group_id = payload.peerUin
         e.group_name = payload.peerName
-        logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
     } else if (payload.chatType == 1) {
         if (!e.sub_type) {
             e.message_type = 'private'
             e.sub_type = 'friend'
         }
-        logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
     }
-
-    switch (e.post_type) {
-        case 'message':
-            if (!e.user_id) {
-                // 判断是否是#开头 ，是否包含 面板 ，体力
-                const regList = [
-                    '^#(\\S*)\\s?([\\s\\S]*)$',
-                    '^#*(\\*|星铁|星轨|穹轨|星穹|崩铁|星穹铁道|崩坏星穹铁道|铁道)?(多|全|全部|a|A|q|d)?(体力|树脂|查询体力|便笺|便签|mr|tl|sz)$',
-                    '^.*(面板|记录|统计|分析).*$'
-                ]
-                let isMatch = false
-                for (const reg of regList) {
-                    const regExp = new RegExp(reg)
-                    if (regExp.test(e.raw_message)) {
-                        isMatch = true
-                        break
-                    }
-                }
-                if (isMatch) {
-                    const errMsg = [{ type: 'text', text: `ErrMsg：${e.raw_message}(๑•́ ₃ •̀๑)\n啾咪啊！出错了呢！请再发一次命令吧~（期待的眨眨眼）` }]
-                    payload.chatType == 1 ? sendFriendMsg(e, errMsg) : sendGroupMsg(e, errMsg)
-                }
-                return logger.error(`解码数据失败：${logger.red(JSON.stringify({
-                    msg: e.raw_message,
-                    message_id: e.message_id,
-                    message_type: e.message_type,
-                    content: 'user_id is null'
-                }))}`)
-            } else {
-                setMsgMap(e.message_id, {
-                    // message_id: e.message_id,
-                    message_id: payload.msgId,
-                    seq: e.seq,
-                    rand: e.rand,
-                    user_id: e.user_id,
-                    time: e.time
-                })
-                Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
-            }
-            break;
-        case 'notice':
-            Bot.em(`${e.post_type}.${e.notice_type}.${e.sub_type}`, e)
-            break
-        default:
-            break;
-    }
+    return e
 }
 
 function pickFriend(self_id, user_id) {
@@ -242,8 +246,34 @@ function pickFriend(self_id, user_id) {
         ...i,
         sendMsg: msg => sendFriendMsg(i, msg),
         recallMsg: async message_id => await recallFriendMsg(i, message_id),
-        sendFile: async file => await sendFriendMsg(i, [{ type: 'file', file }])
+        sendFile: async file => await sendFriendMsg(i, [{ type: 'file', file }]),
+        getChatHistory: async (message_id, count) => await getFriendChatHistory(i, message_id, count)
     }
+}
+
+async function getGroupChatHistory(data, message_id, count) {
+    const msg = await getMsgMap(message_id)
+    if (msg) {
+        const result = await data.bot.api('POST', 'message/getHistory', JSON.stringify({
+            peer: {
+                chatType: 1,
+                peerUin: data.user_id,
+                guildId: null
+            },
+            offsetMsgId: msg.message_id,
+            count: count || 20
+        })).then(r => r.json())
+        if (result.msgList) {
+            const msgList = []
+            for (const i of result.msgList) {
+                const user_id = (await getMsgMap(`${i.peerUid}:${i.msgSeq}`))?.user_id
+                i.senderUin = user_id
+                msgList.push(makeMessage(data.self_id, i))
+            }
+            return msgList
+        }
+    }
+    return []
 }
 
 async function recallFriendMsg(data, message_id) {
@@ -310,8 +340,35 @@ function pickGroup(self_id, group_id) {
         pickMember: user_id => pickMember(self_id, group_id, user_id),
         getMemberMap: async () => await getMemberMap(self_id, group_id),
         recallMsg: async message_id => await recallGroupMsg(i, message_id),
-        sendFile: async file => await sendGroupMsg(i, [{ type: 'file', file }])
+        sendFile: async file => await sendGroupMsg(i, [{ type: 'file', file }]),
+        getChatHistory: async (message_id, count) => await getGroupChatHistory(i, message_id, count)
     }
+}
+
+async function getGroupChatHistory(data, message_id, count) {
+    const msg = await getMsgMap(message_id)
+    if (msg) {
+        const result = await data.bot.api('POST', 'message/getHistory', JSON.stringify({
+            peer: {
+                chatType: 2,
+                peerUin: data.group_id,
+                guildId: null
+            },
+            offsetMsgId: msg.message_id,
+            count: count || 20
+        })).then(r => r.json())
+        if (result.msgList) {
+            const msgList = []
+            for (const i of result.msgList) {
+                const user_id = (await getMsgMap(`${i.peerUid}:${i.msgSeq}`))?.user_id
+                i.senderUin = user_id
+                i.peerUin = data.group_id
+                msgList.push(makeMessage(data.self_id, i))
+            }
+            return msgList
+        }
+    }
+    return []
 }
 
 async function recallGroupMsg(data, message_id) {
@@ -335,7 +392,16 @@ async function sendGroupMsg(data, msg) {
         },
         elements
     })).then(r => r.json())
-    return { message_id: result.msgId }
+    const message_id = `${result.peerUid}:${result.msgSeq}`
+    setMsgMap(message_id, {
+        // message_id: e.message_id,
+        message_id: result.msgId,
+        seq: message_id,
+        rand: message_id,
+        user_id: data.self_id,
+        time: result.msgTime
+    })
+    return { message_id }
 }
 
 async function sendFriendMsg(data, msg) {

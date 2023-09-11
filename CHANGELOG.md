@@ -1,3 +1,9 @@
+# 0.4.19
+
+* QQNT 增加获取群历史消息
+    * 因为回复消息没有msgId,所以将seq存在redis获取对应的msgId,默认存储10分钟
+* QQNT 优化使用TRSS脚本自动获取Token
+
 # 0.4.18
 
 * QQNT 增加发送视频 需要ffmpeg
