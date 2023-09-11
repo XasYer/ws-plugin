@@ -251,7 +251,7 @@ function pickFriend(self_id, user_id) {
     }
 }
 
-async function getGroupChatHistory(data, message_id, count) {
+async function getFriendChatHistory(data, message_id, count) {
     const msg = await getMsgMap(message_id)
     if (msg) {
         const result = await data.bot.api('POST', 'message/getHistory', JSON.stringify({
