@@ -277,14 +277,17 @@ async function getFriendChatHistory(data, message_id, count) {
 }
 
 async function recallFriendMsg(data, message_id) {
-    data.bot.api('POST', 'message/recall', JSON.stringify({
-        peer: {
-            chatType: 1,
-            peerUin: data.user_id,
-            guildId: null,
-        },
-        msgIds: [message_id]
-    }))
+    message_id = (await getMsgMap(message_id))?.message_id
+    if (message_id) {
+        data.bot.api('POST', 'message/recall', JSON.stringify({
+            peer: {
+                chatType: 1,
+                peerUin: data.user_id,
+                guildId: null,
+            },
+            msgIds: [message_id]
+        }))
+    }
 }
 
 function pickMember(self_id, group_id, user_id) {
@@ -372,14 +375,17 @@ async function getGroupChatHistory(data, message_id, count) {
 }
 
 async function recallGroupMsg(data, message_id) {
-    data.bot.api('POST', 'message/recall', JSON.stringify({
-        peer: {
-            chatType: 2,
-            peerUin: data.group_id,
-            guildId: null,
-        },
-        msgIds: [message_id]
-    }))
+    message_id = (await getMsgMap(message_id))?.message_id
+    if (message_id) {
+        data.bot.api('POST', 'message/recall', JSON.stringify({
+            peer: {
+                chatType: 2,
+                peerUin: data.group_id,
+                guildId: null,
+            },
+            msgIds: [message_id]
+        }))
+    }
 }
 
 async function sendGroupMsg(data, msg) {
