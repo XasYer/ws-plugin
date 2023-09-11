@@ -30,9 +30,9 @@ async function toQQNTMsg(bot, data) {
             }
             const payload = data.payload[0]
             const e = makeMessage(bot.self_id, payload)
-            if (e.message_type = 'group') {
+            if (e.message_type == 'group') {
                 logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
-            } else if (e.message_type = 'private') {
+            } else if (e.message_type == 'private') {
                 logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
             }
             switch (e.post_type) {
