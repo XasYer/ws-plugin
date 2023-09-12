@@ -92,7 +92,7 @@ function makeMessage(self_id, payload) {
     const e = {}
     e.bot = Bot[self_id]
     e.post_type = 'message'
-    e.user_id = payload.senderUin
+    e.user_id = Number(payload.senderUin) || null
     // e.message_id = payload.msgId
     e.message_id = `${payload.peerUin}:${payload.msgSeq}`
     e.time = payload.msgTime
