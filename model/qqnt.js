@@ -1,13 +1,14 @@
 import fetch, { FormData, Blob } from 'node-fetch'
 import fs from 'fs'
 import { setMsgMap, getMsgMap } from './msgMap.js'
-import crypto, { createHash, randomUUID } from 'crypto'
+import { createHash, randomBytes, randomUUID } from 'crypto'
 import { resolve, join } from 'path'
 import { exec } from 'child_process'
 import { writeFile, readFile } from 'fs/promises'
 import { createRequire } from 'module'
 import schedule from "node-schedule"
 import os from 'os'
+import _ from 'lodash'
 const require = createRequire(import.meta.url)
 
 async function toQQNTMsg(bot, data) {
@@ -30,11 +31,6 @@ async function toQQNTMsg(bot, data) {
             }
             const payload = data.payload[0]
             const e = makeMessage(bot.self_id, payload)
-            if (e.message_type == 'group') {
-                logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
-            } else if (e.message_type == 'private') {
-                logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
-            }
             switch (e.post_type) {
                 case 'message':
                     if (!e.user_id) {
@@ -63,6 +59,11 @@ async function toQQNTMsg(bot, data) {
                             content: 'user_id is null'
                         }))}`)
                     } else {
+                        if (e.message_type == 'group') {
+                            logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
+                        } else if (e.message_type == 'private') {
+                            logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
+                        }
                         setMsgMap(e.message_id, {
                             // message_id: e.message_id,
                             message_id: payload.msgId,
@@ -390,6 +391,7 @@ async function recallGroupMsg(data, message_id) {
 
 async function sendGroupMsg(data, msg) {
     const { msg: elements, log } = await makeMsg(data, msg)
+    if (!elements) return { message_id: null }
     logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送群消息：${log}`)
     const result = await data.bot.api('POST', 'message/send', JSON.stringify({
         peer: {
@@ -412,6 +414,7 @@ async function sendGroupMsg(data, msg) {
 
 async function sendFriendMsg(data, msg) {
     const { msg: elements, log } = await makeMsg(data, msg)
+    if (!elements) return { message_id: null }
     logger.info(`${logger.blue(`[${data.self_id} => ${data.user_id}]`)} 发送好友消息：${log}`)
     const result = await data.bot.api('POST', 'message/send', JSON.stringify({
         peer: {
@@ -512,20 +515,155 @@ async function makeMsg(data, msg) {
                 }
                 break
             case "node":
-                const array = []
-                for (const { message } of i.data) {
-                    const { msg: node } = await makeMsg(data, message)
-                    array.push(...node)
-                }
-                i = array
+                await sendNodeMsg(data, i.data)
+                return { msg: null, log: null }
                 break
             default:
-                i = []
+                log += JSON.stringify(i)
+                i = [{
+                    "elementType": 1,
+                    "textElement": {
+                        "content": JSON.stringify(i)
+                    }
+                }]
+            // i = []
             // i = { type: "text", data: JSON.stringify(i) }
         }
         msgs.push(...i)
     }
     return { msg: msgs, log }
+}
+
+async function sendNodeMsg(data, msg) {
+    let seq = randomBytes(2).readUint16BE()
+    async function makeMsg(msg) {
+        const result = []
+        for (const i of msg) {
+            switch (i.type) {
+                case 'text':
+                    result.push({
+                        text: {
+                            str: i.text
+                        }
+                    })
+                    break;
+                case 'image':
+                    const img = await makeImg(data, i.file)
+                    const sendRet = await data.bot.api('POST', 'message/send', JSON.stringify({
+                        peer: {
+                            chatType: 1,
+                            peerUin: data.self_id
+                        },
+                        elements: [img]
+                    })).then(r => r.json())
+                    data.bot.api('POST', 'message/recall', JSON.stringify({
+                        peer: {
+                            chatType: 1,
+                            peerUin: data.self_id,
+                            guildId: null,
+                        },
+                        msgIds: [sendRet.msgId]
+                    }))
+                    result.push({
+                        text: {
+                            str: `https://gchat.qpic.cn/gchatpic_new/0/0-0-${img.picElement.md5HexStr.toUpperCase()}/0`
+                        }
+                    })
+                    // const img = await upload(data, i.file, 'image/png')
+                    // result.push({
+                    //     "customFace": {
+                    //         "filePath": img.ntFilePath,
+                    //         "fileId": randomBytes(2).readUint16BE(),
+                    //         "serverIp": -1740138629,
+                    //         "serverPort": 80,
+                    //         "fileType": 1001,
+                    //         "useful": 1,
+                    //         "md5": new Uint8Array(
+                    //             Buffer.from(img.md5, 'hex',),
+                    //         ),
+                    //         "imageType": 1001,
+                    //         "width": img.imageInfo.width,
+                    //         "height": img.imageInfo.width,
+                    //         "size": img.fileSize,
+                    //         "origin": 0,
+                    //         "thumbWidth": 0,
+                    //         "thumbHeight": 0,
+                    //         "pbReserve": new Uint8Array([2, 0])
+                    //     }
+                    // })
+                    break
+                // case 'node':
+
+                //     break
+                default:
+                    for (const key in i) {
+                        if (typeof i[key] === 'string' && i[key].length > 50) {
+                            i[key] = _.truncate(i[key], { length: 50 })
+                        }
+                    }
+                    result.push({
+                        text: {
+                            str: JSON.stringify(i)
+                        }
+                    })
+                    break;
+            }
+        }
+        return result
+    }
+    const msgElements = []
+    for (const i of msg) {
+        if (typeof i.message == 'string') i.message = { type: 'text', text: i.message }
+        if (!Array.isArray(i.message)) i.message = [i.message]
+        const element = {
+            head: {
+                field2: 'u_PmxGsJErxkwN0ilC07NLWw',
+                field8: {
+                    field1: 2854196310,
+                    field4: 'Q群管家'
+                }
+            },
+            content: {
+                field1: 82,
+                field4: randomBytes(4).readUint32BE(),
+                field5: seq++,
+                field6: Math.floor(Date.now() / 1000),
+                field7: 1,
+                field8: 0,
+                field9: 0,
+                field15: {
+                    field1: 0,
+                    field2: 0
+                }
+            },
+            body: {
+                richText: {
+                    elems: [...await makeMsg(i.message)]
+                }
+            }
+        }
+        msgElements.push(element)
+    }
+    let target
+    if (data.group_id) {
+        target = {
+            chatType: 2,
+            peerUin: data.group_id
+        }
+        logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送群消息：[转发消息]`)
+    } else if (data.user_id) {
+        target = {
+            chatType: 1,
+            peerUin: data.user_id
+        }
+        logger.info(`${logger.blue(`[${data.self_id} => ${data.user_id}]`)} 发送好友消息：[转发消息]`)
+    }
+    const payload = {
+        msgElements,
+        srcContact: target,
+        dstContact: target
+    }
+    await data.bot.api('POST', 'message/unsafeSendForward', JSON.stringify(payload))
 }
 
 async function upload(data, msg, contentType) {
@@ -625,7 +763,7 @@ async function uploadFile(file) {
         fs.copyFileSync(file, path)
     }
     const size = buffer.length
-    const hash = crypto.createHash('md5');
+    const hash = createHash('md5');
     hash.update(buffer);
     const md5 = hash.digest('hex')
     return {
@@ -732,7 +870,7 @@ async function getVideoInfo(file) {
 function getVideoMd5(file) {
     return new Promise((resolve, reject) => {
         const stream = fs.createReadStream(file);
-        const hash = crypto.createHash('md5');
+        const hash = createHash('md5');
         stream.on('data', chunk => {
             hash.update(chunk);
         });
@@ -780,7 +918,7 @@ function extractThumbnail(inputFile, outputFile) {
             })
 
             const buffer = fs.readFileSync(outputFile);
-            const hash = crypto.createHash('md5');
+            const hash = createHash('md5');
             hash.update(buffer);
             resolve({
                 thumbMd5: hash.digest('hex'),

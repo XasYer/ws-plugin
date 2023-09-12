@@ -426,6 +426,7 @@ export default class Client {
             avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${bot.uin}`,
             ws: bot.ws,
             uin: bot.self_id,
+            uid: bot.info.uid,
             nickname: bot.nickname,
             self_id: bot.self_id,
             stat: {
