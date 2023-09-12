@@ -344,6 +344,12 @@ export default class Client {
             } catch (error) {
                 logger.error(`${this.name} 未知错误`)
                 reconnect()
+                return
+            }
+            if (!info.uin) {
+                logger.error(`${this.name} 请点击登录`)
+                reconnect()
+                return
             }
             if (!Bot.uin.includes(info.uin)) {
                 Bot.uin.push(info.uin)
