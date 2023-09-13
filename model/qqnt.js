@@ -31,6 +31,7 @@ async function toQQNTMsg(bot, data) {
             }
             const payload = data.payload[0]
             const e = makeMessage(bot.self_id, payload)
+            if (!e) return
             switch (e.post_type) {
                 case 'message':
                     if (!e.user_id) {
@@ -88,7 +89,7 @@ async function toQQNTMsg(bot, data) {
 }
 
 function makeMessage(self_id, payload) {
-    if (!payload) return
+    if (!payload) return null
     const e = {}
     e.bot = Bot[self_id]
     e.post_type = 'message'
@@ -438,70 +439,85 @@ async function makeMsg(data, msg) {
         switch (i.type) {
             case "text":
                 log += i.text
-                i = [{
+                i = {
                     "elementType": 1,
                     "textElement": {
                         "content": i.text + ''
                     }
-                }]
+                }
                 break
             case "image":
-                const img = await makeImg(data, i.file)
-                i = [img]
-                log += `[图片: ${img.picElement.md5HexStr}]`
+                i = await makeImg(data, i.file)
+                log += `[图片: ${i.picElement.md5HexStr}]`
                 break
             case "record":
-                // const record = await makeRecord(data, i.file)
                 const record = await uploadAudio(i.file)
                 if (record) {
-                    i = [record]
+                    i = record
                     log += `[语音: ${record.pttElement.md5HexStr}]`
-                    // setTimeout(() => {
-                    //     fs.unlinkSync(record.pttElement.filePath)
-                    // }, 3000)
                 } else {
-                    i = []
+                    i = {
+                        "elementType": 1,
+                        "textElement": {
+                            "content": JSON.stringify(i)
+                        }
+                    }
                 }
                 break
             case "face":
-                i = [{
+                i = {
                     "elementType": 6,
                     "faceElement": {
                         "faceIndex": i.id,
                         "faceType": 1
                     }
-                }]
+                }
                 log += `[表情: ${i.id}]`
                 break
             case "video":
                 const video = await uploadVideo(data.bot, i.file)
-                i = [video]
-                log += `[视频: ${video.videoElement.videoMd5}]`
+                if (video) {
+                    i = video
+                    log += `[视频: ${video.videoElement.videoMd5}]`
+                } else {
+                    i = {
+                        "elementType": 1,
+                        "textElement": {
+                            "content": JSON.stringify(i)
+                        }
+                    }
+                }
                 break
             case "file":
                 const file = await uploadFile(i.file)
-                i = [file]
-                // setTimeout(() => {
-                //     fs.unlinkSync(file.fileElement.filePath)
-                // }, 3000)
-                log += `[文件: ${file.fileElement.fileMd5}]`
+                if (file) {
+                    i = file
+                    log += `[文件: ${file.fileElement.fileMd5}]`
+                } else {
+                    i = {
+                        "elementType": 1,
+                        "textElement": {
+                            "content": JSON.stringify(i)
+                        }
+                    }
+                }
                 break
             case "at":
                 log += `[提及: ${i.qq}]`
-                i = [{
+                i = {
                     "elementType": 1,
                     "textElement": {
                         // "content": "@时空猫猫",
                         "atType": 2,
                         "atNtUin": i.qq
                     }
-                }]
+                }
                 break
             case "reply":
                 const msg = await getMsgMap(i.id)
                 if (msg) {
                     log += `[回复: ${i.id}]`
-                    i = [{
+                    i = {
                         "elementType": 7,
                         "replyElement": {
                             "replayMsgSeq": msg.seq,
@@ -509,9 +525,14 @@ async function makeMsg(data, msg) {
                             "senderUid": msg.user_id,
                             "replyMsgTime": msg.time
                         }
-                    }]
+                    }
                 } else {
-                    i = []
+                    i = {
+                        "elementType": 1,
+                        "textElement": {
+                            "content": JSON.stringify(i)
+                        }
+                    }
                 }
                 break
             case "node":
@@ -520,16 +541,14 @@ async function makeMsg(data, msg) {
                 break
             default:
                 log += JSON.stringify(i)
-                i = [{
+                i = {
                     "elementType": 1,
                     "textElement": {
                         "content": JSON.stringify(i)
                     }
-                }]
-            // i = []
-            // i = { type: "text", data: JSON.stringify(i) }
+                }
         }
-        msgs.push(...i)
+        msgs.push(i)
     }
     return { msg: msgs, log }
 }
