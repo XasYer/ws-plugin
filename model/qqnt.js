@@ -129,8 +129,9 @@ function makeMessage(self_id, payload) {
         switch (i.elementType) {
             case 1:
                 if (i.textElement.atType == 2) {
-                    e.message.push({ type: 'at', qq: i.textElement.atUid })
-                    e.raw_message += `[提及：${i.textElement.atUid == '0' ? i.textElement.atNtUin : i.textElement.atUid}]`
+                    const qq = i.textElement.atUid == '0' ? i.textElement.atNtUin : i.textElement.atUid
+                    e.message.push({ type: 'at', qq })
+                    e.raw_message += `[提及：${qq}]`
                 } else if (i.textElement.atType == 1) {
                     e.message.push({ type: 'at', qq: 'all' })
                     e.raw_message += `[提及：全体成员]`
