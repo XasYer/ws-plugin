@@ -52,47 +52,47 @@ async function toQQNTMsg(bot, data) {
             if (!e) return
             switch (e.post_type) {
                 case 'message':
-                    if (!e.user_id) {
-                        // 判断是否是#开头 ，是否包含 面板 ，体力
-                        const regList = [
-                            '^#(\\S*)\\s?([\\s\\S]*)$',
-                            '^#*(\\*|星铁|星轨|穹轨|星穹|崩铁|星穹铁道|崩坏星穹铁道|铁道)?(多|全|全部|a|A|q|d)?(体力|树脂|查询体力|便笺|便签|mr|tl|sz)$',
-                            '^.*(面板|记录|统计|分析).*$'
-                        ]
-                        let isMatch = false
-                        for (const reg of regList) {
-                            const regExp = new RegExp(reg)
-                            if (regExp.test(e.raw_message)) {
-                                isMatch = true
-                                break
-                            }
-                        }
-                        if (isMatch) {
-                            const errMsg = [{ type: 'text', text: `ErrMsg：${e.raw_message}(๑•́ ₃ •̀๑)\n啾咪啊！出错了呢！请再发一次命令吧~（期待的眨眨眼）` }]
-                            payload.chatType == 1 ? sendFriendMsg(e, errMsg) : sendGroupMsg(e, errMsg)
-                        }
-                        return logger.error(`解码数据失败：${logger.red(JSON.stringify({
-                            msg: e.raw_message,
-                            message_id: e.message_id,
-                            message_type: e.message_type,
-                            content: 'user_id is null'
-                        }))}`)
-                    } else {
-                        if (e.message_type == 'group') {
-                            logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
-                        } else if (e.message_type == 'private') {
-                            logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
-                        }
-                        setMsgMap(e.message_id, {
-                            // message_id: e.message_id,
-                            message_id: payload.msgId,
-                            seq: e.seq,
-                            rand: e.rand,
-                            user_id: e.user_id,
-                            time: e.time
-                        })
-                        Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
+                    // if (!e.user_id) {
+                    //     // 判断是否是#开头 ，是否包含 面板 ，体力
+                    //     const regList = [
+                    //         '^#(\\S*)\\s?([\\s\\S]*)$',
+                    //         '^#*(\\*|星铁|星轨|穹轨|星穹|崩铁|星穹铁道|崩坏星穹铁道|铁道)?(多|全|全部|a|A|q|d)?(体力|树脂|查询体力|便笺|便签|mr|tl|sz)$',
+                    //         '^.*(面板|记录|统计|分析).*$'
+                    //     ]
+                    //     let isMatch = false
+                    //     for (const reg of regList) {
+                    //         const regExp = new RegExp(reg)
+                    //         if (regExp.test(e.raw_message)) {
+                    //             isMatch = true
+                    //             break
+                    //         }
+                    //     }
+                    //     if (isMatch) {
+                    //         const errMsg = [{ type: 'text', text: `ErrMsg：${e.raw_message}(๑•́ ₃ •̀๑)\n啾咪啊！出错了呢！请再发一次命令吧~（期待的眨眨眼）` }]
+                    //         payload.chatType == 1 ? sendFriendMsg(e, errMsg) : sendGroupMsg(e, errMsg)
+                    //     }
+                    //     return logger.error(`解码数据失败：${logger.red(JSON.stringify({
+                    //         msg: e.raw_message,
+                    //         message_id: e.message_id,
+                    //         message_type: e.message_type,
+                    //         content: 'user_id is null'
+                    //     }))}`)
+                    // } else {
+                    if (e.message_type == 'group') {
+                        logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
+                    } else if (e.message_type == 'private') {
+                        logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
                     }
+                    setMsgMap(e.message_id, {
+                        // message_id: e.message_id,
+                        message_id: payload.msgId,
+                        seq: e.seq,
+                        rand: e.rand,
+                        user_id: e.user_id,
+                        time: e.time
+                    })
+                    Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
+                    // }
                     break;
                 case 'notice':
                     Bot.em(`${e.post_type}.${e.notice_type}.${e.sub_type}`, e)
@@ -111,7 +111,8 @@ function makeMessage(self_id, payload) {
     const e = {}
     e.bot = Bot[self_id]
     e.post_type = 'message'
-    e.user_id = Number(payload.senderUin) || null
+    e.user_id = Number(payload.senderUin)
+    if (!user_id || e.user_id == '0') return null
     // e.message_id = payload.msgId
     e.message_id = `${payload.peerUin}:${payload.msgSeq}`
     e.time = payload.msgTime
@@ -120,6 +121,19 @@ function makeMessage(self_id, payload) {
     e.sender = {
         user_id: payload.senderUin,
         nickname: payload.sendNickName,
+    }
+    switch (payload.roleType) {
+        case 2:
+            e.sender.role = 'member'
+            break;
+        case 3:
+            e.sender.role = 'admin'
+            break
+        case 4:
+            e.sender.role = 'owner'
+            break
+        default:
+            break;
     }
     e.nickname = payload.sendNickName
     e.self_id = self_id
