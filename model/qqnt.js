@@ -447,7 +447,7 @@ async function makeMsg(data, msg) {
                 }
                 break
             case "image":
-                i = await makeImg(data, i.file)
+                i = await makeImg(data, i.file || i.url)
                 log += `[图片: ${i.picElement.md5HexStr}]`
                 break
             case "record":
@@ -568,7 +568,7 @@ async function sendNodeMsg(data, msg) {
                     })
                     break;
                 case 'image':
-                    const img = await makeImg(data, i.file)
+                    const img = await makeImg(data, i.file || i.url)
                     const sendRet = await data.bot.api('POST', 'message/send', JSON.stringify({
                         peer: {
                             chatType: 1,
