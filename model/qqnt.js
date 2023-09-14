@@ -9,6 +9,7 @@ import { createRequire } from 'module'
 import schedule from "node-schedule"
 import os from 'os'
 import _ from 'lodash'
+import { CLIENT_RENEG_LIMIT } from 'tls'
 const require = createRequire(import.meta.url)
 
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
@@ -129,7 +130,7 @@ function makeMessage(self_id, payload) {
             case 1:
                 if (i.textElement.atType == 2) {
                     e.message.push({ type: 'at', qq: i.textElement.atUid })
-                    e.raw_message += `[提及：${i.textElement.atUid}]`
+                    e.raw_message += `[提及：${i.textElement.atUid == '0' ? i.textElement.atNtUin : i.textElement.atUid}]`
                 } else if (i.textElement.atType == 1) {
                     e.message.push({ type: 'at', qq: 'all' })
                     e.raw_message += `[提及：全体成员]`
