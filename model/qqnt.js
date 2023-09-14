@@ -990,17 +990,17 @@ async function uploadAudio(file) {
             fileSize: buffer.length,
             fileName: md5 + '.amr',
             filePath: filePath,
-            waveAmplitudes: [8, 0, 40, 0, 56, 0],
+            waveAmplitudes: [36, 28, 68, 28, 84, 28],
             duration: duration
         }
     }
 }
 
-function audioTrans(tmpPath) {
+function audioTrans(tmpPath, samplingRate = '24000') {
     const { encode } = require('node-silk-encode')
     return new Promise((resolve, reject) => {
         const pcmFile = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
-        exec(`ffmpeg -y -i "${tmpPath}" -ar 24000 -ac 1 -f s16le "${pcmFile}"`, async () => {
+        exec(`ffmpeg -y -i "${tmpPath}" -ar ${samplingRate} -ac 1 -f s16le "${pcmFile}"`, async () => {
             fs.unlink(tmpPath, NOOP)
             fs.access(pcmFile, fs.constants.F_OK, (err) => {
                 if (err) {
@@ -1009,13 +1009,8 @@ function audioTrans(tmpPath) {
             })
 
             const silkFile = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
-            await encode(pcmFile, silkFile, '24000')
+            await encode(pcmFile, silkFile, samplingRate)
             fs.unlink(pcmFile, NOOP)
-            fs.access(silkFile, fs.constants.F_OK, (err) => {
-                if (err) {
-                    reject('音频转码失败')
-                }
-            })
 
             resolve({
                 silkFile
