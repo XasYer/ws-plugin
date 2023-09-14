@@ -557,7 +557,8 @@ async function sendNodeMsg(data, msg) {
     let seq = randomBytes(2).readUint16BE()
     async function makeMsg(msg) {
         const result = []
-        for (const i of msg) {
+        for (let i of msg) {
+            if (typeof i === 'string') i = { type: 'text', text: i }
             switch (i.type) {
                 case 'text':
                     result.push({
