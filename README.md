@@ -230,6 +230,7 @@ QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi
 ## 鸣谢
 
 * [miao-plugin](https://gitee.com/yoimiya-kokomi/miao-plugin) : 使用的ui代码及实现均来自miao-plugin
+* [@idanran](https://github.com/idanran) : QQNT 部分代码来源
 * [xiaofei-plugin](https://gitee.com/xfdown/xiaofei-plugin) : 音乐自定义分享授权使用
 * [yenai-plugin](https://www.yenai.ren/) : components部分代码来源
 * [onebot](https://github.com/botuniverse/onebot) : 统一的聊天机器人应用接口标准
