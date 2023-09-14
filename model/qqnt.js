@@ -108,7 +108,6 @@ async function toQQNTMsg(bot, data) {
 
 function makeMessage(self_id, payload) {
     if (!payload) return null
-    console.log(payload);
     const e = {}
     e.bot = Bot[self_id]
     e.post_type = 'message'
