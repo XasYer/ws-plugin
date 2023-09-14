@@ -108,19 +108,21 @@ async function toQQNTMsg(bot, data) {
 
 function makeMessage(self_id, payload) {
     if (!payload) return null
+    console.log(payload);
     const e = {}
     e.bot = Bot[self_id]
     e.post_type = 'message'
     e.user_id = Number(payload.senderUin)
-    if (!user_id || e.user_id == '0') return null
+    if (!e.user_id || e.user_id == '0') return null
     // e.message_id = payload.msgId
     e.message_id = `${payload.peerUin}:${payload.msgSeq}`
     e.time = payload.msgTime
     e.seq = payload.msgSeq
     e.rand = payload.msgRandom
+    e.nickname = payload.sendNickName || payload.sendMemberName
     e.sender = {
         user_id: payload.senderUin,
-        nickname: payload.sendNickName,
+        nickname: e.nickname,
     }
     switch (payload.roleType) {
         case 2:
@@ -135,7 +137,6 @@ function makeMessage(self_id, payload) {
         default:
             break;
     }
-    e.nickname = payload.sendNickName
     e.self_id = self_id
     e.message = []
     e.raw_message = ''
