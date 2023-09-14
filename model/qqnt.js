@@ -11,10 +11,27 @@ import os from 'os'
 import _ from 'lodash'
 const require = createRequire(import.meta.url)
 
+const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
+const user = os.userInfo().username
+const path = `C:/Users/${user}/AppData/Roaming/BetterUniverse/QQNT`
+
 async function toQQNTMsg(bot, data) {
     data = JSON.parse(data)
     switch (data.type) {
         case 'meta::connect':
+            if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
+            const job = schedule.scheduleJob('0 0 4 * * ?', function () {
+                logger.mark('[ws-plugin] 执行定时任务: 删除Temp')
+                const files = fs.readdirSync(TMP_DIR)
+                for (const file of files) {
+                    fs.unlinkSync(join(TMP_DIR, file))
+                }
+                const redPath = `${path}/redprotocol-upload`
+                const redTemp = fs.readdirSync(redPath)
+                for (const file of redTemp) {
+                    fs.unlinkSync(join(redPath, file))
+                }
+            });
             await getNtPath(bot)
             setTimeout(() => {
                 Bot[bot.self_id].version = {
@@ -740,16 +757,15 @@ async function makeImg(data, msg) {
 }
 
 async function getToken() {
-    let path
+    let tokenPath
     if (os.platform() === 'win32') {
-        const user = os.userInfo().username
-        path = `C:/Users/${user}/AppData/Roaming/BetterUniverse/QQNT/RED_PROTOCOL_TOKEN`
+        tokenPath = `${path}/RED_PROTOCOL_TOKEN`
     } else {
         logger.error('非Windows系统请自行获取Token')
         return false
     }
     try {
-        return fs.readFileSync(path, 'utf8');
+        return fs.readFileSync(tokenPath, 'utf8');
     } catch (error) {
         logger.error('QQNT自动获取Token失败,请检查是否已安装Chronocat并尝试手动获取')
         logger.error(error)
@@ -797,17 +813,8 @@ async function uploadFile(file) {
     }
 }
 
-const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
-if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
-const NOOP = () => { }
 
-const job = schedule.scheduleJob('0 0 4 * * ?', function () {
-    logger.mark('[ws-plugin] 执行定时任务: 删除Temp')
-    const files = fs.readdirSync(TMP_DIR)
-    for (const file of files) {
-        fs.unlinkSync(join(TMP_DIR, file))
-    }
-});
+const NOOP = () => { }
 
 async function getNtPath(bot) {
     let dataPath = await redis.get('ws-plugin:qqnt:dataPath')
