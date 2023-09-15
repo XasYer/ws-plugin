@@ -2,6 +2,7 @@ import plugin from '../../../lib/plugins/plugin.js'
 import lodash from 'lodash'
 import { createRequire } from 'module'
 import { Restart } from '../../other/restart.js'
+import common from '../../../lib/common/common.js'
 
 const require = createRequire(import.meta.url)
 const { exec, execSync } = require('child_process')
@@ -167,21 +168,21 @@ export class update extends plugin {
         })
     }
 
-
     async getLog(plugin = '') {
-        let cm = `cd "plugins/${plugin}" && git log -20 --pretty=format:"%h||[%cd] %s" --date=format:"%F %T"`
+        let cm = 'git log -100 --pretty="%h||[%cd] %s" --date=format:"%F %T"'
+        if (plugin) cm = `cd "plugins/${plugin}" && ${cm}`
 
         let logAll
         try {
             logAll = await execSync(cm, { encoding: 'utf-8' })
         } catch (error) {
             logger.error(error.toString())
-            this.reply(error.toString())
+            await this.reply(error.toString())
         }
 
         if (!logAll) return false
 
-        logAll = logAll.split('\n')
+        logAll = logAll.trim().split('\n')
 
         let log = []
         for (let str of logAll) {
@@ -195,55 +196,18 @@ export class update extends plugin {
 
         if (log.length <= 0) return ''
 
-        log = await this.makeForwardMsg(`${plugin}更新日志，共${line}条`, log)
-
-        return log
-    }
-
-    async makeForwardMsg(title, msg) {
-        let nickname = Bot.nickname
-        if (this.e.isGroup) {
-            let info = await Bot.getGroupMemberInfo(this.e.group_id, Bot.uin)
-            nickname = info.card || info.nickname
-        }
-        let userInfo = {
-            user_id: Bot.uin,
-            nickname
+        let end = ''
+        try {
+            cm = 'git config -l'
+            if (plugin) cm = `cd "plugins/${plugin}" && ${cm}`
+            end = await execSync(cm, { encoding: 'utf-8' })
+            end = end.match(/remote\..*\.url=.+/g).join('\n\n').replace(/remote\..*\.url=/g, '')
+        } catch (error) {
+            logger.error(error.toString())
+            await this.reply(error.toString())
         }
 
-        let forwardMsg = [
-            {
-                ...userInfo,
-                message: title
-            },
-            {
-                ...userInfo,
-                message: msg
-            }
-        ]
-
-        /** 制作转发内容 */
-        if (this.e?.group?.makeForwardMsg) {
-            forwardMsg = await this.e.group.makeForwardMsg(forwardMsg)
-        } else if (this.e?.friend?.makeForwardMsg) {
-            forwardMsg = await this.e.friend.makeForwardMsg(forwardMsg)
-        } else {
-            return msg.join('\n')
-        }
-
-        /** 处理描述 */
-        if (typeof (forwardMsg.data) === 'object') {
-            let detail = forwardMsg.data?.meta?.detail
-            if (detail) {
-                detail.news = [{ text: title }]
-            }
-        } else {
-            forwardMsg.data = forwardMsg.data
-                .replace(/\n/g, '')
-                .replace(/<title color="#777777" size="26">(.+?)<\/title>/g, '___')
-                .replace(/___+/, `<title color="#777777" size="26">${title}</title>`)
-        }
-        return forwardMsg
+        return common.makeForwardMsg(this.e, [log, end], `${plugin || 'ws-plugin'} 更新日志，共${line}条`)
     }
 
     async updateLog() {
