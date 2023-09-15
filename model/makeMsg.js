@@ -2,6 +2,8 @@ import { Config, Version } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
 import { SendMusicShare } from './tool.js'
+import common from '../../../lib/common/common.js'
+import { randomUUID } from 'crypto'
 import _ from 'lodash'
 import cfg from '../../../lib/config/config.js'
 import fetch from 'node-fetch'
@@ -137,7 +139,7 @@ async function makeGSUidReportMsg(e) {
     if (e.isGroup) {
         MessageReceive.user_type = 'group'
         MessageReceive.group_id = e.group_id + ""
-    } else if(e.isGuild) {
+    } else if (e.isGuild) {
         MessageReceive.user_type = 'channel'
         MessageReceive.group_id = e.group_id + ""
     } else {
@@ -222,7 +224,19 @@ async function makeSendMsg(params) {
                 sendMsg.push(segment.at(qq))
                 break
             case 'video':
-                sendMsg.push(segment.video(decodeURIComponent(i.data.file)))
+                i.data.file = decodeURIComponent(i.data.file)
+                if (i.data.file.startsWith('http')) {
+                    const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
+                    if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
+                    const path = TMP_DIR + '/' + randomUUID({ disableEntropyCache: true }) + '.mp4'
+                    if (await common.downFile(i.data.file, path)) {
+                        sendMsg.push(segment.video(path))
+                    } else {
+                        sendMsg.push(MsgToCQ([i]))
+                    }
+                } else {
+                    sendMsg.push(segment.video(i.data.file))
+                }
                 break
             case 'music':
                 if (params.message_type == 'group') {
