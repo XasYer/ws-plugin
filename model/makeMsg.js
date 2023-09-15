@@ -4,6 +4,7 @@ import { getMsgMap, setMsgMap } from './msgMap.js'
 import { SendMusicShare } from './tool.js'
 import common from '../../../lib/common/common.js'
 import { randomUUID } from 'crypto'
+import fs from 'fs'
 import _ from 'lodash'
 import cfg from '../../../lib/config/config.js'
 import fetch from 'node-fetch'
@@ -231,6 +232,9 @@ async function makeSendMsg(params) {
                     const path = TMP_DIR + '/' + randomUUID({ disableEntropyCache: true }) + '.mp4'
                     if (await common.downFile(i.data.file, path)) {
                         sendMsg.push(segment.video(path))
+                        setTimeout(()=>{
+                            fs.unlinkSync(path)
+                        },100000)
                     } else {
                         sendMsg.push(MsgToCQ([i]))
                     }
