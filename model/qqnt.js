@@ -2,14 +2,13 @@ import fetch, { FormData, Blob } from 'node-fetch'
 import fs from 'fs'
 import { setMsgMap, getMsgMap } from './msgMap.js'
 import { createHash, randomBytes, randomUUID } from 'crypto'
-import { resolve, join } from 'path'
+import { resolve, join, extname, basename } from 'path'
 import { exec } from 'child_process'
 import { writeFile, readFile } from 'fs/promises'
 import { createRequire } from 'module'
 import schedule from "node-schedule"
 import os from 'os'
 import _ from 'lodash'
-import { CLIENT_RENEG_LIMIT } from 'tls'
 const require = createRequire(import.meta.url)
 
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
@@ -120,7 +119,7 @@ function makeMessage(self_id, payload) {
     e.rand = payload.msgRandom
     e.nickname = payload.sendNickName || payload.sendMemberName
     e.sender = {
-        user_id: payload.senderUin,
+        user_id: e.user_id,
         nickname: e.nickname,
     }
     switch (payload.roleType) {
@@ -617,33 +616,47 @@ async function sendNodeMsg(data, msg) {
                         },
                         msgIds: [sendRet.msgId]
                     }))
-                    result.push({
-                        text: {
-                            str: `https://gchat.qpic.cn/gchatpic_new/0/0-0-${img.picElement.md5HexStr.toUpperCase()}/0`
-                        }
-                    })
-                    // const img = await upload(data, i.file, 'image/png')
+
+                    function convertFileName(filePath) {
+                        // 获取文件名（不包括扩展名）
+                        let fileName = basename(filePath, extname(filePath));
+
+                        // 将文件名转换为大写，并按照指定的格式添加短横线
+                        let convertedName = fileName.toUpperCase().replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, '$1-$2-$3-$4-$5');
+
+                        // 将转换后的文件名和原始扩展名拼接起来
+                        let newFileName = `{${convertedName}}${extname(filePath)}`;
+
+                        return newFileName;
+                    }
+
                     // result.push({
-                    //     "customFace": {
-                    //         "filePath": img.ntFilePath,
-                    //         "fileId": randomBytes(2).readUint16BE(),
-                    //         "serverIp": -1740138629,
-                    //         "serverPort": 80,
-                    //         "fileType": 1001,
-                    //         "useful": 1,
-                    //         "md5": new Uint8Array(
-                    //             Buffer.from(img.md5, 'hex',),
-                    //         ),
-                    //         "imageType": 1001,
-                    //         "width": img.imageInfo.width,
-                    //         "height": img.imageInfo.width,
-                    //         "size": img.fileSize,
-                    //         "origin": 0,
-                    //         "thumbWidth": 0,
-                    //         "thumbHeight": 0,
-                    //         "pbReserve": new Uint8Array([2, 0])
+                    //     text: {
+                    //         str: `https://gchat.qpic.cn/gchatpic_new/0/0-0-${img.picElement.md5HexStr.toUpperCase()}/0`
                     //     }
                     // })
+                    // const img = await upload(data, i.file, 'image/png')
+                    let formattedStr = convertFileName(img.picElement.sourcePath)
+                    result.push({
+                        "customFace": {
+                            "filePath": formattedStr,
+                            "fileId": randomBytes(2).readUint16BE(),
+                            "serverIp": -1740138629,
+                            "serverPort": 80,
+                            "fileType": 1001,
+                            "useful": 1,
+                            "md5": Buffer.from(img.picElement.md5HexStr, 'hex').toString('base64'),
+                            "imageType": 1001,
+                            "width": img.picElement.picWidth,
+                            "height": img.picElement.picHeight,
+                            "size": img.fileSize,
+                            "origin": 0,
+                            "thumbWidth": 0,
+                            "thumbHeight": 0,
+                            // "pbReserve": [2, 0]
+                            // "pbReserve": null
+                        }
+                    })
                     break
                 // case 'node':
 
@@ -672,7 +685,7 @@ async function sendNodeMsg(data, msg) {
             head: {
                 field2: 'u_PmxGsJErxkwN0ilC07NLWw',
                 field8: {
-                    field1: 2854196310,
+                    field1: Number(data.group_id),
                     field4: 'Q群管家'
                 }
             },
