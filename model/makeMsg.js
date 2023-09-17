@@ -211,7 +211,7 @@ async function makeSendMsg(params) {
         switch (i.type) {
             case 'reply':
                 quote = await getMsgMap(i.data.id)
-                quote = await Bot.getMsg(quote.message_id)
+                if (quote) quote = await Bot.getMsg(quote.message_id)
                 break
             case 'image':
                 sendMsg.push(segment.image(decodeURIComponent(i.data.file)))
