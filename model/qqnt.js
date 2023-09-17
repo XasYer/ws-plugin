@@ -34,9 +34,11 @@ async function toQQNTMsg(bot, data) {
             });
             await getNtPath(bot)
             setTimeout(() => {
-                Bot[bot.self_id].version = {
-                    ...data.payload,
-                    id: 'QQ'
+                if (Bot[bot.self_id]?.version) {
+                    Bot[bot.self_id].version = {
+                        ...data.payload,
+                        id: 'QQ'
+                    }
                 }
             }, 5000)
             break
@@ -296,7 +298,10 @@ async function getFriendChatHistory(data, message_id, count) {
             },
             offsetMsgId: msg.message_id,
             count: count || 20
-        })).then(r => r.json())
+        }))
+        if (result.error) {
+            throw result.error
+        }
         if (result.msgList) {
             const msgList = []
             for (const i of result.msgList) {
@@ -344,14 +349,11 @@ async function getMemberMap(self_id, group_id) {
         group: group_id,
         size: 9999
     }
-    const memberList = await bot.api('POST', 'group/getMemberList', JSON.stringify(body)).then(async r => {
-        if (r.status == 200) {
-            return await r.json()
-        } else {
-            return []
-        }
-    })
     const map = new Map()
+    const memberList = await bot.api('POST', 'group/getMemberList', JSON.stringify(body))
+    if (memberList.error) {
+        throw memberList.error
+    }
     for (const i of memberList) {
         map.set(i.detail.uin, {
             ...i.detail,
@@ -393,7 +395,10 @@ async function getGroupChatHistory(data, message_id, count) {
             },
             offsetMsgId: msg.message_id,
             count: count || 20
-        })).then(r => r.json())
+        }))
+        if (result.error) {
+            throw result.error
+        }
         if (result.msgList) {
             const msgList = []
             for (const i of result.msgList) {
@@ -425,14 +430,18 @@ async function recallGroupMsg(data, message_id) {
 async function sendGroupMsg(data, msg) {
     const { msg: elements, log } = await makeMsg(data, msg)
     if (!elements) return { message_id: null }
-    logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送群消息：${log}`)
     const result = await data.bot.api('POST', 'message/send', JSON.stringify({
         peer: {
             chatType: 2,
             peerUin: data.group_id
         },
         elements
-    })).then(r => r.json())
+    }))
+    if (result.error) {
+        throw result.error
+    } else {
+        logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送群消息：${log}`)
+    }
     const message_id = `${result.peerUid}:${result.msgSeq}`
     setMsgMap(message_id, {
         // message_id: e.message_id,
@@ -448,15 +457,28 @@ async function sendGroupMsg(data, msg) {
 async function sendFriendMsg(data, msg) {
     const { msg: elements, log } = await makeMsg(data, msg)
     if (!elements) return { message_id: null }
-    logger.info(`${logger.blue(`[${data.self_id} => ${data.user_id}]`)} 发送好友消息：${log}`)
     const result = await data.bot.api('POST', 'message/send', JSON.stringify({
         peer: {
             chatType: 1,
             peerUin: data.user_id
         },
         elements
-    })).then(r => r.json())
-    return { message_id: result.msgId }
+    }))
+    if (result.error) {
+        throw result.error
+    } else {
+        logger.info(`${logger.blue(`[${data.self_id} => ${data.user_id}]`)} 发送好友消息：${log}`)
+    }
+    const message_id = `${result.peerUid}:${result.msgSeq}`
+    setMsgMap(message_id, {
+        // message_id: e.message_id,
+        message_id: result.msgId,
+        seq: message_id,
+        rand: message_id,
+        user_id: data.self_id,
+        time: result.msgTime
+    })
+    return { message_id }
 }
 
 async function makeMsg(data, msg) {
@@ -541,7 +563,7 @@ async function makeMsg(data, msg) {
                     "textElement": {
                         // "content": "@时空猫猫",
                         "atType": 2,
-                        "atNtUin": i.qq
+                        "atNtUin": String(i.qq)
                     }
                 }
                 break
@@ -607,7 +629,10 @@ async function sendNodeMsg(data, msg) {
                             peerUin: data.self_id
                         },
                         elements: [img]
-                    })).then(r => r.json())
+                    }))
+                    if (sendRet.error) {
+                        throw sendRet.error
+                    }
                     data.bot.api('POST', 'message/recall', JSON.stringify({
                         peer: {
                             chatType: 1,
@@ -716,20 +741,23 @@ async function sendNodeMsg(data, msg) {
             chatType: 2,
             peerUin: data.group_id
         }
-        logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送群消息：[转发消息]`)
     } else if (data.user_id) {
         target = {
             chatType: 1,
             peerUin: data.user_id
         }
-        logger.info(`${logger.blue(`[${data.self_id} => ${data.user_id}]`)} 发送好友消息：[转发消息]`)
     }
     const payload = {
         msgElements,
         srcContact: target,
         dstContact: target
     }
-    await data.bot.api('POST', 'message/unsafeSendForward', JSON.stringify(payload))
+    const result = await data.bot.api('POST', 'message/unsafeSendForward', JSON.stringify(payload))
+    if (result.error) {
+        throw result.error
+    }
+    logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送${target.chatType == 1 ? '好友' : '群'}消息：[转发消息]`)
+    return { message_id: null }
 }
 
 async function upload(data, msg, contentType) {
@@ -749,7 +777,7 @@ async function upload(data, msg, contentType) {
     const blob = new Blob([buffer], { type: contentType })
     const formData = new FormData()
     formData.append('file', blob, 'ws-plugin.' + contentType.split('/')[1])
-    const file = await data.bot.api('POST', 'upload', formData).then(r => r.json())
+    const file = await data.bot.api('POST', 'upload', formData)
     file.contentType = contentType
     return file
 }
@@ -852,7 +880,7 @@ async function getNtPath(bot) {
         const blob = new Blob([buffer], { type: 'image/png' })
         const formData = new FormData()
         formData.append('file', blob, '1.png')
-        const file = await bot.api('POST', 'upload', formData).then(r => r.json())
+        const file = await bot.api('POST', 'upload', formData)
         fs.unlinkSync(file.ntFilePath)
         const index = file.ntFilePath.indexOf('nt_data');
         dataPath = file.ntFilePath.slice(0, index + 'nt_data'.length);

@@ -303,11 +303,34 @@ export default class Client {
             token: token[2]
         }
         bot.api = async (method, api, body) => {
+            const controller = new AbortController()
+            const signal = controller.signal
+            const timeout = 20000
+            setTimeout(() => {
+                controller.abort()
+            }, timeout);
             return await fetch(`http://${bot.host}:${bot.port}/api/${api}`, {
+                signal,
                 method,
                 body,
                 headers: {
                     Authorization: 'Bearer ' + bot.token
+                }
+            }).then(r => {
+                if (!r.ok) throw ''
+                const contentType = r.headers.get('content-type');
+                if (contentType.includes('application/json')) {
+                    return r.json();
+                } else if (contentType.includes('text/plain')) {
+                    return r.text();
+                } else {
+                    return r
+                }
+            }).catch(error => {
+                if (error.name === 'AbortError') {
+                    return { error: `${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态！`)}`, code: 1 }
+                } else {
+                    return { error: `${logger.red(`[${this.uin}] ${api} 请求失败`)}`, code: 2 }
                 }
             })
         }
@@ -330,45 +353,35 @@ export default class Client {
                 logger.warn(`${this.name} 达到最大重连次数或关闭连接,停止重连`);
             }
         }
-        let info
-        try {
-            info = await bot.api('get', 'getSelfProfile')
-        } catch (error) {
+        let info = await bot.api('get', 'getSelfProfile')
+        if (info.error) {
+            if (info.code == 2) {
+                logger.error(`${this.name} Token错误`)
+                return
+            }
             logger.error(`${this.name} 请检查是否安装Chronocat并启动QQNT`)
             reconnect()
             return
         }
-        if (info.status === 200) {
-            try {
-                info = await info.json()
-            } catch (error) {
-                logger.error(`${this.name} 未知错误`)
-                reconnect()
-                return
-            }
-            if (!info.uin) {
-                logger.error(`${this.name} 请点击登录`)
-                reconnect()
-                return
-            }
-            if (!Bot.uin.includes(info.uin)) {
-                Bot.uin.push(info.uin)
-            }
-            bot.info = {
-                ...info,
-                user_id: info.uin,
-                self_id: info.uin,
-                nickname: info.nick,
-                username: info.nick
-            }
-            bot.nickname = info.nick
-            bot.self_id = info.uin
-            this.uin = bot.self_id
-            bot.uin = bot.self_id
-        } else {
-            logger.error(`${this.name} Token错误`)
+        if (!info.uin) {
+            logger.error(`${this.name} 请点击登录`)
+            reconnect()
             return
         }
+        if (!Bot.uin.includes(info.uin)) {
+            Bot.uin.push(info.uin)
+        }
+        bot.info = {
+            ...info,
+            user_id: info.uin,
+            self_id: info.uin,
+            nickname: info.nick,
+            username: info.nick
+        }
+        bot.nickname = info.nick
+        bot.self_id = info.uin
+        this.uin = bot.self_id
+        bot.uin = bot.self_id
         bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)
         bot.send = (type, payload) => bot.ws.send(JSON.stringify({ type, payload }))
         bot.ws.on('open', () => bot.send('meta::connect', { token: bot.token }))
@@ -389,7 +402,11 @@ export default class Client {
                     return
             }
         })
-        const friendList = await bot.api('get', 'bot/friends').then(r => r.json())
+        const friendList = await bot.api('get', 'bot/friends')
+        if (friendList.error) {
+            logger.error(friendList.error)
+            return
+        }
         const fl = new Map()
         for (const i of friendList) {
             fl.set(Number(i.uin), {
@@ -400,7 +417,12 @@ export default class Client {
             })
         }
         const gl = new Map()
-        for (const i of (await bot.api('get', 'bot/groups').then(r => r.json()))) {
+        const groupList = await bot.api('get', 'bot/groups')
+        if (groupList.error) {
+            logger.error(groupList.error)
+            return
+        }
+        for (const i of groupList) {
             const data = {
                 ...i,
                 bot_id: bot.self_id,
