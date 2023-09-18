@@ -38,6 +38,7 @@ export class QQNTBot {
     }
 
     pickGroup(group_id) {
+        this.getGroupMemberList(group_id)
         const i = {
             ...this.gl.get(Number(group_id)),
             self_id: this.self_id,
