@@ -25,7 +25,7 @@ Bot.on('notice', async e => {
             if (noGroup.some(i => i == e.group_id)) return false
         }
     }
-    if (e.reply) {
+    if (!Version.isTrss) {
         let _reply = e.reply
         e.reply = async function (massage, quote = false, data = {}) {
             let ret = await _reply(massage, quote, data)

@@ -36,7 +36,7 @@ Bot.on('message', async e => {
             if (Config.noMsgStart.some(i => e.message[0].text.startsWith(i))) return false
         }
     }
-    if (e.reply) {
+    if (!Version.isTrss) {
         const _reply = e.reply
         e.reply = async function (massage, quote = false, data = {}) {
             const ret = await _reply(massage, quote, data)
