@@ -284,40 +284,7 @@ async function makeMessage(self_id, payload) {
 }
 
 async function sendNodeMsg(data, msg) {
-    let seq = randomBytes(2).readUint16BE()
-    const msgElements = []
-    for (const i of msg) {
-        if (typeof i.message == 'string') i.message = { type: 'text', text: i.message }
-        if (!Array.isArray(i.message)) i.message = [i.message]
-        const element = {
-            head: {
-                field2: 'u_PmxGsJErxkwN0ilC07NLWw',
-                field8: {
-                    field1: Number(data.group_id),
-                    field4: 'Q群管家'
-                }
-            },
-            content: {
-                field1: 82,
-                field4: randomBytes(4).readUint32BE(),
-                field5: seq++,
-                field6: Math.floor(Date.now() / 1000),
-                field7: 1,
-                field8: 0,
-                field9: 0,
-                field15: {
-                    field1: 0,
-                    field2: 0
-                }
-            },
-            body: {
-                richText: {
-                    elems: [...await makeNodeMsg(data, i.message)]
-                }
-            }
-        }
-        msgElements.push(element)
-    }
+    const msgElements = await makeNodeMsg(data, msg)
     let target
     if (data.group_id) {
         target = {
@@ -344,77 +311,117 @@ async function sendNodeMsg(data, msg) {
 }
 
 async function makeNodeMsg(data, msg) {
-    const result = []
-    for (let i of msg) {
-        if (typeof i === 'string') i = { type: 'text', text: i }
-        switch (i.type) {
-            case 'text':
-                result.push({
-                    text: {
-                        str: i.text
+    const msgElements = []
+    for (const item of msg) {
+        if (typeof item.message == 'string') item.message = { type: 'text', text: item.message }
+        if (!Array.isArray(item.message)) item.message = [item.message]
+        const elems = []
+        for (let i of item.message) {
+            if (typeof i === 'string') i = { type: 'text', text: i }
+            switch (i.type) {
+                case 'text':
+                    elems.push({
+                        text: {
+                            str: i.text
+                        }
+                    })
+                    break;
+                case 'image':
+                    const img = await uploadImg(data.bot, i.file || i.url)
+                    const sendRet = await data.bot.sendApi('POST', 'message/send', JSON.stringify({
+                        peer: {
+                            chatType: 1,
+                            peerUin: String(data.self_id)
+                        },
+                        elements: [img]
+                    }))
+                    if (sendRet.error) {
+                        throw sendRet.error
                     }
-                })
-                break;
-            case 'image':
-                const img = await uploadImg(data.bot, i.file || i.url)
-                const sendRet = await data.bot.sendApi('POST', 'message/send', JSON.stringify({
-                    peer: {
-                        chatType: 1,
-                        peerUin: String(data.self_id)
-                    },
-                    elements: [img]
-                }))
-                if (sendRet.error) {
-                    throw sendRet.error
-                }
-                data.bot.sendApi('POST', 'message/recall', JSON.stringify({
-                    peer: {
-                        chatType: 1,
-                        peerUin: String(data.self_id),
-                        guildId: null,
-                    },
-                    msgIds: [sendRet.msgId]
-                }))
-                let formattedStr = convertFileName(img.picElement.sourcePath)
-                result.push({
-                    "customFace": {
-                        "filePath": formattedStr,
-                        "fileId": randomBytes(2).readUint16BE(),
-                        "serverIp": -1740138629,
-                        "serverPort": 80,
-                        "fileType": 1001,
-                        "useful": 1,
-                        "md5": Buffer.from(img.picElement.md5HexStr, 'hex').toString('base64'),
-                        "imageType": 1001,
-                        "width": img.picElement.picWidth,
-                        "height": img.picElement.picHeight,
-                        "size": img.fileSize,
-                        "origin": 0,
-                        "thumbWidth": 0,
-                        "thumbHeight": 0,
-                        // "pbReserve": [2, 0]
-                        // "pbReserve": null
+                    data.bot.sendApi('POST', 'message/recall', JSON.stringify({
+                        peer: {
+                            chatType: 1,
+                            peerUin: String(data.self_id),
+                            guildId: null,
+                        },
+                        msgIds: [sendRet.msgId]
+                    }))
+                    let formattedStr = convertFileName(img.picElement.sourcePath)
+                    elems.push({
+                        "customFace": {
+                            "filePath": formattedStr,
+                            "fileId": randomBytes(2).readUint16BE(),
+                            "serverIp": -1740138629,
+                            "serverPort": 80,
+                            "fileType": 1001,
+                            "useful": 1,
+                            "md5": Buffer.from(img.picElement.md5HexStr, 'hex').toString('base64'),
+                            "imageType": 1001,
+                            "width": img.picElement.picWidth,
+                            "height": img.picElement.picHeight,
+                            "size": img.fileSize,
+                            "origin": 0,
+                            "thumbWidth": 0,
+                            "thumbHeight": 0,
+                            // "pbReserve": [2, 0]
+                            // "pbReserve": null
+                        }
+                    })
+                    break
+                case 'node':
+                    elems.push(...await makeNodeMsg(data, i.data))
+                    console.log('elems', elems);
+                    break
+                default:
+                    for (const key in i) {
+                        if (typeof i[key] === 'string' && i[key].length > 50) {
+                            i[key] = _.truncate(i[key], { length: 50 })
+                        }
                     }
-                })
-                break
-            // case 'node':
-
-            //     break
-            default:
-                for (const key in i) {
-                    if (typeof i[key] === 'string' && i[key].length > 50) {
-                        i[key] = _.truncate(i[key], { length: 50 })
-                    }
-                }
-                result.push({
-                    text: {
-                        str: JSON.stringify(i)
-                    }
-                })
-                break;
+                    elems.push({
+                        text: {
+                            str: JSON.stringify(i)
+                        }
+                    })
+                    break;
+            }
         }
+        const element = []
+        if (!elems[0].head) {
+            let seq = randomBytes(2).readUint16BE()
+            element.push({
+                head: {
+                    field2: 'u_PmxGsJErxkwN0ilC07NLWw',
+                    field8: {
+                        field1: Number(data.group_id),
+                        field4: 'Q群管家'
+                    }
+                },
+                content: {
+                    field1: 82,
+                    field4: randomBytes(4).readUint32BE(),
+                    field5: seq++,
+                    field6: Math.floor(Date.now() / 1000),
+                    field7: 1,
+                    field8: 0,
+                    field9: 0,
+                    field15: {
+                        field1: 0,
+                        field2: 0
+                    }
+                },
+                body: {
+                    richText: {
+                        elems
+                    }
+                }
+            })
+        } else {
+            element.push(...elems)
+        }
+        msgElements.push(...element)
     }
-    return result
+    return msgElements
 }
 
 function convertFileName(filePath) {
