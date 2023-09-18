@@ -322,12 +322,12 @@ async function sendNodeMsg(data, msg) {
     if (data.group_id) {
         target = {
             chatType: 2,
-            peerUin: data.group_id
+            peerUin: String(data.group_id)
         }
     } else if (data.user_id) {
         target = {
             chatType: 1,
-            peerUin: data.user_id
+            peerUin: String(data.user_id)
         }
     }
     const payload = {
@@ -339,7 +339,7 @@ async function sendNodeMsg(data, msg) {
     if (result.error) {
         throw result.error
     }
-    logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送${target.chatType == 1 ? '好友' : '群'}消息：[转发消息]`)
+    logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id || data.user_id}]`)} 发送${target.chatType == 1 ? '好友' : '群'}消息：[转发消息]`)
     return { message_id: null }
 }
 
