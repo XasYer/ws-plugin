@@ -299,7 +299,7 @@ async function getApiData(api, params = {}, name, uin) {
         // 获取群成员信息
         'get_group_member_info': async (params) => {
             const group = await bot.pickGroup(params.group_id).pickMember(params.user_id)
-            ResponseData = group?.info || group.info?.() || group.getInfo()
+            ResponseData = group?.info || group.info?.() || group.getInfo?.() || await bot.getGroupMemberInfo?.(params.group_id, params.user_id);
             if (ResponseData.shutup_time) {
                 ResponseData.shut_up_timestamp = ResponseData.shutup_time
             }
