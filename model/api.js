@@ -303,6 +303,9 @@ async function getApiData(api, params = {}, name, uin) {
             if (ResponseData.shutup_time) {
                 ResponseData.shut_up_timestamp = ResponseData.shutup_time
             }
+            if (!ResponseData.last_sent_time) {
+                ResponseData.last_sent_time = Date.now()
+            }
         },
         // 获取群成员列表
         'get_group_member_list': async (params) => {
@@ -314,6 +317,9 @@ async function getApiData(api, params = {}, name, uin) {
             list.map(item => {
                 if (item.shutup_time) {
                     item.shut_up_timestamp = item.shutup_time
+                }
+                if (!item.last_sent_time) {
+                    item.last_sent_time = Date.now()
                 }
             })
             ResponseData = list
