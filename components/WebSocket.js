@@ -9,11 +9,21 @@ function createWebSocket(data) {
     const client = new Client(data)
     switch (Number(data.type)) {
         case 1:
-            // if (Version.isTrss) return
+            if (Version.isTrss) {
+                if (!data.uin) {
+                    logger.warn(`${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
+                    return
+                }
+            }
             client.createWs()
             break;
         case 2:
-            // if (Version.isTrss) return
+            if (Version.isTrss) {
+                if (!data.uin) {
+                    logger.warn(`${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
+                    return
+                }
+            }
             client.createServer()
             break
         case 3:

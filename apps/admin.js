@@ -460,7 +460,7 @@ export class setting extends plugin {
             }
             try {
                 Config.modifyarr('ws-config', 'servers', value)
-                this.reply('操作成功~')
+                this.reply('操作成功~请留意控制台输出~')
             } catch (error) {
                 logger.error(error)
                 this.reply('操作失败~')
@@ -476,7 +476,7 @@ export class setting extends plugin {
                 servers[i].close = false
                 try {
                     Config.setArr('ws-config', 'servers', i, servers[i])
-                    this.reply('操作成功~')
+                    this.reply('操作成功~请留意控制台输出~')
                     return true
                 } catch (error) {
                     logger.error(error)
@@ -496,7 +496,7 @@ export class setting extends plugin {
                 servers[i].close = true
                 try {
                     Config.setArr('ws-config', 'servers', i, servers[i])
-                    this.reply('操作成功~')
+                    this.reply('操作成功~请留意控制台输出~')
                     return true
                 } catch (error) {
                     logger.error(error)
@@ -533,7 +533,7 @@ export class setting extends plugin {
             if (servers[i].name == msg) {
                 try {
                     Config.delServersArr(servers[i].name)
-                    this.reply('操作成功~')
+                    this.reply('操作成功~请留意控制台输出~')
                     return true
                 } catch (error) {
                     logger.error(error)
@@ -571,7 +571,7 @@ export class setting extends plugin {
     async reset() {
         clearWebSocket()
         initWebSocket()
-        this.reply('操作成功~')
+        this.reply('操作成功~请留意控制台输出~')
         return true
     }
 
@@ -580,6 +580,11 @@ export class setting extends plugin {
         for (const i of Config.servers) {
             if (msg.length != 0) msg.push('\n----------------\n')
             let status = '已关闭连接'
+            if (i.type == 4) {
+                if (Version.isTrss && !i.close) {
+                    status = '已连接'
+                }
+            }
             for (const s of socketList) {
                 if (s.name == i.name) {
                     switch (s.status) {
