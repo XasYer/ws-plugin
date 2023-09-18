@@ -372,8 +372,7 @@ export class setting extends plugin {
                 default:
                     break;
             }
-            config.uin = this.self_id
-            await this.addWs(config)
+            config.uin = this.e.self_id
             this.finish('checkAddWs', this.e.isGroup)
             await redis.del('ws-plugin:addWs:' + this.e.user_id)
         }
@@ -427,7 +426,7 @@ export class setting extends plugin {
     }
 
     async addWs(msg) {
-        if (Array.isArray(msg) && msg.length != 5 && msg.length != 6) {
+        if (Array.isArray(msg) && msg.length != 5 && msg.length != 6 && msg.length != 7) {
             await this.reply('格式有误,请检查后重新发送#ws添加连接')
             return false
         } else {
