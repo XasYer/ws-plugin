@@ -35,10 +35,14 @@ export class QQNTBot {
     async init() {
         await this.getFriendList()
         await this.getGroupList()
+        this.getConfig = {}
     }
 
     pickGroup(group_id) {
-        this.getGroupMemberList(group_id)
+        if (!this.getConfig[group_id]) {
+            this.getGroupMemberList(group_id)
+            this.getConfig[group_id] = true
+        }
         const i = {
             ...this.gl.get(Number(group_id)),
             self_id: this.self_id,
