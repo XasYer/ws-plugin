@@ -298,16 +298,16 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 获取群成员信息
         'get_group_member_info': async (params) => {
-            const group = bot.pickGroup(params.group_id).pickMember(params.user_id)
-            ResponseData = group.info || group.info?.() || group.getInfo()
+            const group = await bot.pickGroup(params.group_id).pickMember(params.user_id)
+            ResponseData = group?.info || group.info?.() || group.getInfo()
             if (ResponseData.shutup_time) {
                 ResponseData.shut_up_timestamp = ResponseData.shutup_time
             }
         },
         // 获取群成员列表
         'get_group_member_list': async (params) => {
-            const group = bot.pickGroup(params.group_id)
-            let list = group.getMamberMap?.() || group.getMamberList?.() || []
+            const group = await bot.pickGroup(params.group_id)
+            let list = await group.getMemberMap?.() || await group.getMemberList?.() || []
             if (list instanceof Map) {
                 list = Array.from(list.values())
             }
