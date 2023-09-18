@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap, qqnt } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap, QQNTBot, getToken, toQQNTMsg } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from "express"
 import http from "http"
@@ -293,7 +293,7 @@ export default class Client {
             if (this.accessToken) {
                 token[2] = this.accessToken
             } else {
-                token[2] = await qqnt.getToken()
+                token[2] = getToken()
                 if (!token[2]) return
             }
         }
@@ -302,7 +302,7 @@ export default class Client {
             port: token[1],
             token: token[2]
         }
-        bot.api = async (method, api, body) => {
+        bot.sendApi = async (method, api, body) => {
             const controller = new AbortController()
             const signal = controller.signal
             const timeout = 20000
@@ -317,7 +317,7 @@ export default class Client {
                     Authorization: 'Bearer ' + bot.token
                 }
             }).then(r => {
-                if (!r.ok) throw ''
+                if (!r.ok) throw r
                 const contentType = r.headers.get('content-type');
                 if (contentType.includes('application/json')) {
                     return r.json();
@@ -330,7 +330,7 @@ export default class Client {
                 if (error.name === 'AbortError') {
                     return { error: `${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态！`)}`, code: 1 }
                 } else {
-                    return { error: `${logger.red(`[${this.uin}] ${api} 请求失败`)}`, code: 2 }
+                    return { error: `${logger.red(`[${this.uin}] ${api} 请求失败\n${error}`)}`, code: 2 }
                 }
             })
         }
@@ -353,7 +353,7 @@ export default class Client {
                 logger.warn(`${this.name} 达到最大重连次数或关闭连接,停止重连`);
             }
         }
-        let info = await bot.api('get', 'getSelfProfile')
+        let info = await bot.sendApi('get', 'getSelfProfile')
         if (info.error) {
             if (info.code == 2) {
                 logger.error(`${this.name} Token错误`)
@@ -385,7 +385,7 @@ export default class Client {
         bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)
         bot.send = (type, payload) => bot.ws.send(JSON.stringify({ type, payload }))
         bot.ws.on('open', () => bot.send('meta::connect', { token: bot.token }))
-        bot.ws.on('message', data => qqnt.toQQNTMsg(bot, data))
+        bot.ws.on('message', data => toQQNTMsg(bot, data))
         bot.ws.on('close', (code) => {
             delete Bot[bot.self_id]
             this.status = 3
@@ -402,79 +402,7 @@ export default class Client {
                     return
             }
         })
-        const friendList = await bot.api('get', 'bot/friends')
-        if (friendList.error) {
-            logger.error(friendList.error)
-            return
-        }
-        const fl = new Map()
-        for (const i of friendList) {
-            fl.set(Number(i.uin), {
-                ...i,
-                bot_id: bot.self_id,
-                user_id: i.uin,
-                nickname: i.nick
-            })
-        }
-        const gl = new Map()
-        const groupList = await bot.api('get', 'bot/groups')
-        if (groupList.error) {
-            logger.error(groupList.error)
-            return
-        }
-        for (const i of groupList) {
-            const data = {
-                ...i,
-                bot_id: bot.self_id,
-                group_id: i.groupCode,
-                group_name: i.groupName,
-                max_member_count: i.maxMember,
-                member_count: i.memberCount,
-            }
-            switch (i.memberRole) {
-                case 2:
-                    // 普通群员
-                    break;
-                case 3:
-                    data.is_admin = true
-                    break
-                case 4:
-                    data.is_owner = true
-                    break
-                default:
-                    break;
-            }
-            gl.set(Number(i.groupCode), data)
-        }
-        Bot[bot.self_id] = {
-            adapter: {
-                id: "QQ",
-                name: "QQNTRedProtocol"
-            },
-            avatar: `https://q1.qlogo.cn/g?b=qq&s=0&nk=${bot.uin}`,
-            ws: bot.ws,
-            uin: bot.self_id,
-            uid: bot.info.uid,
-            nickname: bot.nickname,
-            self_id: bot.self_id,
-            stat: {
-                start_time: Date.now() / 1000,
-                recv_msg_cnt: 0
-            },
-            version: {
-                id: "QQ",
-                name: "QQNTRedProtocol"
-            },
-            get api() { return bot.api },
-            get send() { return bot.send },
-            pickFriend: user_id => qqnt.pickFriend(bot.self_id, user_id),
-            get pickUser() { return Bot[bot.self_id].pickFriend },
-            pickMember: (group_id, user_id) => qqnt.pickMember(bot.self_id, group_id, user_id),
-            pickGroup: group_id => qqnt.pickGroup(bot.self_id, group_id),
-            fl,
-            gl,
-            gml: new Map,
-        }
+        Bot[bot.self_id] = new QQNTBot(bot)
         logger.mark(`${logger.blue(`[${bot.self_id}]`)} ${this.name} 已连接`)
         this.status = 1
         Bot.em(`connect.${bot.self_id}`, Bot[bot.self_id])

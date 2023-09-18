@@ -2,7 +2,7 @@ import { lifecycle, heartbeat } from './meta.js'
 import { makeOneBotReportMsg, makeGSUidReportMsg, makeGSUidSendMsg } from './makeMsg.js'
 import { getApiData } from './api.js'
 import { setGuildLatestMsgId, getGuildLatestMsgId, setMsgMap } from './msgMap.js'
-import qqnt from './qqnt.js'
+import { QQNTBot, getToken, toQQNTMsg } from './qqnt/index.js'
 
 export {
     lifecycle,
@@ -14,5 +14,7 @@ export {
     setGuildLatestMsgId,
     getGuildLatestMsgId,
     setMsgMap,
-    qqnt
+    QQNTBot,
+    getToken,
+    toQQNTMsg
 }

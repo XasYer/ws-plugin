@@ -209,28 +209,28 @@ export class setting extends plugin {
         }
         switch (regRet[1]) {
             case '添加':
-                if (regRet[2]) {
-                    let msg = regRet[2].split(/,|，/g)
-                    await this.addWs(msg)
-                } else {
-                    this.setContext('checkAddWs', this.e.isGroup)
-                    await this.reply([
-                        '请输入以下参数,用逗号分割\n',
-                        '---------------------------------\n',
-                        '连接名字,连接类型\n',
-                        '---------------------------------\n',
-                        '连接名字: 用来区分每个连接\n',
-                        '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:qqnt连接'
-                    ])
-                    // await this.reply([
-                    //     '请一次性发送以下参数:\n',
-                    //     '-----------------------\n',
-                    //     '连接名字,连接地址,连接类型,重连间隔,最大重连次数,access-token(没有可不加)\n',
-                    //     '-----------------------\n',
-                    //     '用逗号分割,例如:\nNoneBot2,ws://127.0.0.1:8080/onebot/v11/ws,1,5,0\n',
-                    //     '如果对参数不懂意思,可以发送#ws连接说明'
-                    // ])
-                }
+                // if (regRet[2]) {
+                //     let msg = regRet[2].split(/,|，/g)
+                //     await this.addWs(msg)
+                // } else {
+                this.setContext('checkAddWs', this.e.isGroup)
+                await this.reply([
+                    '请输入以下参数,用逗号分割\n',
+                    '---------------------------------\n',
+                    '连接名字,连接类型\n',
+                    '---------------------------------\n',
+                    '连接名字: 用来区分每个连接\n',
+                    '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:qqnt连接'
+                ])
+                // await this.reply([
+                //     '请一次性发送以下参数:\n',
+                //     '-----------------------\n',
+                //     '连接名字,连接地址,连接类型,重连间隔,最大重连次数,access-token(没有可不加)\n',
+                //     '-----------------------\n',
+                //     '用逗号分割,例如:\nNoneBot2,ws://127.0.0.1:8080/onebot/v11/ws,1,5,0\n',
+                //     '如果对参数不懂意思,可以发送#ws连接说明'
+                // ])
+                // }
                 break
             case '删除':
                 if (regRet[2]) {
@@ -372,6 +372,7 @@ export class setting extends plugin {
                 default:
                     break;
             }
+            config.uin = this.self_id
             await this.addWs(config)
             this.finish('checkAddWs', this.e.isGroup)
             await redis.del('ws-plugin:addWs:' + this.e.user_id)

@@ -203,7 +203,8 @@ async function makeGSUidSendMsg(data) {
  * @param {*} params 
  * @returns sendMsg , quote
  */
-async function makeSendMsg(params) {
+async function makeSendMsg(params, uin) {
+    const bot = Version.isTrss ? Bot[uin] : Bot
     let msg = params.message
     if (typeof msg == 'string') msg = CQToMsg(msg)
     let target, uid, sendMsg = [], quote = null
@@ -211,7 +212,7 @@ async function makeSendMsg(params) {
         switch (i.type) {
             case 'reply':
                 quote = await getMsgMap(i.data.id)
-                if (quote) quote = await Bot.getMsg(quote.message_id)
+                if (quote) quote = await bot.getMsg?.(quote.message_id)
                 break
             case 'image':
                 sendMsg.push(segment.image(decodeURIComponent(i.data.file)))
@@ -232,9 +233,9 @@ async function makeSendMsg(params) {
                     const path = TMP_DIR + '/' + randomUUID({ disableEntropyCache: true }) + '.mp4'
                     if (await common.downFile(i.data.file, path)) {
                         sendMsg.push(segment.video(path))
-                        setTimeout(()=>{
+                        setTimeout(() => {
                             fs.unlinkSync(path)
-                        },100000)
+                        }, 100000)
                     } else {
                         sendMsg.push(MsgToCQ([i]))
                     }
@@ -257,11 +258,11 @@ async function makeSendMsg(params) {
                     data.group_id = params.group_id
                     await SendMusicShare(data)
                 } else {
-                    await Bot[target](uid).shareMusic(i.data.type, i.data.id)
+                    await bot[target](uid).shareMusic(i.data.type, i.data.id)
                 }
                 break
             case 'poke':
-                await Bot.pickGroup(params.group_id).pokeMember(Number(i.data.qq))
+                await bot.pickGroup(params.group_id).pokeMember(Number(i.data.qq))
                 break
             case 'record':
                 sendMsg.push(segment.record(decodeURIComponent(i.data.file)))
@@ -297,7 +298,7 @@ async function makeSendMsg(params) {
  * 制作合并转发的消息
  * @param {*} params 
  */
-async function makeForwardMsg(params) {
+async function makeForwardMsg(params, uin) {
     let forwardMsg = []
     for (const msg of params.messages) {
         if (typeof msg.data.content == 'string') {
@@ -344,10 +345,11 @@ async function makeForwardMsg(params) {
             })
         }
     }
+    const bot = Version.isTrss ? Bot[uin] : Bot
     if (params.group_id) {
-        forwardMsg = await Bot.pickGroup(params.group_id).makeForwardMsg(forwardMsg)
+        forwardMsg = await bot.pickGroup(params.group_id).makeForwardMsg?.(forwardMsg) || { type: "node", data: forwardMsg }
     } else if (params.user_id) {
-        forwardMsg = await Bot.pickFriend(params.user_id).makeForwardMsg(forwardMsg)
+        forwardMsg = await bot.pickFriend(params.user_id).makeForwardMsg?.(forwardMsg) || { type: "node", data: forwardMsg }
     }
     return forwardMsg
 }

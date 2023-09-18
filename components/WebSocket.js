@@ -9,11 +9,11 @@ function createWebSocket(data) {
     const client = new Client(data)
     switch (Number(data.type)) {
         case 1:
-            if (Version.isTrss) return
+            // if (Version.isTrss) return
             client.createWs()
             break;
         case 2:
-            if (Version.isTrss) return
+            // if (Version.isTrss) return
             client.createServer()
             break
         case 3:
@@ -23,6 +23,9 @@ function createWebSocket(data) {
         case 4:
             if (!Version.isTrss) return
             client.createQQNT()
+            return
+        case 5:
+            client.createWs()
             break
         default:
             return;

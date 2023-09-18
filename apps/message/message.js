@@ -138,10 +138,15 @@ Bot.on('message', async e => {
             switch (Number(i.type)) {
                 case 1:
                 case 2:
+                    if (Version.isTrss) {
+                        if (i.uin != e.self_id) return
+                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) return
+                    }
                     reportMsg = await makeOneBotReportMsg(msg)
                     break;
                 case 3:
                     reportMsg = await makeGSUidReportMsg(msg)
+                    break
                 default:
                     break;
             }

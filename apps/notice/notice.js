@@ -1,4 +1,4 @@
-import { socketList, Config } from '../../components/index.js'
+import { socketList, Config, Version } from '../../components/index.js'
 import { setMsgMap } from '../../model/index.js'
 
 Bot.on('notice', async e => {
@@ -122,6 +122,10 @@ Bot.on('notice', async e => {
             switch (Number(i.type)) {
                 case 1:
                 case 2:
+                    if (Version.isTrss) {
+                        if (i.uin != e.self_id) return
+                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) return
+                    }
                     i.ws.send(msg)
                     break;
                 default:
