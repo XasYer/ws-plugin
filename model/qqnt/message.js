@@ -146,7 +146,7 @@ async function makeMessage(self_id, payload) {
     e.sender = {
         user_id: e.user_id,
         nickname: e.nickname,
-        role: roleMap[payload.roleType]
+        role: roleMap[payload.roleType] || 'member'
     }
     e.self_id = self_id
     e.message = []
@@ -471,7 +471,7 @@ async function toQQNTMsg(bot, data) {
                     if (e.message_type == 'group') {
                         logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
                         if (!Bot[bot.self_id].gml.has(Number(e.group_id))) {
-                            Bot[bot.self_id].gml.set(Number(e.group_id))
+                            Bot[bot.self_id].gml.set(Number(e.group_id), new Map())
                         }
                         if (!Bot[bot.self_id].gml.get(Number(e.group_id)).has(Number(e.user_id))) {
                             Bot[bot.self_id].gml.get(Number(e.group_id)).set(Number(e.user_id), {
@@ -479,7 +479,9 @@ async function toQQNTMsg(bot, data) {
                                 group_id: e.group_id,
                                 nickname: e.nickname,
                                 role: e.sender.role,
-                                user_id: e.user_id
+                                user_id: e.user_id,
+                                card: e.nickname,
+                                sex: 'unknown'
                             })
                         }
                     } else if (e.message_type == 'private') {

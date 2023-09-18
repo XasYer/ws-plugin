@@ -280,7 +280,8 @@ export class QQNTBot {
                 group_id,
                 user_id: i.detail.uin,
                 role: roleMap[i.detail.role],
-                shutup_time: i.detail.shutUpTime
+                shutup_time: i.detail.shutUpTime,
+                sex: 'unknown'
             })
         }
         return this.gml.get(Number(group_id))
