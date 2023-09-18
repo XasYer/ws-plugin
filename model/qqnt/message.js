@@ -272,7 +272,7 @@ async function makeMessage(self_id, payload) {
             e.message_type = 'group'
             e.sub_type = 'normal'
         }
-        e.group_id = payload.peerUin
+        e.group_id = Number(payload.peerUin)
         e.group_name = payload.peerName
     } else if (payload.chatType == 1) {
         if (!e.sub_type) {

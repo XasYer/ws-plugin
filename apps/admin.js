@@ -372,7 +372,8 @@ export class setting extends plugin {
                 default:
                     break;
             }
-            config.uin = this.e.self_id
+            config.uin = Version.isTrss ? this.e.self_id : Bot.uin
+            await this.addWs(config)
             this.finish('checkAddWs', this.e.isGroup)
             await redis.del('ws-plugin:addWs:' + this.e.user_id)
         }
