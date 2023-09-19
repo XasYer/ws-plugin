@@ -404,10 +404,10 @@ async function makeNodeMsg(data, msg) {
             let seq = randomBytes(2).readUint16BE()
             element.push({
                 head: {
-                    field2: 'u_PmxGsJErxkwN0ilC07NLWw',
+                    field2: Number(item.user_id) || Number(data.self_id),
                     field8: {
                         field1: Number(data.group_id),
-                        field4: 'Q群管家'
+                        field4: String(item.nickname || data.bot.nickname)
                     }
                 },
                 content: {
