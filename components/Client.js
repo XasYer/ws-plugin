@@ -305,7 +305,7 @@ export default class Client {
         bot.sendApi = async (method, api, body) => {
             const controller = new AbortController()
             const signal = controller.signal
-            const timeout = 20000
+            const timeout = 30000
             setTimeout(() => {
                 controller.abort()
             }, timeout);
