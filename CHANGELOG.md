@@ -1,3 +1,10 @@
+# 0.5.3
+
+* 支持了TRSS-Yunzai 的 ICQQ-Plugin
+    * 目前 TRSS-Yunzai 的可用协议为
+        * GenshinUID Core 全部协议均可使用
+        * onebot 仅支持 QQNT 以及 ICQQ
+
 # 0.5.2
 
 * QQNT 拦截配置项中没有uin的连接
