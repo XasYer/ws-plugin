@@ -75,7 +75,7 @@ const { changelogs, currentVersion } = readLogFile(`${process.cwd()}/plugins/ws-
 const yunzaiVersion = packageJson.version
 const isMiao = packageJson.name === 'miao-yunzai'
 const isTrss = Array.isArray(Bot.uin) ? true : false
-const protocol = ['chronocat']
+const protocol = ['chronocat', 'ICQQ']
 
 let Version = {
   isMiao,

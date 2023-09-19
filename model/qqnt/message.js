@@ -1,4 +1,4 @@
-import { uploadImg, uploadAudio, uploadVideo, uploadFile, TMP_DIR, getNtPath, roleMap } from './tool.js'
+import { uploadImg, uploadAudio, uploadVideo, uploadFile, TMP_DIR, getNtPath, roleMap, redPath } from './tool.js'
 import { setMsgMap, getMsgMap } from '../msgMap.js'
 import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
@@ -448,10 +448,10 @@ async function toQQNTMsg(bot, data) {
                 for (const file of files) {
                     fs.unlinkSync(join(TMP_DIR, file))
                 }
-                const redPath = `${path}/redprotocol-upload`
-                const redTemp = fs.readdirSync(redPath)
+                const path = `${redPath}/redprotocol-upload`
+                const redTemp = fs.readdirSync(path)
                 for (const file of redTemp) {
-                    fs.unlinkSync(join(redPath, file))
+                    fs.unlinkSync(join(path, file))
                 }
             });
             await getNtPath(bot)

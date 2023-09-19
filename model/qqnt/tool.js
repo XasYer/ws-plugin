@@ -11,7 +11,7 @@ const require = createRequire(import.meta.url)
 
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 const user = os.userInfo().username
-const path = `C:/Users/${user}/AppData/Roaming/BetterUniverse/QQNT`
+const redPath = `C:/Users/${user}/AppData/Roaming/BetterUniverse/QQNT`
 
 const roleMap = {
     2: 'member',
@@ -337,7 +337,7 @@ async function uploadFile(file) {
 function getToken() {
     let tokenPath
     if (os.platform() === 'win32') {
-        tokenPath = `${path}/RED_PROTOCOL_TOKEN`
+        tokenPath = `${redPath}/RED_PROTOCOL_TOKEN`
     } else {
         logger.error('非Windows系统请自行获取Token')
         return false
@@ -359,5 +359,6 @@ export {
     getToken,
     getNtPath,
     TMP_DIR,
-    roleMap
+    roleMap,
+    redPath
 }
