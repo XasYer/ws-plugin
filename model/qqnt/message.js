@@ -114,8 +114,7 @@ async function makeSendMsg(data, message) {
                 }
                 break
             case "node":
-                await sendNodeMsg(data, i.data)
-                return { msg: null, log: null }
+                return await sendNodeMsg(data, i.data)
                 break
             default:
                 log += JSON.stringify(i)
@@ -263,6 +262,10 @@ async function makeMessage(self_id, payload) {
                         break;
                 }
                 break
+            case 16:
+                e.message.push({ type: 'xml', data: i.multiForwardMsgElement.xmlContent })
+                e.raw_message += `[xml: ${i.multiForwardMsgElement.xmlContent}]`
+                break
             default:
                 break;
         }
@@ -306,8 +309,19 @@ async function sendNodeMsg(data, msg) {
     if (result.error) {
         throw result.error
     }
+    const message_id = `${result.peerUid}:${result.msgSeq}`
+    setMsgMap(message_id, {
+        message_id: result.msgId,
+        seq: message_id,
+        rand: result.msgRandom,
+        user_id: data.self_id,
+        time: result.msgTime,
+        chatType: target.chatType,
+        group_id: data.group_id,
+        sender: data.self_id
+    })
     logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id || data.user_id}]`)} 发送${target.chatType == 1 ? '好友' : '群'}消息：[转发消息]`)
-    return { message_id: null }
+    return { message_id, rand: result.msgRandom }
 }
 
 async function makeNodeMsg(data, msg) {

@@ -1,3 +1,7 @@
+# 0.5.4
+
+* Chronocat 0.0.43 发送转发消息有message_id返回了
+
 # 0.5.3
 
 * 支持了TRSS-Yunzai 的 ICQQ-Plugin
