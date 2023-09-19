@@ -328,7 +328,7 @@ export default class Client {
                 }
             }).catch(error => {
                 if (error.name === 'AbortError') {
-                    return { error: `${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态！`)}` }
+                    return { error: `${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态或重启QQ！`)}` }
                 } else {
                     return { error }
                 }
