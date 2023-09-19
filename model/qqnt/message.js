@@ -384,7 +384,6 @@ async function makeNodeMsg(data, msg) {
                     break
                 case 'node':
                     elems.push(...await makeNodeMsg(data, i.data))
-                    console.log('elems', elems);
                     break
                 default:
                     for (const key in i) {
