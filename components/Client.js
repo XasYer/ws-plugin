@@ -328,9 +328,9 @@ export default class Client {
                 }
             }).catch(error => {
                 if (error.name === 'AbortError') {
-                    return { error: `${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态！`)}`, code: 1 }
+                    return { error: `${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态！`)}` }
                 } else {
-                    return { error: `${logger.red(`[${this.uin}] ${api} 请求失败\n${error}`)}`, code: 2 }
+                    return { error }
                 }
             })
         }
@@ -355,12 +355,12 @@ export default class Client {
         }
         let info = await bot.sendApi('get', 'getSelfProfile')
         if (info.error) {
-            if (info.code == 2) {
-                logger.error(`${this.name} Token错误`)
+            if (info.error.code == 'ECONNREFUSED') {
+                logger.error(`${this.name} 请检查是否安装Chronocat并启动QQNT`)
+                reconnect()
                 return
             }
-            logger.error(`${this.name} 请检查是否安装Chronocat并启动QQNT`)
-            reconnect()
+            logger.error(`${this.name} Token错误`)
             return
         }
         if (!info.uin) {
