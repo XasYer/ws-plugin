@@ -34,9 +34,6 @@ function createWebSocket(data) {
             if (!Version.isTrss) return
             client.createQQNT()
             return
-        case 5:
-            client.createWs()
-            break
         default:
             return;
     }
