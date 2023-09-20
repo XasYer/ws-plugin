@@ -99,9 +99,8 @@ async function makeSendMsg(data, message) {
                         "elementType": 7,
                         "replyElement": {
                             "replayMsgSeq": msg.seq,
-                            "sourceMsgIdInRecords": msg.message_id,
-                            "senderUid": String(msg.user_id),
-                            "replyMsgTime": msg.time
+                            "replayMsgId": msg.message_id,
+                            "senderUin": String(msg.user_id),
                         }
                     }
                 } else {
