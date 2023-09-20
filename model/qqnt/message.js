@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
 import fs from 'fs'
 import schedule from "node-schedule"
+import _ from 'lodash'
 
 async function makeSendMsg(data, message) {
     if (!Array.isArray(message))
