@@ -1,3 +1,8 @@
+# 0.5.5
+
+* QQNT 转发消息发送者改为固定
+* 可能适配了ReadStream的file
+
 # 0.5.4
 
 * Chronocat 0.0.43 发送转发消息有message_id返回了

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url'
 import { exec, spawn } from 'child_process'
 import os from 'os'
 import _ from 'lodash'
+import { Stream } from "stream"
 
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 const user = os.userInfo().username
@@ -35,7 +36,10 @@ async function uploadImg(bot, msg) {
 
 async function upload(bot, msg, contentType) {
     let buffer
-    if (msg.match(/^base64:\/\//)) {
+    if (msg instanceof Stream.Readable) {
+        buffer = fs.readFileSync(msg.path)
+        contentType = contentType.split('/')[0] + '/' + msg.path.substring(msg.path.lastIndexOf('.') + 1)
+    } else if (msg.match(/^base64:\/\//)) {
         buffer = Buffer.from(msg.replace(/^base64:\/\//, ""), 'base64')
     } else if (msg.startsWith('http')) {
         const img = await fetch(msg)
