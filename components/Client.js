@@ -228,30 +228,19 @@ export default class Client {
             const { sendMsg, quote } = await makeGSUidSendMsg(data)
             if (sendMsg.length > 0) {
                 let sendRet
+                const bot = Version.isTrss ? Bot[data.bot_self_id] : Bot
                 switch (data.target_type) {
                     case 'group':
-                        if (Version.isTrss) {
-                            await Bot[data.bot_self_id].pickGroup(data.target_id).sendMsg(sendMsg)
-                        } else {
-                            sendRet = await Bot.sendGroupMsg(data.target_id, sendMsg, quote)
-                        }
+                    case 'channel':
+                        sendRet = await bot.pickGroup(data.target_id).sendMsg(sendMsg, quote)
                         break;
                     case 'direct':
-                        if (Version.isTrss) {
-                            await Bot[data.bot_self_id].pickFriend(data.target_id).sendMsg(sendMsg)
-                        } else {
-                            sendRet = await Bot.sendPrivateMsg(data.target_id, sendMsg, quote)
-                        }
+                        sendRet = await bot.pickFriend(data.target_id).sendMsg(sendMsg, quote)
                         break;
-                    case 'channel':
-                        if (Version.isTrss) {
-                            await Bot[data.bot_self_id].pickGroup(data.target_id).sendMsg(sendMsg)
-                        }
-                        break
                     default:
                         break;
                 }
-                if (sendRet) await setMsgMap(sendRet.rand, sendRet)
+                if (sendRet.rand) await setMsgMap(sendRet.rand, sendRet)
                 logger.mark(`[ws-plugin] 连接名字:${this.name} 处理完成`)
             }
         })
