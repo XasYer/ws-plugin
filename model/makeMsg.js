@@ -131,9 +131,9 @@ async function makeGSUidReportMsg(e) {
     }
     const MessageReceive = {
         bot_id: 'Yunzai_Bot',
-        bot_self_id: e.self_id + "",
-        msg_id: e.message_id,
-        user_id: e.user_id + "",
+        bot_self_id: String(e.self_id),
+        msg_id: String(e.message_id),
+        user_id: String(e.user_id),
         user_pm: user_pm,
         content: message
     };
