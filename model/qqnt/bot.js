@@ -95,7 +95,8 @@ export class QQNTBot {
             info,
             ...this.pickFriend(user_id),
             kick: async (message, block) => await this.setGroupKick(group_id, user_id, false, message),
-            mute: async (duration) => await this.setGroupBan(group_id, user_id, duration)
+            mute: async (duration) => await this.setGroupBan(group_id, user_id, duration),
+            getInfo: () => info
         }
     }
 
