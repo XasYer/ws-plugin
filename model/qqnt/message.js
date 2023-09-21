@@ -457,14 +457,18 @@ async function toQQNTMsg(bot, data) {
             if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
             const job = schedule.scheduleJob('0 0 4 * * ?', function () {
                 logger.mark('[ws-plugin] 执行定时任务: 删除Temp')
-                const files = fs.readdirSync(TMP_DIR)
-                for (const file of files) {
-                    fs.unlinkSync(join(TMP_DIR, file))
-                }
-                const path = `${redPath}/redprotocol-upload`
-                const redTemp = fs.readdirSync(path)
-                for (const file of redTemp) {
-                    fs.unlinkSync(join(path, file))
+                try {
+                    const files = fs.readdirSync(TMP_DIR)
+                    for (const file of files) {
+                        fs.unlinkSync(join(TMP_DIR, file))
+                    }
+                    const path = `${redPath}/redprotocol-upload`
+                    const redTemp = fs.readdirSync(path)
+                    for (const file of redTemp) {
+                        fs.unlinkSync(join(path, file))
+                    }
+                } catch (error) {
+
                 }
             });
             await getNtPath(bot)

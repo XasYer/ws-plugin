@@ -1,13 +1,11 @@
 import fs from 'fs'
-import { createHash, randomBytes, randomUUID } from 'crypto'
-import { resolve, join, extname, basename } from 'path'
+import { createHash, randomUUID } from 'crypto'
+import { resolve, join, dirname } from 'path'
 import fetch, { FormData, Blob } from 'node-fetch'
-import { exec } from 'child_process'
-import { writeFile, readFile } from 'fs/promises'
-import { createRequire } from 'module'
+import { fileURLToPath } from 'url'
+import { exec, spawn } from 'child_process'
 import os from 'os'
 import _ from 'lodash'
-const require = createRequire(import.meta.url)
 
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 const user = os.userInfo().username
@@ -76,7 +74,7 @@ async function uploadAudio(file) {
         duration = await getDuration(tmpPath)
         const res = await audioTrans(tmpPath)
         filePath = res.silkFile
-        buffer = await readFile(filePath)
+        buffer = fs.readFileSync(filePath)
     } else {
         filePath = await saveTmp(buffer)
     }
@@ -91,14 +89,16 @@ async function uploadAudio(file) {
             fileSize: buffer.length,
             fileName: md5 + '.amr',
             filePath: filePath,
-            waveAmplitudes: [36, 28, 68, 28, 84, 28],
+            // waveAmplitudes: [36, 28, 68, 28, 84, 28],
+            waveAmplitudes: [
+                99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99
+            ],
             duration: duration
         }
     }
 }
 
 function audioTrans(tmpPath, samplingRate = '24000') {
-    const { encode } = require('node-silk-encode')
     return new Promise((resolve, reject) => {
         const pcmFile = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
         exec(`ffmpeg -y -i "${tmpPath}" -ar ${samplingRate} -ac 1 -f s16le "${pcmFile}"`, async () => {
@@ -110,12 +110,41 @@ function audioTrans(tmpPath, samplingRate = '24000') {
             })
 
             const silkFile = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
-            await encode(pcmFile, silkFile, samplingRate)
+            await pcmToSilk(pcmFile, silkFile, samplingRate)
             fs.unlink(pcmFile, () => { })
 
             resolve({
                 silkFile
             })
+        })
+    })
+}
+
+function pcmToSilk(input, output, samplingRate) {
+    return new Promise((resolve, reject) => {
+        const args = ['-i', input, '-s', samplingRate, '-o', output]
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = dirname(__filename);
+        const child = spawn(join(__dirname, './cli.exe'), args)
+        child.on('exit', () => {
+            fs.access(output, fs.constants.F_OK, (err) => {
+                if (err) {
+                    reject('音频转码失败')
+                }
+            })
+            // fs.stat(output, (err, stats) => {
+            //     if (err) {
+            //         console.error(err);
+            //         return;
+            //     }
+            //     fs.truncate(output, stats.size - 1, err => {
+            //         if (err) {
+            //             console.error(err);
+            //             return;
+            //         }
+            //     });
+            // });
+            resolve()
         })
     })
 }
@@ -143,22 +172,26 @@ async function saveTmp(data, ext = null) {
     ext = ext ? '.' + ext : ''
     const filename = randomUUID({ disableEntropyCache: true }) + ext
     const tmpPath = resolve(TMP_DIR, filename)
-    await writeFile(tmpPath, data)
+    fs.writeFileSync(tmpPath, data)
     return tmpPath
 }
 
 async function getNtPath(bot) {
     let dataPath = await redis.get('ws-plugin:qqnt:dataPath')
     if (!dataPath) {
-        const buffer = fs.readFileSync('./plugins/ws-plugin/resources/common/cont/logo.png')
-        const blob = new Blob([buffer], { type: 'image/png' })
-        const formData = new FormData()
-        formData.append('file', blob, '1.png')
-        const file = await bot.sendApi('POST', 'upload', formData)
-        fs.unlinkSync(file.ntFilePath)
-        const index = file.ntFilePath.indexOf('nt_data');
-        dataPath = file.ntFilePath.slice(0, index + 'nt_data'.length);
-        await redis.set('ws-plugin:qqnt:dataPath', dataPath)
+        try {
+            const buffer = fs.readFileSync('./plugins/ws-plugin/resources/common/cont/logo.png')
+            const blob = new Blob([buffer], { type: 'image/png' })
+            const formData = new FormData()
+            formData.append('file', blob, '1.png')
+            const file = await bot.sendApi('POST', 'upload', formData)
+            fs.unlinkSync(file.ntFilePath)
+            const index = file.ntFilePath.indexOf('nt_data');
+            dataPath = file.ntFilePath.slice(0, index + 'nt_data'.length);
+            await redis.set('ws-plugin:qqnt:dataPath', dataPath)
+        } catch (error) {
+            return null
+        }
     }
     return dataPath
 }
@@ -177,6 +210,7 @@ async function uploadVideo(bot, file) {
         file = Temp
     }
     const ntPath = await getNtPath(bot)
+    if (!ntPath) return
     const now = new Date();
     const year = now.getFullYear();
     const month = now.getMonth() + 1;
