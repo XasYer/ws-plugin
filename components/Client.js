@@ -127,8 +127,8 @@ export default class Client {
                     socket.destroy();
                 }
             }
-            if (req.url === '/') {
-                this.wss.handleUpgrade(req, socket, head, conn => {
+            this.wss.handleUpgrade(req, socket, head, conn => {
+                if (req.url === '/') {
                     conn.id = req.headers["sec-websocket-key"]
                     let time = null
                     conn.send(lifecycle(this.uin))
@@ -145,7 +145,7 @@ export default class Client {
                         if (this.stopReconnect = false) {
                             logger.warn(`${this.name} 关闭 WebSocket 连接`);
                         }
-                        this.arr = this.arr.filter(i => i != req.headers["sec-websocket-key"])
+                        this.arr = this.arr.filter(i => i.id != req.headers["sec-websocket-key"])
                         clearInterval(time)
                     })
                     conn.on("message", async event => {
@@ -172,12 +172,63 @@ export default class Client {
                         conn.send(JSON.stringify(ret));
                     })
                     this.arr.push(conn)
-                })
-            } else if (req.url === '/api' || req.url === '/api/') {
-                // 处理 /api 请求
-            } else if (req.url === '/event' || req.url === '/event/') {
-                // 处理 /event 请求
-            }
+                } else if (req.url === '/api' || req.url === '/api/') {
+                    logger.mark(`${this.name} 接受 WebSocket api 连接: ${req.connection.remoteAddress}`);
+                    conn.on("error", (event) => {
+                        logger.error(`${this.name} 接受 WebSocket api 连接时出现错误: ${event}`)
+                    })
+                    conn.on("close", () => {
+                        if (this.stopReconnect = false) {
+                            logger.warn(`${this.name} 关闭 WebSocket api 连接`);
+                        }
+                    })
+                    conn.on("message", async event => {
+                        const data = JSON.parse(event)
+                        let ret
+                        try {
+                            let responseData = await getApiData(data.action, data.params, this.name, this.uin);
+                            ret = {
+                                status: 'ok',
+                                retcode: 0,
+                                data: responseData,
+                                echo: data.echo
+                            }
+                        } catch (error) {
+                            if (!error.noLog) logger.error('ws-plugin出现错误', error)
+                            ret = {
+                                status: 'failed',
+                                retcode: -1,
+                                msg: error.message,
+                                wording: 'ws-plugin获取信息失败',
+                                echo: data.echo
+                            }
+                        }
+                        conn.send(JSON.stringify(ret));
+                    })
+                } else if (req.url === '/event' || req.url === '/event/') {
+                    conn.id = req.headers["sec-websocket-key"]
+                    let time = null
+                    conn.send(lifecycle(this.uin))
+                    if (Config.heartbeatInterval > 0) {
+                        time = setInterval(async () => {
+                            conn.send(heartbeat(this.uin))
+                        }, Config.heartbeatInterval * 1000)
+                    }
+                    logger.mark(`${this.name} 接受 WebSocket event 连接: ${req.connection.remoteAddress}`);
+                    conn.on("error", (event) => {
+                        logger.error(`${this.name} 接受 WebSocket event 连接时出现错误: ${event}`)
+                    })
+                    conn.on("close", () => {
+                        if (this.stopReconnect = false) {
+                            logger.warn(`${this.name} 关闭 WebSocket event 连接`);
+                        }
+                        this.arr = this.arr.filter(i => i.id != req.headers["sec-websocket-key"])
+                        clearInterval(time)
+                    })
+                    this.arr.push(conn)
+                }
+            })
+
         })
         this.ws = {
             send: (msg) => {
