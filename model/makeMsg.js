@@ -47,31 +47,10 @@ async function makeOneBotReportMsg(e) {
 async function makeGSUidReportMsg(e) {
     let message = []
     let msg = e.message
-    //前缀处理
-    if (msg[0].type == 'text') {
-        if (Config.noMsgStart.length > 0 && Array.isArray(Config.noMsgStart)) {
-            if (Config.noMsgStart.some(item => msg[0].text.startsWith(item))) {
-                return false
-            }
-        }
-        if (e.isGroup) {
-            let groupCfg = cfg.getGroup(e.group_id)
-            let alias = groupCfg.botAlias
-            if (!Array.isArray(alias)) {
-                alias = [alias]
-            }
-            for (let name of alias) {
-                if (msg[0].text.startsWith(name)) {
-                    msg[0].text = _.trimStart(msg[0].text, name).trim()
-                    break
-                }
-            }
-        }
-    }
     if (e.source) {
         message.push({
             type: "reply",
-            data: e.message_id
+            data: String(e.source.message_id)
         })
     }
     for (const i of msg) {
@@ -112,6 +91,12 @@ async function makeGSUidReportMsg(e) {
                     data: `${name}|${base64}`
                 })
                 break;
+            case 'reply':
+                message.push({
+                    type: "reply",
+                    data: String(i.id)
+                })
+                break
             default:
                 break;
         }

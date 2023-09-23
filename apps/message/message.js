@@ -51,11 +51,37 @@ Bot.on('message', async e => {
             return ret
         }
     }
-    //深拷贝e
-    let msg = _.cloneDeep(e);
+    let msg = {
+        time: e.time,
+        message_id: e.message_id,
+        message: e.message,
+        rand: e.rand,
+        seq: e.seq,
+        source: e.source,
+        user_id: e.user_id,
+        self_id: e.self_id,
+        isMaster: e.isMaster,
+        sender: e.sender,
+        param: {
+            time: e.time,
+            self_id: e.self_id,
+            post_type: e.post_type,
+            message_type: e.message_type,
+            sub_type: e.sub_type,
+            message_id: e.rand,
+            user_id: e.user_id,
+            font: 0,
+            sender: e.sender,
+            anonymous: e.anonymous ? {
+                id: e.anonymous.id,
+                name: e.anonymous.name,
+                flag: e.anonymous.flag
+            } : null
+        }
+    }
     let message = []
     //增加isGroup e.isPrivate
-    if (msg.guild_id) {
+    if (e.guild_id) {
         setGuildLatestMsgId(e.message_id)
         //处理成message
         if (e.content) {
@@ -81,51 +107,24 @@ Bot.on('message', async e => {
             post_type: 'message',
             message_type: 'guild',
             sub_type: 'channel',
-            guild_id: msg.guild_id,
-            channel_id: msg.channel_id,
-            user_id: msg.author.id,
-            message_id: msg.message_id,
-            self_id: msg.bot.appID,
+            guild_id: e.guild_id,
+            channel_id: e.channel_id,
+            user_id: e.author.id,
+            message_id: e.message_id,
+            self_id: e.bot.appID,
             sender: {
-                user_id: msg.author.id,
-                nickname: msg.author.username,
-                tiny_id: msg.author.id,
+                user_id: e.author.id,
+                nickname: e.author.username,
+                tiny_id: e.author.id,
             },
-            self_tiny_id: msg.bot.appID,
+            self_tiny_id: e.bot.appID,
         }
-    } else if (msg.message_type == 'group') {
+    } else if (e.message_type == 'group') {
         msg.isGroup = true
-        msg.param = {
-            time: e.time,
-            self_id: e.self_id,
-            post_type: e.post_type,         // 'message'
-            message_type: e.message_type,   // 'group'
-            sub_type: e.sub_type,           // 'normal' 'anonymous' 'notice'
-            message_id: e.rand,
-            group_id: e.group_id,
-            user_id: e.user_id,
-            font: 0,
-            sender: e.sender,               // 'user_id' 'nickname'
-            anonymous: e.anonymous ? {
-                id: e.anonymous.id,
-                name: e.anonymous.name,
-                flag: e.anonymous.flag
-            } : null
-        }
-    } else if (msg.message_type == 'private') {
+        msg.group_id = e.group_id
+        msg.param.group_id = e.group_id
+    } else if (e.message_type == 'private') {
         msg.isPrivate = true
-        msg.param = {
-            time: e.time,
-            self_id: e.self_id,
-            post_type: e.post_type,         // 'message'
-            message_type: e.message_type,   // 'private'
-            sub_type: e.sub_type,           // 'friend' 'group' 'other'
-            message_id: e.rand,
-            group_id: e.group_id,
-            user_id: e.user_id,
-            font: 0,
-            sender: e.sender                // 'user_id' 'nickname'
-        }
     } else {
         return false
     }
@@ -161,7 +160,7 @@ function onlyReplyAt(e) {
     let groupCfg = cfg.getGroup(e.group_id)
     if (groupCfg.onlyReplyAt != 1 || !groupCfg.botAlias || e.isPrivate) return e
 
-    let at = atBot(e.message)
+    let at = atBot(e)
     if (at) return e
     e = hasAlias(e)
     if (e) return e
@@ -169,20 +168,16 @@ function onlyReplyAt(e) {
     return false
 }
 
-function atBot(msg) {
-    if (!msg) return false
-    for (let i = 0; i < msg.length; i++) {
-        if (msg[i].type === 'at') {
-            if (msg[i].qq == Bot.uin) {
-                return true
-            }
+function atBot(e) {
+    for (const i of e.message) {
+        if (i.type === 'at') {
+            if (i.qq == e.self_id) return true
         }
     }
     return false
 }
 
 function hasAlias(e) {
-    if (!e.message) return false
     if (e.message[0].type === 'text') {
         if (e.isGroup) {
             let groupCfg = cfg.getGroup(e.group_id)
