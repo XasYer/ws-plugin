@@ -196,8 +196,21 @@ async function makeSendMsg(params, uin) {
     for (const i of msg) {
         switch (i.type) {
             case 'reply':
-                quote = await getMsgMap(i.data.id)
-                if (quote) quote = await bot.getMsg?.(quote.message_id)
+                if (i.data.text) {
+                    quote = {
+                        message: i.data.text,
+                        user_id: i.data.qq,
+                        time: i.data.time,
+                        seq: i.data.seq
+                    }
+                } else {
+                    quote = await getMsgMap(i.data.id)
+                    if (quote) {
+                        quote = await bot.getMsg?.(quote.message_id)
+                    } else {
+                        sendMsg.push(MsgToCQ([i]))
+                    }
+                }
                 break
             case 'image':
                 sendMsg.push(segment.image(decodeURIComponent(i.data.file)))
