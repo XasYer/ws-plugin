@@ -1,6 +1,6 @@
 import fs from 'fs'
 import { createHash, randomUUID } from 'crypto'
-import { resolve, join, dirname } from 'path'
+import { resolve, join, dirname, basename } from 'path'
 import fetch, { FormData, Blob } from 'node-fetch'
 import { fileURLToPath } from 'url'
 import { exec, spawn } from 'child_process'
@@ -27,7 +27,7 @@ async function uploadImg(bot, msg) {
             fileSize: file.fileSize,
             picHeight: file.imageInfo.height,
             picWidth: file.imageInfo.width,
-            fileName: file.md5 + '.' + file.ntFilePath.substring(file.ntFilePath.lastIndexOf('.') + 1),
+            fileName: basename(file.ntFilePath),
             sourcePath: file.ntFilePath,
             picType: file.imageInfo.type === 'gif' ? 2000 : 1000
         }

@@ -169,7 +169,7 @@ export class QQNTBot {
             chatType: 1,
             sender: this.self_id
         })
-        return { message_id }
+        return { message_id, rand: result.msgRandom }
     }
 
     async getMsg(message_id) {

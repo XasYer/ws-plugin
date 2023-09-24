@@ -83,12 +83,22 @@ async function makeSendMsg(data, message) {
                 break
             case "at":
                 log += `[提及: ${i.qq}]`
-                i = {
-                    "elementType": 1,
-                    "textElement": {
-                        // "content": "@时空猫猫",
-                        "atType": 2,
-                        "atNtUin": String(i.qq)
+                if (i.qq == 'all') {
+                    i = {
+                        "elementType": 1,
+                        "textElement": {
+                            "content": "@全体成员",
+                            "atType": 1
+                        }
+                    }
+                } else {
+                    i = {
+                        "elementType": 1,
+                        "textElement": {
+                            // "content": "@时空猫猫",
+                            "atType": 2,
+                            "atNtUin": String(i.qq)
+                        }
                     }
                 }
                 break
@@ -136,18 +146,18 @@ async function makeMessage(self_id, payload) {
     e.bot = Bot[self_id]
     e.post_type = 'message'
     e.user_id = Number(payload.senderUin)
-    if (!e.user_id || e.user_id == '0') return null
+    if (!e.user_id) return null
     e.message_id = `${payload.peerUin}:${payload.msgSeq}`
-    e.time = payload.msgTime
-    e.seq = payload.msgSeq
-    e.rand = payload.msgRandom
+    e.time = Number(payload.msgTime)
+    e.seq = Number(payload.msgSeq)
+    e.rand = Number(payload.msgRandom)
     e.nickname = payload.sendNickName || payload.sendMemberName
     e.sender = {
         user_id: e.user_id,
         nickname: e.nickname,
         role: roleMap[payload.roleType] || 'member'
     }
-    e.self_id = self_id
+    e.self_id = Number(self_id)
     e.message = []
     e.raw_message = ''
     for (const i of payload.elements) {
@@ -155,7 +165,7 @@ async function makeMessage(self_id, payload) {
             case 1:
                 if (i.textElement.atType == 2) {
                     const qq = i.textElement.atUid == '0' ? i.textElement.atNtUin : i.textElement.atUid
-                    e.message.push({ type: 'at', qq })
+                    e.message.push({ type: 'at', qq: Number(qq) })
                     e.raw_message += `[提及：${qq}]`
                 } else if (i.textElement.atType == 1) {
                     e.message.push({ type: 'at', qq: 'all' })
@@ -203,7 +213,7 @@ async function makeMessage(self_id, payload) {
                 e.raw_message += `[视频: ${i.videoElement.fileName}]`
                 break
             case 6:
-                e.message.push({ type: 'face', id: i.faceElement.faceIndex })
+                e.message.push({ type: 'face', id: Number(i.faceElement.faceIndex) })
                 e.raw_message += `[表情: ${i.faceElement.faceIndex}]`
                 break
             case 7:
@@ -234,7 +244,7 @@ async function makeMessage(self_id, payload) {
                             e.notice_type = 'group'
                             e.sub_type = 'increase'
                             e.nickname = i.grayTipElement.groupElement.memberAdd.otherAdd.name
-                            e.user_id = i.grayTipElement.groupElement.memberAdd.otherAdd.uin
+                            e.user_id = Number(i.grayTipElement.groupElement.memberAdd.otherAdd.uin)
                         }
                         if (i.grayTipElement.groupElement.shutUp) {
                             // i.grayTipElement.groupElement.type = 8
@@ -242,8 +252,8 @@ async function makeMessage(self_id, payload) {
                             e.notice_type = 'group'
                             e.sub_type = 'ban'
                             e.duration = i.grayTipElement.groupElement.shutUp.duration
-                            e.user_id = i.grayTipElement.groupElement.shutUp.member.uin
-                            e.operator_id = i.grayTipElement.groupElement.shutUp.admin.uin
+                            e.user_id = Number(i.grayTipElement.groupElement.shutUp.member.uin)
+                            e.operator_id = Number(i.grayTipElement.groupElement.shutUp.admin.uin)
                         }
                         break;
                     case 12:
@@ -254,7 +264,7 @@ async function makeMessage(self_id, payload) {
                                 e.post_type = 'notice'
                                 e.notice_type = 'group'
                                 e.sub_type = 'increase'
-                                e.user_id = regRet[3]
+                                e.user_id = Number(regRet[3])
                             }
                         }
                         break
@@ -326,6 +336,7 @@ async function sendNodeMsg(data, msg) {
 
 async function makeNodeMsg(data, msg) {
     const msgElements = []
+    let seq = randomBytes(2).readUint16BE()
     for (const item of msg) {
         if (typeof item.message == 'string') item.message = { type: 'text', text: item.message }
         if (!Array.isArray(item.message)) item.message = [item.message]
@@ -401,7 +412,6 @@ async function makeNodeMsg(data, msg) {
         }
         const element = []
         if (!elems[0].head) {
-            let seq = randomBytes(2).readUint16BE()
             element.push({
                 head: {
                     // field2: Number(data.self_id),
@@ -493,7 +503,7 @@ async function toQQNTMsg(bot, data) {
             switch (e.post_type) {
                 case 'message':
                     if (e.message_type == 'group') {
-                        logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_id}, ${e.user_id}] ${e.raw_message}`)
+                        logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_name}(${e.group_id}), ${e.nickname}(${e.user_id})] ${e.raw_message}`)
                         if (!Bot[bot.self_id].gml.has(Number(e.group_id))) {
                             Bot[bot.self_id].gml.set(Number(e.group_id), new Map())
                         }
@@ -509,7 +519,7 @@ async function toQQNTMsg(bot, data) {
                             })
                         }
                     } else if (e.message_type == 'private') {
-                        logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.user_id}] ${e.raw_message}`)
+                        logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.nickname}(${e.user_id})] ${e.raw_message}`)
                         if (!Bot[bot.self_id].fl.has(Number(e.user_id))) {
                             Bot[bot.self_id].fl.set(Number(e.user_id), {
                                 bot_id: e.self_id,

@@ -1,5 +1,5 @@
 import plugin from '../../../lib/plugins/plugin.js'
-import { Config, clearWebSocket, initWebSocket, Render, Version, socketList } from '../components/index.js'
+import { Config, clearWebSocket, initWebSocket, Render, Version, allSocketList, sendSocketList } from '../components/index.js'
 import lodash from 'lodash'
 
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
@@ -220,7 +220,7 @@ export class setting extends plugin {
                     '连接名字,连接类型\n',
                     '---------------------------------\n',
                     '连接名字: 用来区分每个连接\n',
-                    '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:qqnt连接'
+                    '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:qqnt连接 5:正向http 6:反向http'
                 ])
                 // await this.reply([
                 //     '请一次性发送以下参数:\n',
@@ -299,8 +299,6 @@ export class setting extends plugin {
                         '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连\n',
                         'access-token: 访问秘钥'
                     ])
-                    this.setContext('checkAddWs', this.e.isGroup)
-                    await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
                     break;
                 case '2':
                     await this.reply([
@@ -311,8 +309,6 @@ export class setting extends plugin {
                         '连接地址: 需要启动的ws地址,比如127.0.0.1:8080\n',
                         'access-token: 访问秘钥'
                     ])
-                    this.setContext('checkAddWs', this.e.isGroup)
-                    await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
                     break;
                 case '3':
                     await this.reply([
@@ -325,8 +321,6 @@ export class setting extends plugin {
                         '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连\n',
                         'access-token: 访问秘钥'
                     ])
-                    this.setContext('checkAddWs', this.e.isGroup)
-                    await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
                     break;
                 case '4':
                     await this.reply([
@@ -339,15 +333,35 @@ export class setting extends plugin {
                         '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
                         '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连',
                     ])
-                    this.setContext('checkAddWs', this.e.isGroup)
-                    await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
+                    break;
+                case '5':
+                    await this.reply([
+                        '请继续发送以下参数,用逗号分割\n',
+                        '---------------------------------\n',
+                        '连接地址,access-token(默认空)\n',
+                        '---------------------------------\n',
+                        '连接地址: Host:Port,比如127.0.0.1:3000\n',
+                        'access-token: 访问秘钥',
+                    ])
+                    break;
+                case '6':
+                    await this.reply([
+                        '请继续发送以下参数,用逗号分割\n',
+                        '---------------------------------\n',
+                        '连接地址\n',
+                        '---------------------------------\n',
+                        '连接地址: http://Host:Port,比如http://127.0.0.1:3001\n',
+                        // 'secret: 秘钥',
+                    ])
                     break;
                 default:
                     await this.reply('格式有误,请检查后重新发送#ws添加连接')
                     this.finish('checkAddWs', this.e.isGroup)
                     await redis.del('ws-plugin:addWs:' + this.e.user_id)
-                    break;
+                    return false
             }
+            this.setContext('checkAddWs', this.e.isGroup)
+            await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
         } else {
             const config = {
                 name: addWsMsg[0],
@@ -579,31 +593,18 @@ export class setting extends plugin {
         const msg = []
         for (const i of Config.servers) {
             if (msg.length != 0) msg.push('\n----------------\n')
-            let status = '已关闭连接'
-            if (i.type == 4) {
-                if (Version.isTrss && !i.close) {
-                    status = '已连接'
-                }
-            }
-            for (const s of socketList) {
+            let status = '已关闭'
+            for (const s of allSocketList) {
                 if (s.name == i.name) {
                     switch (s.status) {
                         case 0:
-                            status = '已关闭连接'
+                            status = '已关闭'
                             break;
                         case 1:
-                            if (s.type == 2) {
-                                status = '运行中'
-                            } else {
-                                status = '已连接'
-                            }
+                            status = '正常'
                             break
                         case 3:
-                            if (s.type == 2) {
-                                status = '已停止运行'
-                            } else {
-                                status = '断线重连中'
-                            }
+                            status = '断线重连中'
                             break
                         default:
                             break;

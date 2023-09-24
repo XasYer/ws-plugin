@@ -60,26 +60,8 @@ export default class Client {
             } else {
                 data = JSON.parse(event.data);
             }
-            let ret
-            try {
-                let responseData = await getApiData(data.action, data.params, this.name, this.uin);
-                ret = {
-                    status: 'ok',
-                    retcode: 0,
-                    data: responseData,
-                    echo: data.echo
-                }
-            } catch (error) {
-                if (!error.noLog) logger.error('ws-plugin出现错误', error)
-                ret = {
-                    status: 'failed',
-                    retcode: -1,
-                    msg: error.message,
-                    wording: 'ws-plugin获取信息失败',
-                    echo: data.echo
-                }
-            }
-            this.ws.send(JSON.stringify(ret));
+            let result = await this.getData(data.action, data.params, data.echo)
+            this.ws.send(JSON.stringify(result));
         })
         this.ws.on('close', async code => {
             logger.warn(`${this.name} 连接已关闭`);
@@ -122,9 +104,14 @@ export default class Client {
         this.server.on("upgrade", (req, socket, head) => {
             if (this.accessToken) {
                 const token = req.headers['authorization']?.replace('Token ', '')
-                if (this.accessToken != token) {
+                if (!token) {
                     socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
                     socket.destroy();
+                    return
+                } else if (this.accessToken != token) {
+                    socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
+                    socket.destroy();
+                    return;
                 }
             }
             this.wss.handleUpgrade(req, socket, head, conn => {
@@ -150,26 +137,8 @@ export default class Client {
                     })
                     conn.on("message", async event => {
                         const data = JSON.parse(event)
-                        let ret
-                        try {
-                            let responseData = await getApiData(data.action, data.params, this.name, this.uin);
-                            ret = {
-                                status: 'ok',
-                                retcode: 0,
-                                data: responseData,
-                                echo: data.echo
-                            }
-                        } catch (error) {
-                            if (!error.noLog) logger.error('ws-plugin出现错误', error)
-                            ret = {
-                                status: 'failed',
-                                retcode: -1,
-                                msg: error.message,
-                                wording: 'ws-plugin获取信息失败',
-                                echo: data.echo
-                            }
-                        }
-                        conn.send(JSON.stringify(ret));
+                        const result = await this.getData(data.action, data.params, data.echo)
+                        conn.send(JSON.stringify(result));
                     })
                     this.arr.push(conn)
                 } else if (req.url === '/api' || req.url === '/api/') {
@@ -184,26 +153,8 @@ export default class Client {
                     })
                     conn.on("message", async event => {
                         const data = JSON.parse(event)
-                        let ret
-                        try {
-                            let responseData = await getApiData(data.action, data.params, this.name, this.uin);
-                            ret = {
-                                status: 'ok',
-                                retcode: 0,
-                                data: responseData,
-                                echo: data.echo
-                            }
-                        } catch (error) {
-                            if (!error.noLog) logger.error('ws-plugin出现错误', error)
-                            ret = {
-                                status: 'failed',
-                                retcode: -1,
-                                msg: error.message,
-                                wording: 'ws-plugin获取信息失败',
-                                echo: data.echo
-                            }
-                        }
-                        conn.send(JSON.stringify(ret));
+                        const result = await this.getData(data.action, data.params, data.echo)
+                        conn.send(JSON.stringify(result));
                     })
                 } else if (req.url === '/event' || req.url === '/event/') {
                     conn.id = req.headers["sec-websocket-key"]
@@ -244,16 +195,15 @@ export default class Client {
                 }
             }
         }
-        this.wss = new WebSocketServer({ noServer: true })
-        try {
-            this.server.listen(this.port, this.host, () => {
-                this.status = 1
-                logger.mark(`CQ WebSocket 服务器已启动: ${this.host}:${this.port}`)
-            })
-        } catch (error) {
+        this.server.on('error', error => {
+            logger.error(`${this.name} CQ WebSocket 服务器启动失败: ${this.host}:${this.port}`)
             logger.error(error)
-            logger.error(`${this.name} CQ WebSocket 服务器失败: ${this.host}:${this.port}`)
-        }
+        })
+        this.wss = new WebSocketServer({ noServer: true })
+        this.server.listen(this.port, this.host, () => {
+            this.status = 1
+            logger.mark(`CQ WebSocket 服务器已启动: ${this.host}:${this.port}`)
+        })
     }
 
     createGSUidWs() {
@@ -401,6 +351,7 @@ export default class Client {
                 return
             }
             logger.error(`${this.name} Token错误`)
+            logger.error(info.error)
             return
         }
         if (!info.uin) {
@@ -428,13 +379,13 @@ export default class Client {
         bot.ws.on('message', data => toQQNTMsg(bot, data))
         bot.ws.on('close', (code) => {
             delete Bot[bot.self_id]
-            this.status = 3
+            this.status = 0
             switch (code) {
                 case 1005:
-                    this.status = 0
                     logger.error(`${this.name}(${this.uin}) 主动断开连接`)
                     return
                 case 1006:
+                    this.status = 3
                     logger.error(`${this.name}(${this.uin}) QQNT被关闭`)
                     reconnect()
                     return
@@ -449,28 +400,138 @@ export default class Client {
         return true
     }
 
+    createHttp() {
+        const parts = this.address.split(':');
+        this.host = parts[0];
+        this.port = parts[1];
+        this.express = express();
+        this.server = http.createServer(this.express);
+        this.express.use(express.json());
+        this.express.use(express.urlencoded({ extended: true }));
+        this.express.use((req, res, next) => this.authorization(req, res, next))
+
+        this.express.get('/:action', async (req, res) => {
+            const { action } = req.params;
+            const { query: params } = req;
+            const data = await this.getData(action, params)
+            res.status(200).json(data || {})
+        });
+
+        this.express.post('/:action', async (req, res) => {
+            const { action } = req.params;
+            const { body: params } = req;
+            const data = await this.getData(action, params)
+            res.status(200).json(data || {})
+        });
+
+        this.express.post('/', async (req, res) => {
+            const { action, params } = req.body;
+            const data = await this.getData(action, params)
+            res.status(200).json(data || {})
+        });
+
+        this.server.on('error', error => {
+            logger.error(`${this.name} 正向HTTP 服务器启动失败: ${this.host}:${this.port}`)
+            logger.error(error)
+        })
+        this.server.listen(this.port, this.host, () => {
+            this.status = 1
+            logger.mark(`HTTP 服务器已启动: ${this.host}:${this.port}`)
+        })
+        this.ws = {
+            close: () => {
+                this.server.close()
+                logger.warn(`正向HTTP 服务器已关闭: ${this.host}:${this.port}`)
+            }
+        }
+    }
+
+    createHttpPost() {
+        if (!this.address.startsWith('http')) {
+            this.address = 'http://' + this.address
+        }
+        this.status = 1
+        // 心跳咕一下
+        this.ws = {
+            send: body => {
+                fetch(this.address, {
+                    method: 'POST',
+                    headers: {
+                        'content-type': 'application/json',
+                        'x-self-id': this.uin,
+                        'user-agent': `ws-plugin/${Version.version}`
+                    },
+                    body
+                })
+            }
+        }
+    }
+
     close() {
         this.stopReconnect = true
         if (this.status == 1) {
-            this.ws?.close()
-            this.status = 3
+            this.ws?.close?.()
+            this.status = 0
+        }
+    }
+
+    authorization(req, res, next) {
+        let code = null
+        const token = req.headers['authorization']?.replace?.(/^(Token|Bearer) /, '')
+        if (this.accessToken) {
+            if (!token) {
+                code = 401
+            } else if (this.accessToken != token) {
+                code = 403
+            }
+        }
+        if (code) {
+            res.status(code).end()
+            return
+        }
+        next()
+    }
+
+    async getData(action, params, echo) {
+        let result
+        try {
+            const data = await getApiData(action, params, this.name, this.uin);
+            result = {
+                status: 'ok',
+                retcode: 0,
+                data,
+                echo
+            }
+        } catch (error) {
+            if (!error.noLog) logger.error('ws-plugin出现错误', error)
+            result = {
+                status: 'failed',
+                retcode: -1,
+                msg: error.message,
+                wording: 'ws-plugin获取信息失败',
+                echo
+            }
+        } finally {
+            return result
         }
     }
 
     async sendMasterMsg(msg) {
-        let target = []
+        const bot = Version.isTrss ? Bot[this.uin] : Bot
+        let masterQQ = []
+        const master = Version.isTrss ? Config.master[this.uin] : Config.masterQQ
         if (Config.howToMaster > 0) {
-            target.push(Config.masterQQ[Config.howToMaster - 1])
+            masterQQ.push(master[Config.howToMaster - 1])
         } else if (Config.howToMaster == 0) {
-            target.push(...Config.masterQQ)
+            masterQQ.push(...master)
         }
-        for (const i of target) {
-            let result = await Bot.sendPrivateMsg(i, msg)
+        for (const i of masterQQ) {
+            let result = await bot?.pickFriend?.(i).sendMsg?.(msg) || true
             if (result) {
                 logger.mark(`[ws-plugin] 连接名字:${this.name} 通知主人:${i} 处理完成`)
             } else {
                 const timer = setInterval(async () => {
-                    result = await Bot.sendPrivateMsg(i, msg)
+                    result = await bot?.pickFriend?.(i).sendMsg?.(msg) || true
                     if (result) {
                         clearInterval(timer)
                         logger.mark(`[ws-plugin] 连接名字:${this.name} 通知主人:${i} 处理完成`)

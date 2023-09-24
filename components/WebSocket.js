@@ -1,44 +1,55 @@
 import Client from "./Client.js";
 import { Config, Version } from './index.js'
 
-let socketList = []
+let sendSocketList = []
+let allSocketList = []
 
 function createWebSocket(data) {
     if (data.address == 'ws_address') return
     if (data.close) return
     const client = new Client(data)
+    sendSocketList = sendSocketList.filter(i => i.name != data.name)
+    allSocketList = allSocketList.filter(i => i.name != data.name)
     switch (Number(data.type)) {
         case 1:
-            if (Version.isTrss) {
-                if (!data.uin) {
-                    logger.warn(`${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
-                    return
-                }
-            }
+            if (!checkVersion(data)) return
             client.createWs()
+            sendSocketList.push(client)
             break;
         case 2:
-            if (Version.isTrss) {
-                if (!data.uin) {
-                    logger.warn(`${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
-                    return
-                }
-            }
+            if (!checkVersion(data)) return
             client.createServer()
+            sendSocketList.push(client)
             break
         case 3:
-            // if (Version.isTrss) return
             client.createGSUidWs()
+            sendSocketList.push(client)
             break
         case 4:
             if (!Version.isTrss) return
             client.createQQNT()
-            return
+            break
+        case 5:
+            if (!checkVersion(data)) return
+            client.createHttp()
+            break
+        case 6:
+            if (!checkVersion(data)) return
+            client.createHttpPost()
+            sendSocketList.push(client)
+            break
         default:
             return;
     }
-    socketList = socketList.filter(i => i.name != data.name)
-    socketList.push(client)
+    allSocketList.push(client)
+}
+
+function checkVersion(data) {
+    if (Version.isTrss && !data.uin) {
+        logger.warn(`${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
+        return false
+    }
+    return true
 }
 
 function modifyWebSocket(target) {
@@ -50,7 +61,7 @@ function modifyWebSocket(target) {
             break;
         case 'del':
         case 'close':
-            for (const i of socketList) {
+            for (const i of allSocketList) {
                 if (i.name == target.data.name) {
                     i.close()
                     break
@@ -63,7 +74,7 @@ function modifyWebSocket(target) {
 }
 
 function clearWebSocket() {
-    for (const i of socketList) {
+    for (const i of allSocketList) {
         i.close()
     }
 }
@@ -81,6 +92,7 @@ export {
     initWebSocket,
     clearWebSocket,
     modifyWebSocket,
-    socketList,
+    allSocketList,
+    sendSocketList
 }
 

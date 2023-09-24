@@ -1,7 +1,7 @@
-import { socketList, Config } from '../../components/index.js'
+import { sendSocketList, Config } from '../../components/index.js'
 
 Bot.on('request', async e => {
-    if (socketList.length == 0) return false
+    if (sendSocketList.length == 0) return false
     let other = {}
     switch (e.request_type) {
         case 'friend':
@@ -46,7 +46,7 @@ Bot.on('request', async e => {
         ...other
     }
     msg = JSON.stringify(msg)
-    socketList.forEach(i => {
+    sendSocketList.forEach(i => {
         if (i.status == 1) {
             switch (Number(i.type)) {
                 case 1:

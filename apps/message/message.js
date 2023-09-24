@@ -1,4 +1,4 @@
-import { socketList, Config, Version } from '../../components/index.js'
+import { sendSocketList, Config, Version } from '../../components/index.js'
 import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId, setMsgMap } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
@@ -7,7 +7,7 @@ import cfg from '../../../../lib/config/config.js'
 Bot.on('message', async e => {
     // console.log(e);
     // 如果没有已连接的Websocket
-    if (socketList.length == 0) return false
+    if (sendSocketList.length == 0) return false
     if (e.group_id) {
         // 判断云崽白名单
         const whiteGroup = Config.whiteGroup
@@ -131,12 +131,13 @@ Bot.on('message', async e => {
     // 判断云崽前缀
     msg = onlyReplyAt(msg)
     if (!msg) return false
-    socketList.forEach(async i => {
+    sendSocketList.forEach(async i => {
         if (i.status == 1) {
             let reportMsg = null
             switch (Number(i.type)) {
                 case 1:
                 case 2:
+                case 6:
                     if (Version.isTrss) {
                         if (i.uin != e.self_id) return
                         if (!Version.protocol.some(i => i == e.bot?.version?.name)) return

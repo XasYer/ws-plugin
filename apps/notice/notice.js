@@ -1,8 +1,8 @@
-import { socketList, Config, Version } from '../../components/index.js'
+import { sendSocketList, Config, Version } from '../../components/index.js'
 import { setMsgMap } from '../../model/index.js'
 
 Bot.on('notice', async e => {
-    if (socketList.length == 0) return false
+    if (sendSocketList.length == 0) return false
     if (e.group_id) {
         // 判断云崽白名单
         const whiteGroup = Config.whiteGroup
@@ -117,7 +117,7 @@ Bot.on('notice', async e => {
         ...other
     }
     msg = JSON.stringify(msg)
-    socketList.forEach(i => {
+    sendSocketList.forEach(i => {
         if (i.status == 1) {
             switch (Number(i.type)) {
                 case 1:

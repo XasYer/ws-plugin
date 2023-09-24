@@ -39,13 +39,18 @@ class Config {
     return cfg.masterQQ
   }
 
+  /** Bot账号:[主人帐号] */
+  get master() {
+    return cfg.master
+  }
+
   /** 云崽黑名单群 */
   get blackGroup() {
     return cfg.getOther().blackGroup
   }
 
   /** 云崽白名单群 */
-  get whiteGroup(){
+  get whiteGroup() {
     return cfg.getOther().whiteGroup
   }
 
@@ -101,7 +106,7 @@ class Config {
     return this.getDefOrConfig('msg-config').noGroup
   }
 
-  get yesGroup(){
+  get yesGroup() {
     return this.getDefOrConfig('msg-config').yesGroup
   }
 
