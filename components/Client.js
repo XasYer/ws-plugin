@@ -406,8 +406,8 @@ export default class Client {
         this.port = parts[1];
         this.express = express();
         this.server = http.createServer(this.express);
-        this.express.use(express.json());
-        this.express.use(express.urlencoded({ extended: true }));
+        this.express.use(express.json({ limit: '50mb' }));
+        this.express.use(express.urlencoded({ extended: true, limit: '50mb' }));
         this.express.use((req, res, next) => this.authorization(req, res, next))
 
         this.express.get('/:action', async (req, res) => {
