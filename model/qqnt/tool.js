@@ -7,10 +7,14 @@ import { exec, spawn } from 'child_process'
 import os from 'os'
 import _ from 'lodash'
 import { Stream } from "stream"
+import YAML from 'yaml'
 
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 const user = os.userInfo().username
-const redPath = `C:/Users/${user}/AppData/Roaming/BetterUniverse/QQNT`
+let redPath = `C:/Users/${user}/.chronocat`
+if (!fs.existsSync(redPath)) {
+    redPath = `C:/Users/${user}/AppData/Roaming/BetterUniverse/QQNT`
+}
 
 const roleMap = {
     2: 'member',
@@ -374,14 +378,26 @@ async function uploadFile(file) {
 
 function getToken() {
     let tokenPath
-    if (os.platform() === 'win32') {
-        tokenPath = `${redPath}/RED_PROTOCOL_TOKEN`
-    } else {
-        logger.error('非Windows系统请自行获取Token')
-        return false
-    }
     try {
-        return fs.readFileSync(tokenPath, 'utf8');
+        if (os.platform() === 'win32') {
+            tokenPath = `${redPath}/config/chronocat.yml`
+            if (fs.existsSync(tokenPath)) {
+                const data = YAML.parse(fs.readFileSync(tokenPath, 'utf-8'))
+                for (const i of data?.servers || []) {
+                    if (i.type === 'red') {
+                        return i.token
+                    }
+                }
+                logger.error('请检查chronocat配置是否开启red服务')
+                return false
+            } else {
+                tokenPath = `${redPath}/RED_PROTOCOL_TOKEN`
+                return fs.readFileSync(tokenPath, 'utf-8')
+            }
+        } else {
+            logger.error('非Windows系统请自行获取Token')
+            return false
+        }
     } catch (error) {
         logger.error('QQNT自动获取Token失败,请检查是否已安装Chronocat并尝试手动获取')
         logger.error(error)

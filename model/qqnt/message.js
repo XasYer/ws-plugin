@@ -470,12 +470,12 @@ async function toQQNTMsg(bot, data) {
                 try {
                     const files = fs.readdirSync(TMP_DIR)
                     for (const file of files) {
-                        fs.unlinkSync(join(TMP_DIR, file))
+                        fs.unlink(join(TMP_DIR, file), () => { })
                     }
                     const path = `${redPath}/redprotocol-upload`
                     const redTemp = fs.readdirSync(path)
                     for (const file of redTemp) {
-                        fs.unlinkSync(join(path, file))
+                        fs.unlink(join(path, file), () => { })
                     }
                 } catch (error) {
 
