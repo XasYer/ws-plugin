@@ -747,6 +747,9 @@ async function getApiData(api, params = {}, name, uin) {
         'get_guild_list': async params => {
             ResponseData = await bot.getGuildList?.()
         },
+        'get_guild_channel_list': async params => {
+            
+        },
 
     }
     if (typeof publicApi[api] === 'function') {
