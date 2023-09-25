@@ -381,6 +381,7 @@ export class setting extends plugin {
                     config['maxReconnectAttempts'] = addWsMsg[5] || '0'
                     break
                 case '2':
+                case '5':
                     config['accessToken'] = addWsMsg[3]
                     break
                 default:
