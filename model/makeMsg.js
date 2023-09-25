@@ -219,7 +219,7 @@ async function makeSendMsg(params, uin) {
                 sendMsg.push(i.data.text)
                 break
             case 'at':
-                sendMsg.push(segment.at(Number(qq) || 'all'))
+                sendMsg.push(segment.at(Number(i.data.qq) || 'all'))
                 break
             case 'video':
                 i.data.file = decodeURIComponent(i.data.file)
