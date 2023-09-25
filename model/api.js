@@ -734,18 +734,18 @@ async function getApiData(api, params = {}, name, uin) {
                     id: getGuildLatestMsgId()
                 }
             })
-            await bot[uin].pickGroup(`qg_${params.guild_id}-${params.channel_id}`).sendMsg(sendMsg)
+            await bot.pickGroup?.(`qg_${params.guild_id}-${params.channel_id}`)?.sendMsg?.(sendMsg)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'get_guild_service_profile': async params => {
             ResponseData = {
-                avatar_url: bot.pickFriend(bot.uin).getAvatarUrl(),
+                avatar_url: bot.avatar,
                 nickname: bot.nickname,
                 tiny_id: bot.tiny_id
             }
         },
         'get_guild_list': async params => {
-            ResponseData = await bot.getGuildList()
+            ResponseData = await bot.getGuildList?.()
         },
 
     }
