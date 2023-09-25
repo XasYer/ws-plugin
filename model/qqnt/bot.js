@@ -81,6 +81,10 @@ export class QQNTBot {
     }
 
     pickMember(group_id, user_id) {
+        if (!this.getConfig[group_id]) {
+            this.getGroupMemberList(group_id)
+            this.getConfig[group_id] = true
+        }
         const info = this.gml.get(Number(group_id))?.get?.(Number(user_id))
         if (!info) return {}
         const i = {
@@ -96,7 +100,7 @@ export class QQNTBot {
             ...this.pickFriend(user_id),
             kick: async (message, block) => await this.setGroupKick(group_id, user_id, false, message),
             mute: async (duration) => await this.setGroupBan(group_id, user_id, duration),
-            getInfo: () => info
+            getInfo: async () => await this.getGroupMemberInfo(group_id, user_id)
         }
     }
 
@@ -286,6 +290,14 @@ export class QQNTBot {
             })
         }
         return this.gml.get(Number(group_id))
+    }
+
+    async getGroupMemberInfo(group_id, user_id) {
+        if (!this.getConfig[group_id]) {
+            await this.getGroupMemberList(group_id)
+            this.getConfig[group_id] = true
+        }
+        return this.gl.get(Number(group_id))?.get?.(Number(user_id)) || {}
     }
 
     async getGroupInfo(group_id) {
