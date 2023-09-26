@@ -176,12 +176,13 @@ async function makeMessage(self_id, payload) {
                 }
                 break;
             case 2:
-                const md5 = i.picElement.md5HexStr.toUpperCase()
+                const md5 = i.picElement.md5HexStr
                 e.message.push({
                     type: 'image',
-                    url: `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5}/0`
+                    url: `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0`,
+                    file: md5
                 })
-                e.raw_message += `[图片: https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5}/0]`
+                e.raw_message += `[图片: https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0]`
                 break
             case 3:
                 e.message.push({
