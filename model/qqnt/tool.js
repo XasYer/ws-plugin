@@ -39,6 +39,7 @@ async function uploadImg(bot, msg) {
 }
 
 async function upload(bot, msg, contentType) {
+    if (!msg) throw { noLog: true }
     let buffer
     if (msg instanceof Stream.Readable) {
         buffer = fs.readFileSync(msg.path)
