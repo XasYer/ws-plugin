@@ -67,6 +67,13 @@ export const cfgSchema = {
         desc: `通知主人列表的第几个主人,为0时通知全部主人`,
         fileName: 'msg-config'
       },
+      muteStop: {
+        title: '禁言拦截',
+        key: '禁言拦截',
+        def: false,
+        desc: '被禁言或者全体禁言时是否拦截消息不上报',
+        fileName: 'msg-config'
+      },
       msgStoreTime: {
         title: '消息存储时间',
         key: '存储',

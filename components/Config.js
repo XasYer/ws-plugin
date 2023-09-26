@@ -106,8 +106,14 @@ class Config {
     return this.getDefOrConfig('msg-config').noGroup
   }
 
+  /** 白名单群聊 */
   get yesGroup() {
     return this.getDefOrConfig('msg-config').yesGroup
+  }
+
+  /** 禁言拦截 */
+  get muteStop() {
+    return this.getDefOrConfig('msg-config').muteStop
   }
 
   /**群管理员变动是否上报 */

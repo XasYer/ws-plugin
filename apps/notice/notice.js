@@ -2,6 +2,7 @@ import { sendSocketList, Config, Version } from '../../components/index.js'
 import { setMsgMap } from '../../model/index.js'
 
 Bot.on('notice', async e => {
+    if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false
     if (sendSocketList.length == 0) return false
     if (e.group_id) {
         // 判断云崽白名单

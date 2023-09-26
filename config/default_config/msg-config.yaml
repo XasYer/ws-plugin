@@ -27,3 +27,6 @@ noGroup:
 
 #白名单群
 yesGroup: []
+
+#被禁言或者全体禁言时候拦截消息不再上报
+muteStop: false

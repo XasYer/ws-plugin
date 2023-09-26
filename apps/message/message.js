@@ -6,6 +6,8 @@ import cfg from '../../../../lib/config/config.js'
 
 Bot.on('message', async e => {
     // console.log(e);
+    // 被禁言或者全体禁言
+    if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false
     // 如果没有已连接的Websocket
     if (sendSocketList.length == 0) return false
     if (e.group_id) {
