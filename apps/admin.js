@@ -366,19 +366,19 @@ export class setting extends plugin {
             const config = {
                 name: addWsMsg[0],
                 address: addWsMsg[2],
-                type: addWsMsg[1],
+                type: Number(addWsMsg[1]),
             }
             switch (addWsMsg[1]) {
                 case '1':
                 case '3':
-                    config['reconnectInterval'] = addWsMsg[3] || '5'
-                    config['maxReconnectAttempts'] = addWsMsg[4] || '0'
+                    config['reconnectInterval'] = Number(addWsMsg[3]) || 5
+                    config['maxReconnectAttempts'] = Number(addWsMsg[4]) || 0
                     config['accessToken'] = addWsMsg[5]
                     break;
                 case '4':
                     config['accessToken'] = addWsMsg[3]
-                    config['reconnectInterval'] = addWsMsg[4] || '5'
-                    config['maxReconnectAttempts'] = addWsMsg[5] || '0'
+                    config['reconnectInterval'] = Number(addWsMsg[4]) || 5
+                    config['maxReconnectAttempts'] = Number(addWsMsg[5]) || 0
                     break
                 case '2':
                 case '5':
@@ -387,7 +387,7 @@ export class setting extends plugin {
                 default:
                     break;
             }
-            if (Version.isTrss) config.uin = this.e.self_id
+            if (Version.isTrss) config.uin = Number(this.e.self_id) || String(this.e.self_id)
             await this.addWs(config)
             this.finish('checkAddWs', this.e.isGroup)
             await redis.del('ws-plugin:addWs:' + this.e.user_id)
