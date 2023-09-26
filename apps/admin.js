@@ -467,10 +467,11 @@ export class setting extends plugin {
                     if (item.name == value.name) {
                         this.reply(`已经有连接名为${value.name}的连接了\n连接地址为${item.address}\n请删除旧的连接或更改连接名字`)
                         return false
-                    } else if (item.address == value.address) {
-                        this.reply(`已经有连接地址为${value.address}的连接了\n连接名字为${item.name}\n请删除旧的连接或更改连接地址`)
-                        return false
                     }
+                    // else if (item.address == value.address) {
+                    //     this.reply(`已经有连接地址为${value.address}的连接了\n连接名字为${item.name}\n请删除旧的连接或更改连接地址`)
+                    //     return false
+                    // }
                 }
             }
             try {
