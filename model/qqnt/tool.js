@@ -59,6 +59,9 @@ async function upload(bot, msg, contentType) {
     const formData = new FormData()
     formData.append('file', blob, 'ws-plugin.' + contentType.split('/')[1])
     const file = await bot.sendApi('POST', 'upload', formData)
+    if (file.error) {
+        throw file.error
+    }
     file.contentType = contentType
     return file
 }

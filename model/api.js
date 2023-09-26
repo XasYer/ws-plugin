@@ -91,22 +91,22 @@ async function getApiData(api, params = {}, name, uin) {
         // 发送私聊消息
         'send_private_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin)
-            if (sendMsg.length > 0) sendRet = await bot.pickFriend(params.user_id).sendMsg(sendMsg, quote)
+            if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送群聊消息
         'send_group_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin)
-            if (sendMsg.length > 0) sendRet = await bot.pickGroup(params.group_id).sendMsg(sendMsg, quote)
+            if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送消息
         'send_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin)
             if (params.message_type == 'group' || params.group_id) {
-                if (sendMsg.length > 0) sendRet = await bot.pickGroup(params.group_id).sendMsg(sendMsg, quote)
+                if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
             } else if (params.message_type == 'private' || params.user_id) {
-                if (sendMsg.length > 0) sendRet = await bot.pickFriend(params.user_id).sendMsg(sendMsg, quote)
+                if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
             }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
