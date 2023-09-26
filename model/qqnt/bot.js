@@ -29,13 +29,13 @@ export class QQNTBot {
         this.fl = new Map()
         this.gl = new Map()
         this.gml = new Map()
+        this.getConfig = {}
         this.init()
     }
 
     async init() {
         await this.getFriendList()
         await this.getGroupList()
-        this.getConfig = {}
     }
 
     pickGroup(group_id) {
