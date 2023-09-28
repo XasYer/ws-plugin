@@ -160,12 +160,12 @@ Bot.on('message', async e => {
 function onlyReplyAt(e) {
     if (!e.message) return false
 
-    let groupCfg = cfg.getGroup(e.group_id)
+    let groupCfg = Version.isTrss ? cfg.getGroup(e.self_id, e.group_id) : cfg.getGroup(e.group_id)
     if (groupCfg.onlyReplyAt != 1 || !groupCfg.botAlias || e.isPrivate) return e
 
     let at = atBot(e)
     if (at) return e
-    e = hasAlias(e)
+    e = hasAlias(e, groupCfg)
     if (e) return e
 
     return false
@@ -180,19 +180,16 @@ function atBot(e) {
     return false
 }
 
-function hasAlias(e) {
+function hasAlias(e, groupCfg) {
     if (e.message[0].type === 'text') {
-        if (e.isGroup) {
-            let groupCfg = cfg.getGroup(e.group_id)
-            let alias = groupCfg.botAlias
-            if (!Array.isArray(alias)) {
-                alias = [alias]
-            }
-            for (let name of alias) {
-                if (e.message[0].text.startsWith(name)) {
-                    e.message[0].text = _.trimStart(e.message[0].text, name).trim()
-                    return e
-                }
+        let alias = groupCfg.botAlias
+        if (!Array.isArray(alias)) {
+            alias = [alias]
+        }
+        for (let name of alias) {
+            if (e.message[0].text.startsWith(name)) {
+                e.message[0].text = _.trimStart(e.message[0].text, name).trim()
+                return e
             }
         }
     }
