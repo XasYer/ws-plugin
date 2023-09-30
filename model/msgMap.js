@@ -10,7 +10,7 @@ async function getMsgMap(where, other) {
         const msg = await getMessage_id(where, other)
         return msg
     } else {
-        let key = value.onebot_id || value.message_id
+        let key = where.onebot_id || where.message_id
         let msg = await redis.get(`Yz:ws-plugin:msg:${key}`)
         if (!msg) {
             return null
