@@ -767,7 +767,6 @@ async function getApiData(api, params = {}, name, uin) {
                 rand: sendRet.rand,
                 user_id: params.user_id,
                 group_id: params.group_id,
-                sender_id: uin,
                 onebot_id,
             })
         }
