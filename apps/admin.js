@@ -329,7 +329,7 @@ export class setting extends plugin {
                         '连接地址,Token(为空尝试自动获取),重连间隔(默认5),最大重连次数(默认0)\n',
                         '---------------------------------\n',
                         '连接地址: Host:Port,比如127.0.0.1:16530\n',
-                        'Token: Chronocat 连接 Token',
+                        'Token: Chronocat 连接 Token\n',
                         '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
                         '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连',
                     ])

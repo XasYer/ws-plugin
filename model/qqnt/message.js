@@ -103,7 +103,7 @@ async function makeSendMsg(data, message) {
                 }
                 break
             case "reply":
-                const msg = await getMsgMap(i.id)
+                const msg = await getMsgMap({ message_id: i.id })
                 if (msg) {
                     log += `[回复: ${i.id}]`
                     i = {
@@ -147,11 +147,12 @@ async function makeMessage(self_id, payload) {
     e.post_type = 'message'
     e.user_id = Number(payload.senderUin)
     if (!e.user_id) return null
-    e.message_id = `${payload.peerUin}:${payload.msgSeq}`
+    // e.message_id = `${payload.peerUin}:${payload.msgSeq}`
+    e.message_id = payload.msgId
     e.time = Number(payload.msgTime)
     e.seq = Number(payload.msgSeq)
     e.rand = Number(payload.msgRandom)
-    e.nickname = payload.sendNickName || payload.sendMemberName
+    e.nickname = payload.sendMemberName || payload.sendNickName
     e.sender = {
         user_id: e.user_id,
         nickname: e.nickname,
@@ -224,17 +225,24 @@ async function makeMessage(self_id, payload) {
                 //     seq: `${payload.peerUin}:${i.replyElement.replayMsgSeq}`,
                 // })
                 let replyMsg = i.replyElement.sourceMsgTextElems.reduce((acc, item) => acc + item.textElemContent, '')
-                const id = `${payload.peerUin}:${i.replyElement.replayMsgSeq}`
-                const msg = await getMsgMap(id)
+                const getMsgData = {
+                    seq: Number(i.replyElement.replayMsgSeq),
+                }
+                if (payload.chatType == 2) {
+                    getMsgData.group_id = Number(payload.peerUin)
+                } else if (payload.chatType == 1) {
+                    getMsgData.user_id = e.user_id
+                }
+                const msg = await getMsgMap(getMsgData)
                 e.source = {
-                    message_id: id,
-                    seq: id,
-                    time: id,
+                    message_id: msg?.message_id,
+                    seq: Number(i.replyElement.replayMsgSeq),
+                    time: Number(i.replyElement.replyMsgTime),
                     rand: msg?.rand,
-                    user_id: i.replyElement.senderUid,
+                    user_id: Number(i.replyElement.senderUid),
                     message: replyMsg
                 }
-                e.raw_message += `[回复: ${id}]`
+                e.raw_message += `[回复: ${msg?.message_id || i.replyElement.replayMsgSeq}]`
                 break
             case 8:
                 switch (i.grayTipElement.subElementType) {
@@ -272,6 +280,14 @@ async function makeMessage(self_id, payload) {
                     default:
                         break;
                 }
+                break
+            case 11:
+                e.message.push({
+                    type: 'bface',
+                    file: i.marketFaceElement.emojiId,
+                    text: i.marketFaceElement.faceName
+                })
+                e.raw_message += `[bface: ${i.marketFaceElement.faceName}]`
                 break
             case 16:
                 e.message.push({ type: 'xml', data: i.multiForwardMsgElement.xmlContent })
@@ -320,19 +336,17 @@ async function sendNodeMsg(data, msg) {
     if (result.error) {
         throw result.error
     }
-    const message_id = `${result.peerUid}:${result.msgSeq}`
-    setMsgMap(message_id, {
+    const sendRet = {
         message_id: result.msgId,
-        seq: message_id,
-        rand: result.msgRandom,
-        user_id: data.self_id,
-        time: result.msgTime,
-        chatType: target.chatType,
-        group_id: data.group_id,
-        sender: data.self_id
-    })
+        seq: Number(result.msgSeq),
+        rand: Number(result.msgRandom),
+        user_id: Number(data.user_id),
+        time: Number(result.msgTime),
+        group_id: Number(data.group_id),
+    }
+    setMsgMap(sendRet)
     logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id || data.user_id}]`)} 发送${target.chatType == 1 ? '好友' : '群'}消息：[转发消息]`)
-    return { message_id, rand: result.msgRandom }
+    return sendRet
 }
 
 async function makeNodeMsg(data, msg) {
@@ -418,7 +432,7 @@ async function makeNodeMsg(data, msg) {
                     // field2: Number(data.self_id),
                     field8: {
                         // field1: Number(data.group_id),
-                        field4: 'Q群管家' //String(data.bot.nickname)
+                        field4: 'QQ用户' //String(data.bot.nickname)
                     }
                 },
                 content: {
@@ -529,15 +543,13 @@ async function toQQNTMsg(bot, data) {
                             })
                         }
                     }
-                    setMsgMap(e.message_id, {
-                        // message_id: e.message_id,
-                        message_id: payload.msgId,
-                        seq: e.seq,
-                        rand: e.rand,
-                        user_id: e.user_id,
-                        time: e.time,
-                        chatType: e.message_type == 'group' ? 2 : 1,
-                        group_id: e.group_id
+                    setMsgMap({
+                        message_id: e.message_id,
+                        seq: Number(e.seq),
+                        rand: Number(e.rand),
+                        user_id: Number(e.user_id),
+                        time: Number(e.time),
+                        group_id: Number(e.group_id),
                     })
                     Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
                     // }

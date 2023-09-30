@@ -56,7 +56,7 @@ export class QQNTBot {
             getMemberMap: async () => await this.getGroupMemberList(group_id),
             recallMsg: async message_id => await this.deleteMsg(message_id),
             sendFile: async file => await this.sendGroupMsg(group_id, [{ type: 'file', file }]),
-            getChatHistory: async (message_id, count) => await this.getChatHistory(message_id, count),
+            getChatHistory: async (seq, count) => await this.getChatHistory(seq, count, 'group', group_id),
             getInfo: async () => await this.getGroupInfo(group_id),
             muteMember: async (user_id, duration) => await this.setGroupBan(group_id, user_id, duration),
             muteAll: async (enable) => await this.setGroupWholeBan(group_id, enable),
@@ -76,7 +76,7 @@ export class QQNTBot {
             sendMsg: async msg => await this.sendPrivateMsg(user_id, msg),
             recallMsg: async message_id => await this.deleteMsg(message_id),
             sendFile: async file => await this.sendPrivateMsg(user_id, [{ type: 'file', file }]),
-            getChatHistory: async (message_id, count) => await this.getChatHistory(message_id, count)
+            getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id)
         }
     }
 
@@ -128,18 +128,16 @@ export class QQNTBot {
         } else {
             logger.info(`${logger.blue(`[${this.self_id} => ${group_id}]`)} 发送群消息：${log}`)
         }
-        const message_id = `${result.peerUid}:${result.msgSeq}`
-        setMsgMap(message_id, {
-            // message_id: e.message_id,
+        const sendRet = {
             message_id: result.msgId,
-            seq: message_id,
-            rand: result.msgRandom,
-            user_id: this.self_id,
-            time: result.msgTime,
-            chatType: 2,
-            group_id
-        })
-        return { message_id, rand: result.msgRandom }
+            seq: Number(result.msgSeq),
+            rand: Number(result.msgRandom),
+            time: Number(result.msgTime),
+            group_id: Number(group_id),
+            onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
+        }
+        setMsgMap(sendRet)
+        return sendRet
     }
 
     async sendPrivateMsg(user_id, message) {
@@ -162,18 +160,16 @@ export class QQNTBot {
         } else {
             logger.info(`${logger.blue(`[${this.self_id} => ${user_id}]`)} 发送好友消息：${log}`)
         }
-        const message_id = `${user_id}:${result.msgSeq}`
-        setMsgMap(message_id, {
-            // message_id: e.message_id,
+        const sendRet = {
             message_id: result.msgId,
-            seq: message_id,
-            rand: message_id,
-            user_id: user_id,
-            time: result.msgTime,
-            chatType: 1,
-            sender: this.self_id
-        })
-        return { message_id, rand: result.msgRandom }
+            seq: Number(result.msgSeq),
+            rand: Number(result.msgRandom),
+            user_id: Number(user_id),
+            time: Number(result.msgTime),
+            onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
+        }
+        setMsgMap(sendRet)
+        return sendRet
     }
 
     async getMsg(message_id) {
@@ -186,11 +182,11 @@ export class QQNTBot {
     }
 
     async deleteMsg(message_id) {
-        const msg = await getMsgMap(message_id)
+        const msg = await getMsgMap({ message_id })
         if (msg) {
             this.bot.sendApi('POST', 'message/recall', JSON.stringify({
                 peer: {
-                    chatType: msg.chatType,
+                    chatType: msg.group_id ? 2 : 1,
                     peerUin: String(msg.group_id || msg.user_id),
                     guildId: null
                 },
@@ -199,12 +195,30 @@ export class QQNTBot {
         }
     }
 
-    async getChatHistory(message_id, count) {
-        const msg = await getMsgMap(message_id)
+    async getChatHistory(message_id, count, target, target_id) {
+        let data = {}
+        if (target === 'group') {
+            if (!message_id) message_id = (await getMsgMap({ group_id: target_id }, [['seq', 'DESC']])).seq
+            data = {
+                seq: message_id,
+                group_id: target_id,
+            }
+        } else if (target === 'friend') {
+            if (!message_id) message_id = (await getMsgMap({ user_id: target_id }, [['time', 'DESC']])).time
+            data = {
+                time: message_id,
+                user_id: target_id,
+            }
+        } else {
+            data = {
+                message_id,
+            }
+        }
+        const msg = await getMsgMap(data)
         if (msg) {
             const result = await this.bot.sendApi('POST', 'message/getHistory', JSON.stringify({
                 peer: {
-                    chatType: msg.chatType,
+                    chatType: msg.group_id ? 2 : 1,
                     peerUin: String(msg.group_id || msg.user_id),
                     guildId: null
                 },
@@ -217,9 +231,6 @@ export class QQNTBot {
             if (result.msgList) {
                 const msgList = []
                 for (const i of result.msgList) {
-                    const ret = await getMsgMap(`${msg.group_id || msg.user_id}:${i.msgSeq}`)
-                    i.senderUin = ret.sender || ret.user_id
-                    i.peerUin = msg.group_id || msg.user_id
                     const message = await makeMessage(this.self_id, i)
                     if (message.bot) delete message.bot
                     msgList.push(message)

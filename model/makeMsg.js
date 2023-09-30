@@ -6,7 +6,6 @@ import common from '../../../lib/common/common.js'
 import { randomUUID } from 'crypto'
 import fs from 'fs'
 import _ from 'lodash'
-import cfg from '../../../lib/config/config.js'
 import fetch from 'node-fetch'
 
 /**
@@ -15,7 +14,7 @@ import fetch from 'node-fetch'
  * @returns 
  */
 async function makeOneBotReportMsg(e) {
-    let reportMsg = msgToOneBotMsg(e.message, e.source)
+    let reportMsg = await msgToOneBotMsg(e.message, e.source)
 
     if (!reportMsg) {
         return false
@@ -24,11 +23,14 @@ async function makeOneBotReportMsg(e) {
     if (Config.messagePostFormat == 'string' || Config.messagePostFormat == '1') {
         reportMsg = raw_message
     }
-    await setMsgMap(e.rand, {
+    setMsgMap({
         message_id: e.message_id,
         time: e.time,
         seq: e.seq,
         rand: e.rand,
+        user_id: e.user_id,
+        group_id: e.group_id,
+        onebot_id: e.param.message_id,
     })
     let Message = {
         message: reportMsg,
@@ -204,7 +206,7 @@ async function makeSendMsg(params, uin) {
                         seq: i.data.seq
                     }
                 } else {
-                    quote = await getMsgMap(i.data.id)
+                    quote = await getMsgMap({ onebot_id: i.data.id })
                     if (quote) {
                         quote = await bot.getMsg?.(quote.message_id)
                     } else {
@@ -354,13 +356,14 @@ async function makeForwardMsg(params, uin) {
  * 转换成onebot消息
  * @returns 
  */
-function msgToOneBotMsg(msg, source = null) {
+async function msgToOneBotMsg(msg, source = null) {
     let reportMsg = []
     if (source) {
+        let i = await getMsgMap({ message_id: source.message_id })
         reportMsg.push({
             "type": "reply",
             "data": {
-                "id": source.rand
+                "id": i?.onebot_id
             }
         })
     }

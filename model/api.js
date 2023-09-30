@@ -112,7 +112,7 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 获取消息
         'get_msg': async (params) => {
-            ResponseData = await getMsgMap(params.message_id)
+            ResponseData = await getMsgMap({ onebot_id: params.message_id })
             if (ResponseData) {
                 ResponseData = await bot.getMsg?.(ResponseData.message_id)
                 if (ResponseData) {
@@ -120,7 +120,7 @@ async function getApiData(api, params = {}, name, uin) {
                     ResponseData.group = ResponseData.message_type == 'group' ? true : false
                     ResponseData.real_id = Number(ResponseData.seq)
                     ResponseData.message_id = Number(ResponseData.rand)
-                    ResponseData.message = msgToOneBotMsg(ResponseData.message)
+                    ResponseData.message = await msgToOneBotMsg(ResponseData.message)
                 } else {
                     throw { message: 'get_msg API error', noLog: true }
                 }
@@ -130,7 +130,7 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 撤回消息
         'delete_msg': async (params) => {
-            let msg = await getMsgMap(params.message_id)
+            let msg = await getMsgMap({ onebot_id: params.message_id })
             if (msg) {
                 await bot.deleteMsg?.(msg.message_id)
             }
@@ -145,7 +145,7 @@ async function getApiData(api, params = {}, name, uin) {
             let messages = []
             for (const item of result) {
                 messages.push({
-                    content: MsgToCQ(msgToOneBotMsg(item.message)),
+                    content: MsgToCQ(await msgToOneBotMsg(item.message)),
                     sender: {
                         nickname: item.nickname,
                         user_id: item.user_id
@@ -191,7 +191,7 @@ async function getApiData(api, params = {}, name, uin) {
         'get_group_msg_history': async params => {
             let messages, flag = true
             if (params.message_seq) {
-                let message_id = (await getMsgMap(params.message_seq))?.message_id
+                let message_id = (await getMsgMap({ onebot_id: params.message_id }))?.message_id
                 if (message_id) {
                     messages = await bot.getChatHistory?.(message_id)
                     flag = false
@@ -200,8 +200,10 @@ async function getApiData(api, params = {}, name, uin) {
             if (flag) {
                 messages = await bot.pickGroup(params.group_id).getChatHistory?.()
             }
-            if (message) {
-                messages.map(i => msgToOneBotMsg(i.message))
+            if (messages) {
+                for (let i = 0; i < messages.length; i++) {
+                    messages[i] = await msgToOneBotMsg(messages[i])
+                }
             }
             ResponseData = {
                 messages
@@ -392,8 +394,6 @@ async function getApiData(api, params = {}, name, uin) {
                         operator_time: add_digest_time,
                         message_id: i.msg_random
                     })
-                    const msg = (await bot.pickGroup(params.group_id).getChatHistory(i.msg_seq, 1))[0]
-                    if (msg) await setMsgMap(msg.rand, msg)
                 }
             }
         },
@@ -454,12 +454,12 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 设置精华消息
         'set_essence_msg': async params => {
-            let message_id = (await getMsgMap(params.message_id))?.message_id
+            let message_id = (await getMsgMap({ onebot_id: params.message_id }))?.message_id
             if (message_id) await bot.setEssenceMessage?.(message_id)
         },
         // 移出精华消息
         'delete_essence_msg': async params => {
-            let message_id = (await getMsgMap(params.message_id))?.message_id
+            let message_id = (await getMsgMap({ onebot_id: params.message_id }))?.message_id
             if (message_id) await bot.removeEssenceMessage?.(message_id)
         },
         // 群打卡
@@ -748,18 +748,28 @@ async function getApiData(api, params = {}, name, uin) {
             ResponseData = await bot.getGuildList?.()
         },
         'get_guild_channel_list': async params => {
-            
+
         },
 
     }
     if (typeof publicApi[api] === 'function') {
         await publicApi[api](params)
         if (sendRet) {
+            const onebot_id = Math.floor(Math.random() * Math.pow(2, 32)) | 0
             ResponseData = {
                 ...sendRet,
-                message_id: sendRet.rand,
+                message_id: onebot_id,
             }
-            await setMsgMap(sendRet.rand, sendRet)
+            setMsgMap({
+                message_id: sendRet.message_id,
+                time: sendRet.time,
+                seq: sendRet.seq,
+                rand: sendRet.rand,
+                user_id: params.user_id,
+                group_id: params.group_id,
+                sender_id: uin,
+                onebot_id,
+            })
         }
         return ResponseData
     } else {

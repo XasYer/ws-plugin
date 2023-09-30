@@ -31,11 +31,14 @@ Bot.on('notice', async e => {
         e.reply = async function (massage, quote = false, data = {}) {
             let ret = await _reply(massage, quote, data)
             if (ret) {
-                await setMsgMap(ret.rand, {
+                setMsgMap({
                     message_id: ret.message_id,
                     time: ret.time,
                     seq: ret.seq,
                     rand: ret.rand,
+                    user_id: e.user_id,
+                    group_id: e.group_id,
+                    onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
                 })
             }
             return ret

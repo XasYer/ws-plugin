@@ -5,7 +5,6 @@ import cfg from '../../../../lib/config/config.js'
 
 
 Bot.on('message', async e => {
-    // console.log(e);
     // 被禁言或者全体禁言
     if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false
     // 如果没有已连接的Websocket
@@ -43,16 +42,20 @@ Bot.on('message', async e => {
         e.reply = async function (massage, quote = false, data = {}) {
             const ret = await _reply(massage, quote, data)
             if (ret) {
-                await setMsgMap(ret.rand, {
+                setMsgMap({
                     message_id: ret.message_id,
                     time: ret.time,
                     seq: ret.seq,
                     rand: ret.rand,
+                    user_id: e.user_id,
+                    group_id: e.group_id,
+                    onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
                 })
             }
             return ret
         }
     }
+    const message_id = Math.floor(Math.random() * Math.pow(2, 32)) | 0
     let msg = {
         time: e.time,
         message_id: e.message_id,
@@ -70,7 +73,7 @@ Bot.on('message', async e => {
             post_type: e.post_type,
             message_type: e.message_type,
             sub_type: e.sub_type,
-            message_id: e.rand,
+            message_id,
             user_id: e.user_id,
             font: 0,
             sender: e.sender,
