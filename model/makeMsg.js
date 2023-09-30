@@ -359,20 +359,22 @@ async function makeForwardMsg(params, uin) {
 async function msgToOneBotMsg(msg, source = null) {
     let reportMsg = []
     if (source) {
-        const keys = ['message_id', 'rand', 'time', 'seq'];
-        let getData = keys.reduce((obj, key) => {
+        const keys = ['message_id', 'rand', 'time', 'seq']
+        const getData = keys.reduce((obj, key) => {
             if (source[key] !== undefined) {
-                obj[key] = source[key];
+                obj[key] = source[key]
             }
-            return obj;
+            return obj
         }, {});
-        let i = await getMsgMap(getData)
-        reportMsg.push({
-            "type": "reply",
-            "data": {
-                "id": i?.onebot_id
-            }
-        })
+        const msg = await getMsgMap(getData)
+        if (msg) {
+            reportMsg.push({
+                "type": "reply",
+                "data": {
+                    "id": msg.onebot_id
+                }
+            })
+        }
     }
     for (let i = 0; i < msg.length; i++) {
         switch (msg[i].type) {
