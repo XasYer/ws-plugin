@@ -59,7 +59,7 @@ Bot.on('message', async e => {
     let msg = {
         time: e.time,
         message_id: e.message_id,
-        message: e.message,
+        message: _.cloneDeep(e.message),
         rand: e.rand,
         seq: e.seq,
         source: e.source,
