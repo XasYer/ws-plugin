@@ -309,6 +309,17 @@ async function makeMessage(self_id, payload) {
             e.message_type = 'private'
             e.sub_type = 'friend'
         }
+    } else if (payload.chatType == 100) {
+        if (!e.sub_type) {
+            e.message_type = 'private'
+            e.sub_type = 'group'
+        }
+        Bot[self_id].fl.set(e.user_id, {
+            bot_id: self_id,
+            user_id: e.user_id,
+            nickname: e.nickname,
+            isGroupMsg: true
+        })
     }
     return e
 }

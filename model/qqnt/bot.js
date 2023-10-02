@@ -65,17 +65,20 @@ export class QQNTBot {
     }
 
     pickFriend(user_id) {
+        const user = this.fl.get(Number(user_id))
+        if (!user) return {}
         const i = {
-            ...this.fl.get(Number(user_id)),
+            ...user,
             self_id: this.self_id,
             bot: this.bot,
             user_id,
         }
+        const chatType = user.isGroupMsg ? 100 : 1
         return {
             ...i,
-            sendMsg: async msg => await this.sendPrivateMsg(user_id, msg),
+            sendMsg: async msg => await this.sendPrivateMsg(user_id, msg, chatType),
             recallMsg: async message_id => await this.deleteMsg(message_id),
-            sendFile: async file => await this.sendPrivateMsg(user_id, [{ type: 'file', file }]),
+            sendFile: async file => await this.sendPrivateMsg(user_id, [{ type: 'file', file }], chatType),
             getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id)
         }
     }
@@ -140,7 +143,8 @@ export class QQNTBot {
         return sendRet
     }
 
-    async sendPrivateMsg(user_id, message) {
+    async sendPrivateMsg(user_id, message, chatType = 1) {
+        if ([1, 100].indexOf(chatType) == -1) chatType = 1
         const data = {
             bot: this.bot,
             self_id: this.self_id,
@@ -150,7 +154,7 @@ export class QQNTBot {
         if (id) return { message_id: id, rand }
         const result = await this.bot.sendApi('POST', 'message/send', JSON.stringify({
             peer: {
-                chatType: 1,
+                chatType,
                 peerUin: String(user_id)
             },
             elements
