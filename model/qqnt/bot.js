@@ -66,7 +66,6 @@ export class QQNTBot {
 
     pickFriend(user_id) {
         const user = this.fl.get(Number(user_id))
-        if (!user) return {}
         const i = {
             ...user,
             self_id: this.self_id,
