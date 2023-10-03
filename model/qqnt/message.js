@@ -18,11 +18,12 @@ async function makeSendMsg(data, message) {
 
         switch (i.type) {
             case "text":
+                if (typeof i.text === 'boolean') break
                 log += i.text
                 i = {
                     "elementType": 1,
                     "textElement": {
-                        "content": i.text + ''
+                        "content": i.text
                     }
                 }
                 break
