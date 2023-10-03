@@ -1,7 +1,7 @@
 import { Config, Version } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
-import { SendMusicShare } from './tool.js'
+import { SendMusicShare, TMP_DIR } from './tool.js'
 import common from '../../../lib/common/common.js'
 import { randomUUID } from 'crypto'
 import fs from 'fs'
@@ -226,8 +226,6 @@ async function makeSendMsg(params, uin) {
             case 'video':
                 i.data.file = decodeURIComponent(i.data.file)
                 if (i.data.file.startsWith('http')) {
-                    const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
-                    if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
                     const path = TMP_DIR + '/' + randomUUID({ disableEntropyCache: true }) + '.mp4'
                     if (await common.downFile(i.data.file, path)) {
                         sendMsg.push(segment.video(path))

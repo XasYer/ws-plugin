@@ -3,6 +3,7 @@ import { makeOneBotReportMsg, makeGSUidReportMsg, makeGSUidSendMsg } from './mak
 import { getApiData } from './api.js'
 import { setGuildLatestMsgId, getGuildLatestMsgId, setMsgMap } from './msgMap.js'
 import { QQNTBot, getToken, toQQNTMsg } from './qqnt/index.js'
+import { TMP_DIR, mimeTypes } from './tool.js'
 
 export {
     lifecycle,
@@ -16,5 +17,7 @@ export {
     setMsgMap,
     QQNTBot,
     getToken,
-    toQQNTMsg
+    toQQNTMsg,
+    TMP_DIR,
+    mimeTypes
 }

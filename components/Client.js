@@ -1,9 +1,11 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap, QQNTBot, getToken, toQQNTMsg } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap, QQNTBot, getToken, toQQNTMsg, TMP_DIR, mimeTypes } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from "express"
 import http from "http"
 import fetch from 'node-fetch'
+import { join, extname } from 'path'
+import fs from 'fs'
 
 export default class Client {
     constructor({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, uin = Bot.uin }) {
@@ -404,6 +406,29 @@ export default class Client {
                 default:
                     return
             }
+        })
+        Bot.express.get('/ws-plugin*', async (req, res) => {
+            const file = req.query.file
+            if (file) {
+                const ext = extname(file)
+                const contentType = mimeTypes[ext]
+                fs.readFile(join(TMP_DIR, file), (err, content) => {
+                    if (err) {
+                        res.writeHead(404)
+                        res.end('File not found')
+                    } else {
+                        const name = file.split('-')
+                        res.writeHead(200, {
+                            'Content-Type': contentType,
+                            'Content-Disposition': `attachment; filename=${name[1] || name[0]}`
+                        })
+                        res.end(content)
+                    }
+                })
+                return
+            }
+            res.writeHead(404);
+            res.end('Page not found')
         })
         Bot[bot.self_id] = new QQNTBot(bot)
         logger.mark(`${logger.blue(`[${bot.self_id}]`)} ${this.name} 已连接`)

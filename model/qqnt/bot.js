@@ -78,7 +78,8 @@ export class QQNTBot {
             sendMsg: async msg => await this.sendPrivateMsg(user_id, msg, chatType),
             recallMsg: async message_id => await this.deleteMsg(message_id),
             sendFile: async file => await this.sendPrivateMsg(user_id, [{ type: 'file', file }], chatType),
-            getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id)
+            getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id),
+            getFileUrl: async (fid) => `http://127.0.0.1:${Bot.server.address().port}/ws-plugin?file=${fid}`
         }
     }
 

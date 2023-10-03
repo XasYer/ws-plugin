@@ -1,4 +1,5 @@
-import { uploadImg, uploadAudio, uploadVideo, uploadFile, TMP_DIR, getNtPath, roleMap, redPath } from './tool.js'
+import { uploadImg, uploadAudio, uploadVideo, uploadFile, getNtPath, roleMap, redPath } from './tool.js'
+import { TMP_DIR } from '../tool.js'
 import { setMsgMap, getMsgMap } from '../msgMap.js'
 import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
@@ -186,10 +187,22 @@ async function makeMessage(self_id, payload) {
                 e.raw_message += `[图片: https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0]`
                 break
             case 3:
+                const file = await Bot[self_id].sendApi('POST', 'message/fetchRichMedia', JSON.stringify({
+                    "msgId": e.message_id,
+                    "chatType": payload.chatType,
+                    "peerUid": payload.peerUin,
+                    "elementId": i.elementId,
+                    "thumbSize": 0,
+                    "downloadType": 2
+                }))
+                if (file.error) throw file.error
+                const buffer = Buffer.from(await file.arrayBuffer())
+                const fid = `${e.time}-${i.fileElement.fileName}`
+                fs.writeFileSync(join(TMP_DIR, fid), buffer)
                 e.message.push({
                     type: 'file',
                     name: i.fileElement.fileName,
-                    fid: i.fileElement.fileUuid.replace('/', ''),
+                    fid,
                     md5: i.fileElement.fileMd5,
                     size: i.fileElement.fileSize,
                 })
@@ -490,7 +503,6 @@ async function toQQNTMsg(bot, data) {
     data = JSON.parse(data)
     switch (data.type) {
         case 'meta::connect':
-            if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
             const job = schedule.scheduleJob('0 0 4 * * ?', function () {
                 logger.mark('[ws-plugin] 执行定时任务: 删除Temp')
                 try {

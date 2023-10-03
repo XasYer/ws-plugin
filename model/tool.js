@@ -1,4 +1,5 @@
 import _ from 'lodash'
+import fs from 'fs'
 
 async function CreateMusicShare(data) {
     let appid, appname, appsign, style = 4;
@@ -84,6 +85,24 @@ async function SendMusicShare(data) {
     }
 }
 
+const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
+if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
+
+const mimeTypes = {
+    '.html': 'text/html',
+    '.js': 'text/javascript',
+    '.css': 'text/css',
+    '.json': 'application/json',
+    '.png': 'image/png',
+    '.jpg': 'image/jpg',
+    '.gif': 'image/gif',
+    '.ico': 'image/x-icon',
+    '.txt': 'text/plain',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
+
 export {
-    SendMusicShare
+    SendMusicShare,
+    TMP_DIR,
+    mimeTypes
 }

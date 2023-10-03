@@ -8,8 +8,8 @@ import os from 'os'
 import _ from 'lodash'
 import { Stream } from "stream"
 import YAML from 'yaml'
+import { TMP_DIR } from '../tool.js'
 
-const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 const user = os.userInfo().username
 let redPath = `C:/Users/${user}/.chronocat`
 if (!fs.existsSync(redPath)) {
@@ -423,7 +423,6 @@ export {
     uploadFile,
     getToken,
     getNtPath,
-    TMP_DIR,
     roleMap,
     redPath
 }
