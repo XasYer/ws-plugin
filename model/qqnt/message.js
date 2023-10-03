@@ -23,7 +23,7 @@ async function makeSendMsg(data, message) {
                 i = {
                     "elementType": 1,
                     "textElement": {
-                        "content": i.text
+                        "content": String(i.text)
                     }
                 }
                 break
