@@ -72,7 +72,7 @@ export class QQNTBot {
             bot: this.bot,
             user_id,
         }
-        const chatType = user.isGroupMsg ? 100 : 1
+        const chatType = user?.isGroupMsg ? 100 : 1
         return {
             ...i,
             sendMsg: async msg => await this.sendPrivateMsg(user_id, msg, chatType),
