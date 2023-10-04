@@ -188,6 +188,7 @@ async function makeMessage(self_id, payload) {
                 e.raw_message += `[图片: https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0]`
                 break
             case 3:
+                if (payload.chatType == 2) break
                 const file = await Bot[self_id].sendApi('POST', 'message/fetchRichMedia', JSON.stringify({
                     "msgId": e.message_id,
                     "chatType": payload.chatType,
