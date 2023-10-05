@@ -1,4 +1,4 @@
-import { sendSocketList, Config } from '../../components/index.js'
+import { sendSocketList, Config, Version } from '../../components/index.js'
 
 Bot.on('request', async e => {
     if (sendSocketList.length == 0) return false
