@@ -219,7 +219,7 @@ class Config {
     watcher.on('change', path => {
       delete this.config[key]
       if (typeof Bot == 'undefined') return
-      logger.mark(`[ws-Plugin][修改配置文件][${type}][${name}]`)
+      logger.mark(`[ws-plugin][修改配置文件][${type}][${name}]`)
 
       if (name == 'ws-config') {
         const oldConfig = this.oldConfig[key]

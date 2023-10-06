@@ -399,18 +399,18 @@ function getToken() {
                         return i.token
                     }
                 }
-                logger.error('请检查chronocat配置是否开启red服务')
+                logger.error('[ws-plugin] 请检查chronocat配置是否开启red服务')
                 return false
             } else {
                 tokenPath = `${redPath}/RED_PROTOCOL_TOKEN`
                 return fs.readFileSync(tokenPath, 'utf-8')
             }
         } else {
-            logger.error('非Windows系统请自行获取Token')
+            logger.error('[ws-plugin] 非Windows系统请自行获取Token')
             return false
         }
     } catch (error) {
-        logger.error('QQNT自动获取Token失败,请检查是否已安装Chronocat并尝试手动获取')
+        logger.error('[ws-plugin] QQNT自动获取Token失败,请检查是否已安装Chronocat并尝试手动获取')
         logger.error(error)
         return false
     }

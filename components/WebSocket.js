@@ -48,7 +48,7 @@ async function createWebSocket(data) {
 async function checkVersion(data) {
     if (Version.isTrss) {
         if (!data.uin) {
-            logger.warn(`${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
+            logger.warn(`[ws-plugin] ${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
             return false
         } else {
             for (let i = 0; i < 15; i++) {
@@ -57,7 +57,7 @@ async function checkVersion(data) {
                 }
                 await sleep(1000)
             }
-            logger.warn(`${data.name} 未适配的协议或未连接对应协议`)
+            logger.warn(`[ws-plugin] ${data.name} 未适配的协议或未连接对应协议`)
             return false
         }
     }

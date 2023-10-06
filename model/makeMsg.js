@@ -283,7 +283,7 @@ async function makeSendMsg(params, uin) {
                 break
             default:
                 sendMsg.push(MsgToCQ([i]))
-                logger.warn(`出现了未适配的消息的类型${JSON.stringify(i)}`)
+                logger.warn(`[ws-plugin] 出现了未适配的消息的类型${JSON.stringify(i)}`)
                 break
         }
     }

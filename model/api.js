@@ -772,7 +772,7 @@ async function getApiData(api, params = {}, name, uin) {
         }
         return ResponseData
     } else {
-        logger.warn(`未适配的api: ${api}`);
+        logger.warn(`[ws-plugin] 未适配的api: ${api}`);
     }
 }
 

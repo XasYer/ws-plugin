@@ -34,15 +34,15 @@ export default class Client {
             if (this.accessToken) headers["Authorization"] = 'Token ' + this.accessToken
             this.ws = new WebSocket(this.address, { headers })
         } catch (error) {
-            logger.error(`出错了,可能是ws地址填错了~\nws名字: ${this.name}\n地址: ${this.address}\n类型: 1`)
+            logger.error(`[ws-plugin] 出错了,可能是ws地址填错了~\nws名字: ${this.name}\n地址: ${this.address}\n类型: 1`)
             return
         }
         this.ws.on('open', async () => {
-            logger.mark(`${this.name}已连接`);
+            logger.mark(`[ws-plugin] ${this.name} 已连接`);
             if (this.status == 3 && this.reconnectCount > 1 && Config.reconnectToMaster) {
-                await this.sendMasterMsg(`${this.name}重连成功~`)
+                await this.sendMasterMsg(`${this.name} 重连成功~`)
             } else if (this.status == 0 && Config.firstconnectToMaster) {
-                await this.sendMasterMsg(`${this.name}连接成功~`)
+                await this.sendMasterMsg(`${this.name} 连接成功~`)
             }
             this.ws.send(lifecycle(this.uin))
             this.status = 1
@@ -64,7 +64,7 @@ export default class Client {
             this.ws.send(JSON.stringify(result));
         })
         this.ws.on('close', async code => {
-            logger.warn(`${this.name} 连接已关闭`);
+            logger.warn(`[ws-plugin] ${this.name} 连接已关闭`);
             clearInterval(this.timer)
             if (Config.disconnectToMaster && this.reconnectCount == 1 && this.status == 1) {
                 await this.sendMasterMsg(`${this.name} 已断开连接...`)
@@ -74,10 +74,10 @@ export default class Client {
             this.status = 3
             if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
                 if (code === 1005) {
-                    logger.warn(`${this.name} 连接异常,停止重连`);
+                    logger.warn(`[ws-plugin] ${this.name} 连接异常,停止重连`);
                     this.status = 0
                 } else {
-                    logger.warn(`${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
+                    logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
                     this.reconnectCount++
                     setTimeout(() => {
                         this.createWs()
@@ -86,11 +86,11 @@ export default class Client {
             } else {
                 this.stopReconnect = false
                 this.status = 0
-                logger.warn(`${this.name} 达到最大重连次数或关闭连接,停止重连`);
+                logger.warn(`[ws-plugin] ${this.name} 达到最大重连次数或关闭连接,停止重连`);
             }
         })
         this.ws.on('error', (event) => {
-            logger.error(`${this.name} 连接失败\n${event}`);
+            logger.error(`[ws-plugin] ${this.name} 连接失败\n${event}`);
         })
     }
 
@@ -124,13 +124,13 @@ export default class Client {
                             conn.send(heartbeat(this.uin))
                         }, Config.heartbeatInterval * 1000)
                     }
-                    logger.mark(`${this.name} 接受 WebSocket 连接: ${req.connection.remoteAddress}`);
+                    logger.mark(`[ws-plugin] ${this.name} 接受 WebSocket 连接: ${req.connection.remoteAddress}`);
                     conn.on("error", (event) => {
-                        logger.error(`${this.name} 接受 WebSocket 连接时出现错误: ${event}`)
+                        logger.error(`[ws-plugin] ${this.name} 接受 WebSocket 连接时出现错误: ${event}`)
                     })
                     conn.on("close", () => {
                         if (this.stopReconnect = false) {
-                            logger.warn(`${this.name} 关闭 WebSocket 连接`);
+                            logger.warn(`[ws-plugin] ${this.name} 关闭 WebSocket 连接`);
                         }
                         this.arr = this.arr.filter(i => i.id != req.headers["sec-websocket-key"])
                         clearInterval(time)
@@ -142,13 +142,13 @@ export default class Client {
                     })
                     this.arr.push(conn)
                 } else if (req.url === '/api' || req.url === '/api/') {
-                    logger.mark(`${this.name} 接受 WebSocket api 连接: ${req.connection.remoteAddress}`);
+                    logger.mark(`[ws-plugin] ${this.name} 接受 WebSocket api 连接: ${req.connection.remoteAddress}`);
                     conn.on("error", (event) => {
-                        logger.error(`${this.name} 接受 WebSocket api 连接时出现错误: ${event}`)
+                        logger.error(`[ws-plugin] ${this.name} 接受 WebSocket api 连接时出现错误: ${event}`)
                     })
                     conn.on("close", () => {
                         if (this.stopReconnect = false) {
-                            logger.warn(`${this.name} 关闭 WebSocket api 连接`);
+                            logger.warn(`[ws-plugin] ${this.name} 关闭 WebSocket api 连接`);
                         }
                     })
                     conn.on("message", async event => {
@@ -165,13 +165,13 @@ export default class Client {
                             conn.send(heartbeat(this.uin))
                         }, Config.heartbeatInterval * 1000)
                     }
-                    logger.mark(`${this.name} 接受 WebSocket event 连接: ${req.connection.remoteAddress}`);
+                    logger.mark(`[ws-plugin] ${this.name} 接受 WebSocket event 连接: ${req.connection.remoteAddress}`);
                     conn.on("error", (event) => {
-                        logger.error(`${this.name} 接受 WebSocket event 连接时出现错误: ${event}`)
+                        logger.error(`[ws-plugin] ${this.name} 接受 WebSocket event 连接时出现错误: ${event}`)
                     })
                     conn.on("close", () => {
                         if (this.stopReconnect = false) {
-                            logger.warn(`${this.name} 关闭 WebSocket event 连接`);
+                            logger.warn(`[ws-plugin] ${this.name} 关闭 WebSocket event 连接`);
                         }
                         this.arr = this.arr.filter(i => i.id != req.headers["sec-websocket-key"])
                         clearInterval(time)
@@ -189,20 +189,20 @@ export default class Client {
             },
             close: () => {
                 this.server.close()
-                logger.warn(`CQ WebSocket 服务器已关闭: ${this.host}:${this.port}`)
+                logger.warn(`[ws-plugin] CQ WebSocket 服务器已关闭: ${this.host}:${this.port}`)
                 for (const i of this.arr) {
                     i.close()
                 }
             }
         }
         this.server.on('error', error => {
-            logger.error(`${this.name} CQ WebSocket 服务器启动失败: ${this.host}:${this.port}`)
+            logger.error(`[ws-plugin] ${this.name} CQ WebSocket 服务器启动失败: ${this.host}:${this.port}`)
             logger.error(error)
         })
         this.wss = new WebSocketServer({ noServer: true })
         this.server.listen(this.port, this.host, () => {
             this.status = 1
-            logger.mark(`CQ WebSocket 服务器已启动: ${this.host}:${this.port}`)
+            logger.mark(`[ws-plugin] CQ WebSocket 服务器已启动: ${this.host}:${this.port}`)
         })
     }
 
@@ -210,15 +210,15 @@ export default class Client {
         try {
             this.ws = new WebSocket(this.address)
         } catch (error) {
-            logger.error(`出错了,可能是ws地址填错了~\nws名字: ${this.name}\n地址: ${this.address}\n类型: 3`)
+            logger.error(`[ws-plugin] 出错了,可能是ws地址填错了~\nws名字: ${this.name}\n地址: ${this.address}\n类型: 3`)
             return
         }
         this.ws.on('open', async () => {
-            logger.mark(`${this.name}已连接`);
+            logger.mark(`[ws-plugin] ${this.name} 已连接`);
             if (this.status == 3 && this.reconnectCount > 1 && Config.reconnectToMaster) {
-                await this.sendMasterMsg(`${this.name}重连成功~`)
+                await this.sendMasterMsg(`${this.name} 重连成功~`)
             } else if (this.status == 0 && Config.firstconnectToMaster) {
-                await this.sendMasterMsg(`${this.name}连接成功~`)
+                await this.sendMasterMsg(`${this.name} 连接成功~`)
             }
             this.status = 1
             this.reconnectCount = 1
@@ -259,19 +259,19 @@ export default class Client {
         })
 
         this.ws.on('close', async code => {
-            logger.warn(`${this.name}连接已关闭`);
+            logger.warn(`[ws-plugin] ${this.name} 连接已关闭`);
             if (Config.disconnectToMaster && this.reconnectCount == 1 && this.status == 1) {
-                await this.sendMasterMsg(`${this.name}已断开连接...`)
+                await this.sendMasterMsg(`${this.name} 已断开连接...`)
             } else if (Config.firstconnectToMaster && this.reconnectCount == 1 && this.status == 0) {
-                await this.sendMasterMsg(`${this.name}连接失败...`)
+                await this.sendMasterMsg(`${this.name} 连接失败...`)
             }
             this.status = 3
             if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
                 if (code === 1005) {
-                    logger.warn(`${this.name} 连接异常,停止重连`);
+                    logger.warn(`[ws-plugin] ${this.name} 连接异常,停止重连`);
                     this.status = 0
                 } else {
-                    logger.warn('开始尝试重新连接第' + this.reconnectCount + '次');
+                    logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第 ${this.reconnectCount} 次`);
                     this.reconnectCount++
                     setTimeout(() => {
                         this.createGSUidWs()
@@ -280,12 +280,12 @@ export default class Client {
             } else {
                 this.stopReconnect = false
                 this.status = 0
-                logger.warn('达到最大重连次数或关闭连接,停止重连');
+                logger.warn(`[ws-plugin] ${this.name} 达到最大重连次数或关闭连接,停止重连`);
             }
         })
 
         this.ws.on('error', (event) => {
-            logger.error(`${this.name}连接失败\n${event}`);
+            logger.error(`[ws-plugin] ${this.name} 连接失败\n${event}`);
         })
     }
 
@@ -330,7 +330,7 @@ export default class Client {
                 }
             }).catch(error => {
                 if (error.name === 'AbortError') {
-                    return { error: `${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态或重启QQ！`)}` }
+                    return { error: `[ws-plugin] ${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态或重启QQ！`)}` }
                 } else {
                     return { error }
                 }
@@ -344,7 +344,7 @@ export default class Client {
         const reconnect = () => {
             if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
                 this.status = 3
-                logger.warn(`${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
+                logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
                 this.reconnectCount++
                 setTimeout(() => {
                     this.createQQNT()
@@ -352,22 +352,22 @@ export default class Client {
             } else {
                 this.stopReconnect = false
                 this.status = 0
-                logger.warn(`${this.name} 达到最大重连次数或关闭连接,停止重连`);
+                logger.warn(`[ws-plugin] ${this.name} 达到最大重连次数或关闭连接,停止重连`);
             }
         }
         let info = await bot.sendApi('get', 'getSelfProfile')
         if (info.error) {
             if (info.error.code == 'ECONNREFUSED') {
-                logger.error(`${this.name} 请检查是否安装Chronocat并启动QQNT`)
+                logger.error(`[ws-plugin] ${this.name} 请检查是否安装Chronocat并启动QQNT`)
                 reconnect()
                 return
             }
-            logger.error(`${this.name} Token错误`)
+            logger.error(`[ws-plugin] ${this.name} Token错误`)
             logger.error(info.error)
             return
         }
         if (!info.uin) {
-            logger.error(`${this.name} 请点击登录`)
+            logger.error(`[ws-plugin] ${this.name} 请点击登录`)
             reconnect()
             return
         }
@@ -394,11 +394,11 @@ export default class Client {
             this.status = 0
             switch (code) {
                 case 1005:
-                    logger.error(`${this.name}(${this.uin}) 主动断开连接`)
+                    logger.error(`[ws-plugin] ${this.name}(${this.uin}) 主动断开连接`)
                     return
                 case 1006:
                     this.status = 3
-                    logger.error(`${this.name}(${this.uin}) QQNT被关闭`)
+                    logger.error(`[ws-plugin] ${this.name}(${this.uin}) QQNT被关闭`)
                     reconnect()
                     return
                 default:
@@ -406,7 +406,7 @@ export default class Client {
             }
         })
         Bot[bot.self_id] = new QQNTBot(bot)
-        logger.mark(`${logger.blue(`[${bot.self_id}]`)} ${this.name} 已连接`)
+        logger.mark(`[ws-plugin] ${logger.blue(`[${bot.self_id}]`)} ${this.name} 已连接`)
         this.status = 1
         Bot.em(`connect.${bot.self_id}`, Bot[bot.self_id])
         return true
@@ -443,17 +443,17 @@ export default class Client {
         });
 
         this.server.on('error', error => {
-            logger.error(`${this.name} 正向HTTP 服务器启动失败: ${this.host}:${this.port}`)
+            logger.error(`[ws-plugin] ${this.name} 正向HTTP 服务器启动失败: ${this.host}:${this.port}`)
             logger.error(error)
         })
         this.server.listen(this.port, this.host, () => {
             this.status = 1
-            logger.mark(`HTTP 服务器已启动: ${this.host}:${this.port}`)
+            logger.mark(`[ws-plugin] HTTP 服务器已启动: ${this.host}:${this.port}`)
         })
         this.ws = {
             close: () => {
                 this.server.close()
-                logger.warn(`正向HTTP 服务器已关闭: ${this.host}:${this.port}`)
+                logger.warn(`[ws-plugin] 正向HTTP 服务器已关闭: ${this.host}:${this.port}`)
             }
         }
     }
