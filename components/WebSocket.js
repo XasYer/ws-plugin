@@ -1,10 +1,11 @@
 import Client from "./Client.js";
 import { Config, Version } from './index.js'
+import { sleep } from '../model/index.js'
 
 let sendSocketList = []
 let allSocketList = []
 
-function createWebSocket(data) {
+async function createWebSocket(data) {
     if (data.address == 'ws_address') return
     if (data.close) return
     const client = new Client(data)
@@ -12,12 +13,12 @@ function createWebSocket(data) {
     allSocketList = allSocketList.filter(i => i.name != data.name)
     switch (Number(data.type)) {
         case 1:
-            if (!checkVersion(data)) return
+            if (!await checkVersion(data)) return
             client.createWs()
             sendSocketList.push(client)
             break;
         case 2:
-            if (!checkVersion(data)) return
+            if (!await checkVersion(data)) return
             client.createServer()
             sendSocketList.push(client)
             break
@@ -30,11 +31,11 @@ function createWebSocket(data) {
             client.createQQNT()
             break
         case 5:
-            if (!checkVersion(data)) return
+            if (!await checkVersion(data)) return
             client.createHttp()
             break
         case 6:
-            if (!checkVersion(data)) return
+            if (!await checkVersion(data)) return
             client.createHttpPost()
             sendSocketList.push(client)
             break
@@ -44,10 +45,21 @@ function createWebSocket(data) {
     allSocketList.push(client)
 }
 
-function checkVersion(data) {
-    if (Version.isTrss && !data.uin) {
-        logger.warn(`${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
-        return false
+async function checkVersion(data) {
+    if (Version.isTrss) {
+        if (!data.uin) {
+            logger.warn(`${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
+            return false
+        } else {
+            for (let i = 0; i < 15; i++) {
+                if (Version.protocol.some(i => i == Bot[data.uin]?.version?.name)) {
+                    return true
+                }
+                await sleep(1000)
+            }
+            logger.warn(`${data.name} 未适配的协议或未连接对应协议`)
+            return false
+        }
     }
     return true
 }

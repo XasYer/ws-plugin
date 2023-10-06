@@ -85,6 +85,10 @@ async function SendMusicShare(data) {
     }
 }
 
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
 
@@ -103,6 +107,7 @@ const mimeTypes = {
 
 export {
     SendMusicShare,
+    sleep,
     TMP_DIR,
     mimeTypes
 }
