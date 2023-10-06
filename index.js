@@ -62,9 +62,10 @@ if (Version.isTrss) {
                     res.end('File not found')
                 } else {
                     const name = file.split('-')
+                    const filename = encodeURIComponent(name[1]) || encodeURIComponent(name[0]) || encodeURIComponent(file)
                     res.writeHead(200, {
                         'Content-Type': contentType,
-                        'Content-Disposition': `attachment; filename=${name[1] || name[0]}`
+                        'Content-Disposition': `attachment; filename=${filename}`
                     })
                     res.end(content)
                 }
