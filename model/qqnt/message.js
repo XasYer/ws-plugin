@@ -539,7 +539,7 @@ async function toQQNTMsg(bot, data) {
             }
             const payload = data.payload[0]
             const e = await makeMessage(bot.self_id, payload)
-            if (!e || e.message.length == 0) return
+            if (!e || (e.post_type === 'message' && e.message.length == 0)) return
             switch (e.post_type) {
                 case 'message':
                     if (e.message_type == 'group') {
