@@ -489,7 +489,7 @@ export default class Client {
 
     authorization(req, res, next) {
         let code = null
-        const token = req.headers['authorization']?.replace?.(/^(Token|Bearer) /, '')
+        const token = req.headers['authorization']?.replace?.(/^(Token|Bearer) /, '') || req.query.access_token
         if (this.accessToken) {
             if (!token) {
                 code = 401
