@@ -533,17 +533,17 @@ export default class Client {
         let masterQQ = []
         const master = Version.isTrss ? Config.master[this.uin] : Config.masterQQ
         if (Config.howToMaster > 0) {
-            masterQQ.push(master[Config.howToMaster - 1])
+            masterQQ.push(master?.[Config.howToMaster - 1])
         } else if (Config.howToMaster == 0) {
             masterQQ.push(...master)
         }
         for (const i of masterQQ) {
-            let result = await bot?.pickFriend?.(i).sendMsg?.(msg) || true
+            let result = await bot?.pickFriend?.(i)?.sendMsg?.(msg) || true
             if (result) {
                 logger.mark(`[ws-plugin] 连接名字:${this.name} 通知主人:${i} 处理完成`)
             } else {
                 const timer = setInterval(async () => {
-                    result = await bot?.pickFriend?.(i).sendMsg?.(msg) || true
+                    result = await bot?.pickFriend?.(i)?.sendMsg?.(msg) || true
                     if (result) {
                         clearInterval(timer)
                         logger.mark(`[ws-plugin] 连接名字:${this.name} 通知主人:${i} 处理完成`)
