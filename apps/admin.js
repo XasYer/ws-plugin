@@ -5,6 +5,7 @@ import lodash from 'lodash'
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
 let sysCfgReg = new RegExp(`^#ws设置\\s*(${keys.join('|')})?\\s*(.*)$`)
 const groupReg = '^#ws(查看|删除|添加)?(禁用|启用)群([0-9]*)$'
+const wsReg = '^#ws(添加|删除|打开|关闭|重新|查看)[连链]接(.*)$'
 
 export class setting extends plugin {
     constructor() {
@@ -15,7 +16,7 @@ export class setting extends plugin {
             priority: 1,
             rule: [
                 {
-                    reg: '^#ws(添加|删除|打开|关闭|重新|查看)连接.*$',
+                    reg: wsReg,
                     fnc: 'modifyWs',
                     permission: 'master'
                 },
@@ -202,7 +203,7 @@ export class setting extends plugin {
     }
 
     async modifyWs() {
-        let reg = new RegExp('^#ws(添加|删除|打开|关闭|重新|查看)连接(.*)$')
+        let reg = new RegExp(wsReg)
         let regRet = reg.exec(this.e.msg)
         if (!regRet) {
             return true

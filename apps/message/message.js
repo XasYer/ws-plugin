@@ -55,6 +55,12 @@ Bot.on('message', async e => {
             return ret
         }
     }
+    let isMaster = e.isMaster
+    if (Version.isTrss) {
+        if (e.user_id && cfg.master[e.self_id]?.includes(String(e.user_id))) {
+            isMaster = true
+        }
+    }
     const message_id = Math.floor(Math.random() * Math.pow(2, 32)) | 0
     let msg = {
         time: e.time,
@@ -65,7 +71,7 @@ Bot.on('message', async e => {
         source: e.source,
         user_id: e.user_id,
         self_id: e.self_id,
-        isMaster: e.isMaster,
+        isMaster,
         sender: e.sender,
         param: {
             time: e.time,

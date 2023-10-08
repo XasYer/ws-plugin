@@ -56,12 +56,8 @@ async function upload(bot, msg, contentType) {
         buffer = fs.readFileSync(msg.replace('file:///', ''))
         contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
     } else {
-        try {
-            buffer = fs.readFileSync(msg)
-            contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
-        } catch (error) {
-            return false
-        }
+        buffer = fs.readFileSync(msg)
+        contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
     }
     const blob = new Blob([buffer], { type: contentType })
     const formData = new FormData()
