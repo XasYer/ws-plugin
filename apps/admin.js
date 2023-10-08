@@ -269,7 +269,7 @@ export class setting extends plugin {
     }
 
     async checkAddWs() {
-        if (!this.e.msg) {
+        if (!this.e.msg || !this.e.isMaster) {
             return false
         }
         const msg = this.e.msg.split(/,|，/g)
