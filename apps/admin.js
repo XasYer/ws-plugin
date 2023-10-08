@@ -527,7 +527,7 @@ export class setting extends plugin {
     }
 
     async checkOpenWs() {
-        if (!this.e.msg) {
+        if (!this.e.msg || !this.e.isMaster) {
             return false
         }
         let msg = this.e.msg
@@ -536,7 +536,7 @@ export class setting extends plugin {
     }
 
     async checkCloseWs() {
-        if (!this.e.msg) {
+        if (!this.e.msg || !this.e.isMaster) {
             return false
         }
         let msg = this.e.msg
@@ -577,7 +577,7 @@ export class setting extends plugin {
     }
 
     async checkDelWs() {
-        if (!this.e.msg) {
+        if (!this.e.msg || !this.e.isMaster) {
             return false
         }
         let msg = this.e.msg
