@@ -15,16 +15,26 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 
 #### [Miao-Yunzai](https://gitee.com/yoimiya-kokomi/Miao-Yunzai) && [Yunzai-Bot](https://gitee.com/yoimiya-kokomi/Yunzai-Bot)
 
-支持以下通信方式:
-  1.  反向 WebSocket
-  2.  正向 WebSocket
-  3.  [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
+作为客户端:
+  - onebot v11
+    -  反向 WebSocket
+    -  正向 WebSocket
+    -  正向http
+    -  反向http
+  -  [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
 
 #### [TRSS-Yunzai](https://gitee.com/TimeRainStarSky/Yunzai)
 
-支持以下通信方式
-  1. 作为适配器连接QQNT
-  2. [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
+作为客户端:
+  - onebot v11 (目前仅支持 [ICQQ-Plugin](https://gitee.com/TimeRainStarSky/Yunzai-ICQQ-Plugin) & Red)
+    -  反向 WebSocket
+    -  正向 WebSocket
+    -  正向http
+    -  反向http
+  -  [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
+
+作为服务端
+  - RedProtocol
 
 ## 安装与更新
 
@@ -35,18 +45,17 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 请使用 git 进行安装，以方便后续升级。在 Yunzai-Bot 根目录夹打开终端，运行下述指令之一
 
 ```
+#gitee
 git clone --depth=1 https://gitee.com/xiaoye12123/ws-plugin.git ./plugins/ws-plugin/
 pnpm install --filter=ws-plugin
-
+```
+```
+#github
+git clone --depth=1 https://github.com/xiaoye12123/ws-plugin.git ./plugins/ws-plugin/
+pnpm install --filter=ws-plugin
 ```
 
 进行安装。安装完毕后，管理员只需发送 `#ws更新` 即可自动更新 ws-plugin。
-
-### 手工下载安装（不推荐）
-
-手工下载安装包，解压后将`ws-plugin-master`更名为`ws-plugin`，然后放置在Yunzai的plugins目录内
-
-虽然此方式能够使用，但无法使用`#ws更新`进行更新，不利于后续升级，故不推荐使用
 
 ## 使用说明
 
@@ -67,13 +76,7 @@ pnpm install --filter=ws-plugin
 
 </details>
 
-## 支持的通信方式(连接类型)
-
-1. 反向 WebSocket
-2. 正向 WebSocket  &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;!!只做了简单的连接
-3. [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
-
-## 反馈或建议
+## 反馈或建议(QQ群)
 
 QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi5xpxdmJj8VRT&authKey=gnMoAHGtaQcqlGg50M%2B6QvIvKsyzMrPymK0FjIxCe7mdzUM8rSIi2jvxWczaZEU5&noverify=0&group_code=698673296)
 
