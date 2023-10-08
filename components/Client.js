@@ -538,12 +538,22 @@ export default class Client {
             masterQQ.push(...master)
         }
         for (const i of masterQQ) {
-            let result = await bot?.pickFriend?.(i)?.sendMsg?.(msg) || true
+            if (!i) continue
+            let result
+            try {
+                result = await bot?.pickFriend?.(i)?.sendMsg?.(msg) || true
+            } catch (error) {
+                result = true
+            }
             if (result) {
                 logger.mark(`[ws-plugin] 连接名字:${this.name} 通知主人:${i} 处理完成`)
             } else {
                 const timer = setInterval(async () => {
-                    result = await bot?.pickFriend?.(i)?.sendMsg?.(msg) || true
+                    try {
+                        result = await bot?.pickFriend?.(i)?.sendMsg?.(msg) || true
+                    } catch (error) {
+                        result = true
+                    }
                     if (result) {
                         clearInterval(timer)
                         logger.mark(`[ws-plugin] 连接名字:${this.name} 通知主人:${i} 处理完成`)
