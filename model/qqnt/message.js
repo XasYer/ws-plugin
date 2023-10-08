@@ -267,8 +267,10 @@ async function makeMessage(self_id, payload) {
                             e.post_type = 'notice'
                             e.notice_type = 'group'
                             e.sub_type = 'increase'
-                            e.nickname = i.grayTipElement.groupElement.memberAdd.otherAdd.name
-                            e.user_id = Number(i.grayTipElement.groupElement.memberAdd.otherAdd.uin)
+                            e.nickname = i.grayTipElement.memberNick
+                            e.user_id = Number(i.grayTipElement.groupElement.memberUin)
+                            // e.nickname = i.grayTipElement.groupElement.memberAdd.otherAdd.name
+                            // e.user_id = Number(i.grayTipElement.groupElement.memberAdd.otherAdd.uin)
                         }
                         if (i.grayTipElement.groupElement.shutUp) {
                             // i.grayTipElement.groupElement.type = 8
