@@ -1,5 +1,6 @@
 import _ from 'lodash'
 import fs from 'fs'
+import { Version } from '../components/index.js'
 
 async function CreateMusicShare(data) {
     let appid, appname, appsign, style = 4;
@@ -72,14 +73,35 @@ async function CreateMusicShare(data) {
 }
 
 async function SendMusicShare(data) {
+    let core, bot
+    if (Version.isTrss) {
+        bot = Bot[data.bot_id]
+        core = bot?.core
+    } else {
+        bot = Bot
+        try {
+            core = (await import('oicq')).core
+        } catch (error) {
+            core = null
+        }
+    }
+    if (!core) {
+        const msg = [data.url]
+        if (data.message_type === 'group') {//群聊
+            await bot?.pickGroup?.(data.group_id)?.sendMsg?.(msg)
+        } else if (data.message_type === 'private') {//私聊
+            await bot?.pickFriend?.(data.user_id)?.sendMsg?.(msg)
+        }
+        return
+    }
     let body = await CreateMusicShare(data)
-    let payload = await Bot.sendOidb("OidbSvc.0xb77_9", core.pb.encode(body));
+    let payload = await bot.sendOidb("OidbSvc.0xb77_9", core.pb.encode(body));
     let result = core.pb.decode(payload);
     if (result[3] != 0) {
         if (data.message_type === 'group') {//群聊
-            await Bot.pickGroup(data.group_id).sendMsg('歌曲分享失败：' + result[3])
+            await bot?.pickGroup(data.group_id).sendMsg('歌曲分享失败：' + result[3])
         } else if (data.message_type === 'private') {//私聊
-            await Bot.pickFriend(data.user_id).sendMsg('歌曲分享失败：' + result[3])
+            await bot?.pickFriend(data.user_id).sendMsg('歌曲分享失败：' + result[3])
         }
         // e.reply('歌曲分享失败：' + result[3], true);
     }

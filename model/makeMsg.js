@@ -249,6 +249,7 @@ async function makeSendMsg(params, uin) {
                 }
                 if (i.data.type == 'custom') {
                     let data = i.data
+                    data.bot_id = uin
                     data.message_type = params.message_type
                     data.user_id = params.user_id
                     data.group_id = params.group_id

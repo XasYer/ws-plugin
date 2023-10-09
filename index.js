@@ -14,18 +14,6 @@ files.forEach((file) => {
     ret.push(import(`./apps/${file}`))
 })
 
-try {
-    if (!global.segment) {
-        global.segment = (await import('oicq')).segment
-    }
-    if (!Version.isTrss) {
-        if (!global.core) {
-            global.core = (await import('oicq')).core;
-        }
-    }
-} catch (error) {
-
-}
 ret = await Promise.allSettled(ret)
 
 let apps = {}
