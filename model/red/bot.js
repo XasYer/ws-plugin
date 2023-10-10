@@ -2,7 +2,7 @@ import { makeSendMsg, makeMessage } from './message.js'
 import { setMsgMap, getMsgMap } from '../msgMap.js'
 import { roleMap } from './tool.js'
 
-export class QQNTBot {
+export class QQRedBot {
     constructor(bot) {
         this.bot = bot
         this.self_id = bot.self_id

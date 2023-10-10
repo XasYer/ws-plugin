@@ -221,7 +221,7 @@ export class setting extends plugin {
                     '连接名字,连接类型\n',
                     '---------------------------------\n',
                     '连接名字: 用来区分每个连接\n',
-                    '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:qqnt连接 5:正向http 6:反向http'
+                    '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:red连接 5:正向http 6:反向http'
                 ])
                 // await this.reply([
                 //     '请一次性发送以下参数:\n',

@@ -503,7 +503,7 @@ function convertFileName(filePath) {
     return newFileName;
 }
 
-async function toQQNTMsg(bot, data) {
+async function toQQRedMsg(bot, data) {
     data = JSON.parse(data)
     switch (data.type) {
         case 'meta::connect':
@@ -597,6 +597,6 @@ async function toQQNTMsg(bot, data) {
 
 export {
     makeSendMsg,
-    toQQNTMsg,
+    toQQRedMsg,
     makeMessage
 }

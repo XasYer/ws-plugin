@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap, QQNTBot, getToken, toQQNTMsg } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap, QQRedBot, getToken, toQQRedMsg } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from "express"
 import http from "http"
@@ -388,7 +388,7 @@ export default class Client {
         bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)
         bot.send = (type, payload) => bot.ws.send(JSON.stringify({ type, payload }))
         bot.ws.on('open', () => bot.send('meta::connect', { token: bot.token }))
-        bot.ws.on('message', data => toQQNTMsg(bot, data))
+        bot.ws.on('message', data => toQQRedMsg(bot, data))
         bot.ws.on('close', (code) => {
             delete Bot[bot.self_id]
             this.status = 0
@@ -405,7 +405,7 @@ export default class Client {
                     return
             }
         })
-        Bot[bot.self_id] = new QQNTBot(bot)
+        Bot[bot.self_id] = new QQRedBot(bot)
         logger.mark(`[ws-plugin] ${logger.blue(`[${bot.self_id}]`)} ${this.name} 已连接`)
         this.status = 1
         Bot.em(`connect.${bot.self_id}`, Bot[bot.self_id])
