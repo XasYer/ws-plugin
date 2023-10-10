@@ -26,24 +26,7 @@ Bot.on('notice', async e => {
             if (noGroup.some(i => i == e.group_id)) return false
         }
     }
-    if (!Version.isTrss) {
-        let _reply = e.reply
-        e.reply = async function (massage, quote = false, data = {}) {
-            let ret = await _reply(massage, quote, data)
-            if (ret) {
-                setMsgMap({
-                    message_id: ret.message_id,
-                    time: ret.time,
-                    seq: ret.seq,
-                    rand: ret.rand,
-                    user_id: e.user_id,
-                    group_id: e.group_id,
-                    onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
-                })
-            }
-            return ret
-        }
-    }
+    e.reply = reply(e)
     let other = {}
     if (e.notice_type == 'group') {
         other.group_id = e.group_id
@@ -121,14 +104,14 @@ Bot.on('notice', async e => {
         ...other
     }
     msg = JSON.stringify(msg)
-    sendSocketList.forEach(i => {
+    for (const i of sendSocketList) {
         if (i.status == 1) {
             switch (Number(i.type)) {
                 case 1:
                 case 2:
                     if (Version.isTrss) {
-                        if (i.uin != e.self_id) return
-                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) return
+                        if (i.uin != e.self_id) continue
+                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) continue
                     }
                     i.ws.send(msg)
                     break;
@@ -136,5 +119,58 @@ Bot.on('notice', async e => {
                     break;
             }
         }
-    })
+    }
 })
+
+function reply(e) {
+    if (!Version.isTrss) {
+        const replyNew = e.reply
+        return async function (massage, quote = false, data = {}) {
+            const ret = await replyNew(massage, quote, data)
+            if (ret) {
+                setMsgMap({
+                    message_id: ret.message_id,
+                    time: ret.time,
+                    seq: ret.seq,
+                    rand: ret.rand,
+                    user_id: e.user_id,
+                    group_id: e.group_id,
+                    onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
+                })
+            }
+            return ret
+        }
+    } else {
+        if (e.bot?.version?.name == 'ICQQ') {
+            return async function (massage, quote = false) {
+                let ret
+                if (e.isGroup) {
+                    if (e.group?.sendMsg) {
+                        ret = await e.group.sendMsg(massage, quote)
+                    } else {
+                        ret = await e.bot.pickGroup(e.group_id).sendMsg(massage, quote)
+                    }
+                } else {
+                    if (e.friend?.sendMsg) {
+                        ret = await e.friend.sendMsg(massage, quote)
+                    } else {
+                        ret = await e.bot.pickFriend(e.user_id).sendMsg(massage, quote)
+                    }
+                }
+                if (ret) {
+                    setMsgMap({
+                        message_id: ret.message_id,
+                        time: ret.time,
+                        seq: ret.seq,
+                        rand: ret.rand,
+                        user_id: e.user_id,
+                        group_id: e.group_id,
+                        onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
+                    })
+                }
+                return ret
+            }
+        }
+        return e.reply
+    }
+}

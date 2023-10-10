@@ -37,24 +37,6 @@ Bot.on('message', async e => {
             if (Config.noMsgStart.some(i => e.message[0].text.startsWith(i))) return false
         }
     }
-    if (!Version.isTrss) {
-        const _reply = e.reply
-        e.reply = async function (massage, quote = false, data = {}) {
-            const ret = await _reply(massage, quote, data)
-            if (ret) {
-                setMsgMap({
-                    message_id: ret.message_id,
-                    time: ret.time,
-                    seq: ret.seq,
-                    rand: ret.rand,
-                    user_id: e.user_id,
-                    group_id: e.group_id,
-                    onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
-                })
-            }
-            return ret
-        }
-    }
     let isMaster = e.isMaster
     if (Version.isTrss) {
         if (e.user_id && cfg.master[e.self_id]?.includes(String(e.user_id))) {
@@ -142,7 +124,7 @@ Bot.on('message', async e => {
     // 判断云崽前缀
     msg = onlyReplyAt(msg)
     if (!msg) return false
-    sendSocketList.forEach(async i => {
+    for (const i of sendSocketList) {
         if (i.status == 1) {
             let reportMsg = null
             switch (Number(i.type)) {
@@ -150,9 +132,10 @@ Bot.on('message', async e => {
                 case 2:
                 case 6:
                     if (Version.isTrss) {
-                        if (i.uin != e.self_id) return
-                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) return
+                        if (i.uin != e.self_id) continue
+                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) continue
                     }
+                    e.reply = reply(e)
                     reportMsg = await makeOneBotReportMsg(msg)
                     break;
                 case 3:
@@ -163,8 +146,61 @@ Bot.on('message', async e => {
             }
             if (reportMsg) i.ws.send(reportMsg)
         }
-    })
+    }
 })
+
+function reply(e) {
+    if (!Version.isTrss) {
+        const replyNew = e.reply
+        return async function (massage, quote = false, data = {}) {
+            const ret = await replyNew(massage, quote, data)
+            if (ret) {
+                setMsgMap({
+                    message_id: ret.message_id,
+                    time: ret.time,
+                    seq: ret.seq,
+                    rand: ret.rand,
+                    user_id: e.user_id,
+                    group_id: e.group_id,
+                    onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
+                })
+            }
+            return ret
+        }
+    } else {
+        if (e.bot?.version?.name == 'ICQQ') {
+            return async function (massage, quote = false) {
+                let ret
+                if (e.isGroup) {
+                    if (e.group?.sendMsg) {
+                        ret = await e.group.sendMsg(massage, quote)
+                    } else {
+                        ret = await e.bot.pickGroup(e.group_id).sendMsg(massage, quote)
+                    }
+                } else {
+                    if (e.friend?.sendMsg) {
+                        ret = await e.friend.sendMsg(massage, quote)
+                    } else {
+                        ret = await e.bot.pickFriend(e.user_id).sendMsg(massage, quote)
+                    }
+                }
+                if (ret) {
+                    setMsgMap({
+                        message_id: ret.message_id,
+                        time: ret.time,
+                        seq: ret.seq,
+                        rand: ret.rand,
+                        user_id: e.user_id,
+                        group_id: e.group_id,
+                        onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
+                    })
+                }
+                return ret
+            }
+        }
+        return e.reply
+    }
+}
 
 function onlyReplyAt(e) {
     if (!e.message) return false
