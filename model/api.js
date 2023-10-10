@@ -1,6 +1,6 @@
 import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
 import { getMsgMap, setMsgMap, getGuildLatestMsgId, getLatestMsg } from './msgMap.js'
-import { MsgToCQ } from './CQCode.js'
+import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { Version } from '../components/index.js'
 import fetch from 'node-fetch'
 
@@ -723,7 +723,146 @@ async function getApiData(api, params = {}, name, uin) {
         // 获取中文分词 ( 隐藏 API )
         // .get_word_slices
         // 对事件执行快速操作 ( 隐藏 API )
-        // .handle_quick_operation
+        '.handle_quick_operation': async ({ context, operation }) => {
+            switch (context.post_type) {
+                case 'message':
+                    switch (context.message_type) {
+                        case 'group':
+                            if (operation.reply) {
+                                if (operation.auto_escape) {
+                                    operation.reply = CQToMsg(operation.reply)
+                                }
+                                if (!Array.isArray(operation.reply)) {
+                                    operation.reply = [{ type: 'text', data: { text: operation.reply } }]
+                                }
+                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin)
+                                if (operation.at_sender) {
+                                    sendMsg.unshift(segment.at(context.user_id))
+                                }
+                                await bot.pickGroup?.(context.group_id).sendMsg?.(sendMsg, quote)
+                            }
+                            if (operation.delete) {
+                                let msg = await getMsgMap({ onebot_id: context.message_id })
+                                if (msg) {
+                                    await bot.deleteMsg?.(msg.message_id)
+                                }
+                            }
+                            if (operation.kick) {
+                                await bot.setGroupKick?.(context.group_id, context.user_id, true)
+                            }
+                            if (operation.ban) {
+                                await bot.setGroupBan?.(context.group_id, context.user_id, context.ban_duration)
+                            }
+                            break;
+                        case 'private':
+                            if (operation.reply) {
+                                if (operation.auto_escape) {
+                                    operation.reply = CQToMsg(operation.reply)
+                                }
+                                if (!Array.isArray(operation.reply)) {
+                                    operation.reply = [{ type: 'text', data: { text: operation.reply } }]
+                                }
+                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin)
+                                await bot.pickFriend?.(context.group_id).sendMsg?.(sendMsg, quote)
+                            }
+                            break
+                    }
+                    break;
+                case 'request':
+                    switch (context.request_type) {
+                        case 'friend':
+                            if (operation.approve) {
+                                let ret = (await bot.getSystemMsg?.() || []).filter(i => i.request_type == 'friend' && i.flag == context.flag)
+                                if (ret.length > 0) {
+                                    ret = ret[0]
+                                    if (ret.approve(operation.approve)) {
+                                        if (operation.remark) {
+                                            bot.pickFriend(ret.user_id).setRemark(operation.remark)
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        case 'group':
+                            let type = context.sub_type
+                            let ret = (await bot.getSystemMsg?.() || []).filter(i => i.request_type == 'group' && i.sub_type == type && i.flag == context.flag)
+                            if (ret.length > 0) {
+                                ret = ret[0]
+                                ret.approve(operation.approve)
+                            }
+                    }
+            }
+        },
+        '.handle_quick_operation_async': async ({ context, operation }) => {
+            switch (context.post_type) {
+                case 'message':
+                    switch (context.message_type) {
+                        case 'group':
+                            if (operation.reply) {
+                                if (operation.auto_escape) {
+                                    operation.reply = CQToMsg(operation.reply)
+                                }
+                                if (!Array.isArray(operation.reply)) {
+                                    operation.reply = [{ type: 'text', data: { text: operation.reply } }]
+                                }
+                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin)
+                                if (operation.at_sender) {
+                                    sendMsg.unshift(segment.at(context.user_id))
+                                }
+                                await bot.pickGroup?.(context.group_id).sendMsg?.(sendMsg, quote)
+                            }
+                            if (operation.delete) {
+                                let msg = await getMsgMap({ onebot_id: context.message_id })
+                                if (msg) {
+                                    await bot.deleteMsg?.(msg.message_id)
+                                }
+                            }
+                            if (operation.kick) {
+                                await bot.setGroupKick?.(context.group_id, context.user_id, true)
+                            }
+                            if (operation.ban) {
+                                await bot.setGroupBan?.(context.group_id, context.user_id, context.ban_duration)
+                            }
+                            break;
+                        case 'private':
+                            if (operation.reply) {
+                                if (operation.auto_escape) {
+                                    operation.reply = CQToMsg(operation.reply)
+                                }
+                                if (!Array.isArray(operation.reply)) {
+                                    operation.reply = [{ type: 'text', data: { text: operation.reply } }]
+                                }
+                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin)
+                                await bot.pickFriend?.(context.group_id).sendMsg?.(sendMsg, quote)
+                            }
+                            break
+                    }
+                    break;
+                case 'request':
+                    switch (context.request_type) {
+                        case 'friend':
+                            if (operation.approve) {
+                                let ret = (await bot.getSystemMsg?.() || []).filter(i => i.request_type == 'friend' && i.flag == context.flag)
+                                if (ret.length > 0) {
+                                    ret = ret[0]
+                                    if (ret.approve(operation.approve)) {
+                                        if (operation.remark) {
+                                            bot.pickFriend(ret.user_id).setRemark(operation.remark)
+                                        }
+                                    }
+                                }
+                            }
+                            break;
+                        case 'group':
+                            let type = context.sub_type
+                            let ret = (await bot.getSystemMsg?.() || []).filter(i => i.request_type == 'group' && i.sub_type == type && i.flag == context.flag)
+                            if (ret.length > 0) {
+                                ret = ret[0]
+                                ret.approve(operation.approve)
+                            }
+                    }
+            }
+        },
 
 
         'send_guild_channel_msg': async params => {
