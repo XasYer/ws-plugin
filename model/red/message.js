@@ -1,6 +1,7 @@
 import { uploadImg, uploadAudio, uploadVideo, uploadFile, getNtPath, roleMap, redPath } from './tool.js'
 import { TMP_DIR, sleep } from '../tool.js'
 import { setMsgMap, getMsgMap } from '../msgMap.js'
+import { Config } from '../../components/index.js'
 import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
 import fs from 'fs'
@@ -127,9 +128,9 @@ async function makeSendMsg(data, message) {
                 }
                 break
             case "node":
-                if (os.platform() === 'win32') {
+                if (Config.redSendForwardMsgType == 1) {
                     return await sendNodeMsg(data, i.data)
-                } else {
+                } else if (Config.redSendForwardMsgType == 2) {
                     let message_id, rand, seq, time
                     for (const { message: msg } of i.data) {
                         let peer = {
@@ -162,7 +163,7 @@ async function makeSendMsg(data, message) {
                             seq = Number(result.msgSeq)
                             rand = Number(result.msgRandom)
                             time = Number(result.msgTime)
-                            logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送群消息：${log}`)
+                            logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id || data.user_id}]`)} 发送消息：${log}`)
                         }
                         // 防止发太快
                         // await sleep(500)

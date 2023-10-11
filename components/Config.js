@@ -117,6 +117,11 @@ class Config {
     return this.getDefOrConfig('msg-config').muteStop
   }
 
+  /** red 发送伪造转发消息方式 */
+  get redSendForwardMsgType(){
+    return this.getDefOrConfig('msg-config').redSendForwardMsgType
+  }
+
   /**群管理员变动是否上报 */
   get groupAdmin() {
     return this.getDefOrConfig('notice-config').groupAdmin

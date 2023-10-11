@@ -74,6 +74,15 @@ export const cfgSchema = {
         desc: '被禁言或者全体禁言时是否拦截消息不上报',
         fileName: 'msg-config'
       },
+      redSendForwardMsgType: {
+        title: 'red转发方式',
+        key: 'red转发',
+        type: 'num',
+        def: 1,
+        desc: 'red 发送伪造转发消息方式 1:伪造转发 2:直接发送',
+        input: (n) => Math.min(2, Math.max(n * 1 || 0, 1)),
+        fileName: 'msg-config'
+      },
       msgStoreTime: {
         title: '消息存储时间',
         key: '存储',
