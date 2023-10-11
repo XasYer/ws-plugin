@@ -90,9 +90,6 @@ export const adapter = new class RedAdapter {
             reconnect()
             return
         }
-        if (!Bot.uin.includes(info.uin)) {
-            Bot.uin.push(info.uin)
-        }
         bot.info = {
             ...info,
             user_id: info.uin,
