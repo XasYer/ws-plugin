@@ -117,10 +117,14 @@ async function getApiData(api, params = {}, name, uin) {
                 ResponseData = await bot.getMsg?.(ResponseData.message_id)
                 if (ResponseData) {
                     if (ResponseData.bot) delete ResponseData.bot
+                    if (ResponseData.friend) delete ResponseData.friend
+                    if (ResponseData.group) delete ResponseData.group
+                    if (ResponseData.member) delete ResponseData.member
                     ResponseData.group = ResponseData.message_type == 'group' ? true : false
                     ResponseData.real_id = Number(ResponseData.seq)
                     ResponseData.message_id = Number(ResponseData.rand)
                     ResponseData.message = await msgToOneBotMsg(ResponseData.message)
+                    ResponseData.raw_message = MsgToCQ(ResponseData.message)
                 } else {
                     throw { message: 'get_msg API error', noLog: true }
                 }
