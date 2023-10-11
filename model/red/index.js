@@ -20,7 +20,7 @@ export const adapter = new class RedAdapter {
     async connect(data) {
         if (data.closed) return
         const [host, port] = data.address.split(':')
-        let token = data.token
+        let token = data.accessToken
         if (!token) {
             token = getToken()
             if (!token) return
@@ -82,7 +82,7 @@ export const adapter = new class RedAdapter {
                 return
             }
             logger.error(`${this.name} Token错误`)
-            logger.error(info.error)
+            logger.error(await info.error.text())
             return
         }
         if (!info.uin) {
