@@ -1,16 +1,18 @@
 import Client from "./Client.js";
 import { Config, Version } from './index.js'
 import { sleep } from '../model/index.js'
+import { adapter } from '../model/red/index.js'
 
 let sendSocketList = []
 let allSocketList = []
 
 async function createWebSocket(data) {
-    if (data.address == 'ws_address') return
-    if (data.close) return
     const client = new Client(data)
+    setAllSocketList(client)
+    if (data.address == 'ws_address') return
+    if (data.close) data.closed = data.close
+    if (data.closed) return
     sendSocketList = sendSocketList.filter(i => i.name != data.name)
-    allSocketList = allSocketList.filter(i => i.name != data.name)
     switch (Number(data.type)) {
         case 1:
             if (!await checkVersion(data)) return
@@ -26,10 +28,10 @@ async function createWebSocket(data) {
             client.createGSUidWs()
             sendSocketList.push(client)
             break
-        case 4:
-            if (!Version.isTrss) return
-            client.createQQNT()
-            break
+        // case 4:
+        //     if (!Version.isTrss) return
+        //     client.createQQNT()
+        //     break
         case 5:
             if (!await checkVersion(data)) return
             client.createHttp()
@@ -42,7 +44,11 @@ async function createWebSocket(data) {
         default:
             return;
     }
-    allSocketList.push(client)
+}
+
+function setAllSocketList(data) {
+    allSocketList = allSocketList.filter(i => i.name != data.name)
+    allSocketList.push(data)
 }
 
 async function checkVersion(data) {
@@ -69,7 +75,13 @@ function modifyWebSocket(target) {
     switch (target.type) {
         case 'add':
         case 'open':
-            createWebSocket(target.data)
+            if (target.data.type == 4) {
+                const client = new Client(target.data)
+                setAllSocketList(client)
+                adapter.connect(client)
+            } else {
+                createWebSocket(target.data)
+            }
             break;
         case 'del':
         case 'close':
@@ -105,6 +117,7 @@ export {
     clearWebSocket,
     modifyWebSocket,
     allSocketList,
+    setAllSocketList,
     sendSocketList
 }
 

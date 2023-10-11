@@ -1,12 +1,12 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap, QQRedBot, getToken, toQQRedMsg } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from "express"
 import http from "http"
 import fetch from 'node-fetch'
 
 export default class Client {
-    constructor({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, uin = Bot.uin }) {
+    constructor({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, uin = Bot.uin, closed = false }) {
         this.name = name;
         this.address = address;
         this.type = type;
@@ -16,6 +16,7 @@ export default class Client {
         this.uin = Number(uin)
         this.ws = null
         this.status = 0
+        this.closed = closed
     }
 
     reconnectCount = 1
@@ -289,128 +290,128 @@ export default class Client {
         })
     }
 
-    async createQQNT() {
-        const token = this.address.split(':')
-        if (!token[2]) {
-            if (this.accessToken) {
-                token[2] = this.accessToken
-            } else {
-                token[2] = getToken()
-                if (!token[2]) return
-            }
-        }
-        const bot = {
-            host: token[0],
-            port: token[1],
-            token: token[2]
-        }
-        bot.sendApi = async (method, api, body) => {
-            const controller = new AbortController()
-            const signal = controller.signal
-            const timeout = 30000
-            setTimeout(() => {
-                controller.abort()
-            }, timeout);
-            return await fetch(`http://${bot.host}:${bot.port}/api/${api}`, {
-                signal,
-                method,
-                body,
-                headers: {
-                    Authorization: 'Bearer ' + bot.token
-                }
-            }).then(r => {
-                if (!r.ok) throw r
-                const contentType = r.headers.get('content-type');
-                if (contentType.includes('application/json')) {
-                    return r.json();
-                } else if (contentType.includes('text/plain')) {
-                    return r.text();
-                } else {
-                    return r
-                }
-            }).catch(error => {
-                if (error.name === 'AbortError') {
-                    return { error: `[ws-plugin] ${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态或重启QQ！`)}` }
-                } else {
-                    return { error }
-                }
-            })
-        }
-        this.ws = {
-            close: () => {
-                bot.ws?.close()
-            }
-        }
-        const reconnect = () => {
-            if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
-                this.status = 3
-                logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
-                this.reconnectCount++
-                setTimeout(() => {
-                    this.createQQNT()
-                }, this.reconnectInterval * 1000);
-            } else {
-                this.stopReconnect = false
-                this.status = 0
-                logger.warn(`[ws-plugin] ${this.name} 达到最大重连次数或关闭连接,停止重连`);
-            }
-        }
-        let info = await bot.sendApi('get', 'getSelfProfile')
-        if (info.error) {
-            if (info.error.code == 'ECONNREFUSED') {
-                logger.error(`[ws-plugin] ${this.name} 请检查是否安装Chronocat并启动QQNT`)
-                reconnect()
-                return
-            }
-            logger.error(`[ws-plugin] ${this.name} Token错误`)
-            logger.error(info.error)
-            return
-        }
-        if (!info.uin) {
-            logger.error(`[ws-plugin] ${this.name} 请点击登录`)
-            reconnect()
-            return
-        }
-        if (!Bot.uin.includes(info.uin)) {
-            Bot.uin.push(info.uin)
-        }
-        bot.info = {
-            ...info,
-            user_id: info.uin,
-            self_id: info.uin,
-            nickname: info.nick,
-            username: info.nick
-        }
-        bot.nickname = info.nick
-        bot.self_id = info.uin
-        this.uin = bot.self_id
-        bot.uin = bot.self_id
-        bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)
-        bot.send = (type, payload) => bot.ws.send(JSON.stringify({ type, payload }))
-        bot.ws.on('open', () => bot.send('meta::connect', { token: bot.token }))
-        bot.ws.on('message', data => toQQRedMsg(bot, data))
-        bot.ws.on('close', (code) => {
-            delete Bot[bot.self_id]
-            this.status = 0
-            switch (code) {
-                case 1005:
-                    logger.error(`[ws-plugin] ${this.name}(${this.uin}) 主动断开连接`)
-                    return
-                case 1006:
-                    this.status = 3
-                    logger.error(`[ws-plugin] ${this.name}(${this.uin}) QQNT被关闭`)
-                    reconnect()
-                    return
-                default:
-                    return
-            }
-        })
-        Bot[bot.self_id] = new QQRedBot(bot)
-        logger.mark(`[ws-plugin] ${logger.blue(`[${bot.self_id}]`)} ${this.name} 已连接`)
-        this.status = 1
-        Bot.em(`connect.${bot.self_id}`, Bot[bot.self_id])
-        return true
-    }
+    // async createQQNT() {
+    //     const token = this.address.split(':')
+    //     if (!token[2]) {
+    //         if (this.accessToken) {
+    //             token[2] = this.accessToken
+    //         } else {
+    //             token[2] = getToken()
+    //             if (!token[2]) return
+    //         }
+    //     }
+    //     const bot = {
+    //         host: token[0],
+    //         port: token[1],
+    //         token: token[2]
+    //     }
+    //     bot.sendApi = async (method, api, body) => {
+    //         const controller = new AbortController()
+    //         const signal = controller.signal
+    //         const timeout = 30000
+    //         setTimeout(() => {
+    //             controller.abort()
+    //         }, timeout);
+    //         return await fetch(`http://${bot.host}:${bot.port}/api/${api}`, {
+    //             signal,
+    //             method,
+    //             body,
+    //             headers: {
+    //                 Authorization: 'Bearer ' + bot.token
+    //             }
+    //         }).then(r => {
+    //             if (!r.ok) throw r
+    //             const contentType = r.headers.get('content-type');
+    //             if (contentType.includes('application/json')) {
+    //                 return r.json();
+    //             } else if (contentType.includes('text/plain')) {
+    //                 return r.text();
+    //             } else {
+    //                 return r
+    //             }
+    //         }).catch(error => {
+    //             if (error.name === 'AbortError') {
+    //                 return { error: `[ws-plugin] ${logger.red(`[${this.uin}] ${api} 请求超时, 请检查账号状态或重启QQ！`)}` }
+    //             } else {
+    //                 return { error }
+    //             }
+    //         })
+    //     }
+    //     this.ws = {
+    //         close: () => {
+    //             bot.ws?.close()
+    //         }
+    //     }
+    //     const reconnect = () => {
+    //         if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
+    //             this.status = 3
+    //             logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
+    //             this.reconnectCount++
+    //             setTimeout(() => {
+    //                 this.createQQNT()
+    //             }, this.reconnectInterval * 1000);
+    //         } else {
+    //             this.stopReconnect = false
+    //             this.status = 0
+    //             logger.warn(`[ws-plugin] ${this.name} 达到最大重连次数或关闭连接,停止重连`);
+    //         }
+    //     }
+    //     let info = await bot.sendApi('get', 'getSelfProfile')
+    //     if (info.error) {
+    //         if (info.error.code == 'ECONNREFUSED') {
+    //             logger.error(`[ws-plugin] ${this.name} 请检查是否安装Chronocat并启动QQNT`)
+    //             reconnect()
+    //             return
+    //         }
+    //         logger.error(`[ws-plugin] ${this.name} Token错误`)
+    //         logger.error(info.error)
+    //         return
+    //     }
+    //     if (!info.uin) {
+    //         logger.error(`[ws-plugin] ${this.name} 请点击登录`)
+    //         reconnect()
+    //         return
+    //     }
+    //     if (!Bot.uin.includes(info.uin)) {
+    //         Bot.uin.push(info.uin)
+    //     }
+    //     bot.info = {
+    //         ...info,
+    //         user_id: info.uin,
+    //         self_id: info.uin,
+    //         nickname: info.nick,
+    //         username: info.nick
+    //     }
+    //     bot.nickname = info.nick
+    //     bot.self_id = info.uin
+    //     this.uin = bot.self_id
+    //     bot.uin = bot.self_id
+    //     bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)
+    //     bot.send = (type, payload) => bot.ws.send(JSON.stringify({ type, payload }))
+    //     bot.ws.on('open', () => bot.send('meta::connect', { token: bot.token }))
+    //     bot.ws.on('message', data => toQQRedMsg(bot, data))
+    //     bot.ws.on('close', (code) => {
+    //         delete Bot[bot.self_id]
+    //         this.status = 0
+    //         switch (code) {
+    //             case 1005:
+    //                 logger.error(`[ws-plugin] ${this.name}(${this.uin}) 主动断开连接`)
+    //                 return
+    //             case 1006:
+    //                 this.status = 3
+    //                 logger.error(`[ws-plugin] ${this.name}(${this.uin}) QQNT被关闭`)
+    //                 reconnect()
+    //                 return
+    //             default:
+    //                 return
+    //         }
+    //     })
+    //     Bot[bot.self_id] = new QQRedBot(bot)
+    //     logger.mark(`[ws-plugin] ${logger.blue(`[${bot.self_id}]`)} ${this.name} 已连接`)
+    //     this.status = 1
+    //     Bot.em(`connect.${bot.self_id}`, Bot[bot.self_id])
+    //     return true
+    // }
 
     createHttp() {
         const parts = this.address.split(':');

@@ -490,7 +490,7 @@ export class setting extends plugin {
         let servers = Config.servers
         for (let i = 0; i < servers.length; i++) {
             if (servers[i].name == msg) {
-                servers[i].close = false
+                servers[i].closed = false
                 try {
                     Config.setArr('ws-config', 'servers', i, servers[i])
                     this.reply('操作成功~请留意控制台输出~')
@@ -510,7 +510,7 @@ export class setting extends plugin {
         let servers = Config.servers
         for (let i = 0; i < servers.length; i++) {
             if (servers[i].name == msg) {
-                servers[i].close = true
+                servers[i].closed = true
                 try {
                     Config.setArr('ws-config', 'servers', i, servers[i])
                     this.reply('操作成功~请留意控制台输出~')
@@ -595,6 +595,7 @@ export class setting extends plugin {
     async view() {
         const msg = []
         for (const i of Config.servers) {
+            // if (i.type == 4) continue
             if (msg.length != 0) msg.push('\n----------------\n')
             let status = '已关闭'
             for (const s of allSocketList) {
