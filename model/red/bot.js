@@ -117,8 +117,8 @@ export class QQRedBot {
             self_id: this.self_id,
             group_id
         }
-        const { msg: elements, log, message_id: id, rand } = await makeSendMsg(data, message)
-        if (id) return { message_id: id, rand }
+        const { msg: elements, log, message_id: id, rand, seq, time } = await makeSendMsg(data, message)
+        if (id) return { message_id: id, rand, seq, time }
         const result = await this.bot.sendApi('POST', 'message/send', JSON.stringify({
             peer: {
                 chatType: 2,
@@ -150,8 +150,8 @@ export class QQRedBot {
             self_id: this.self_id,
             user_id
         }
-        const { msg: elements, log, message_id: id, rand } = await makeSendMsg(data, message)
-        if (id) return { message_id: id, rand }
+        const { msg: elements, log, message_id: id, rand, seq, time } = await makeSendMsg(data, message)
+        if (id) return { message_id: id, rand, seq, time }
         const result = await this.bot.sendApi('POST', 'message/send', JSON.stringify({
             peer: {
                 chatType,

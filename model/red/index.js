@@ -101,7 +101,7 @@ export const adapter = new class RedAdapter {
             username: info.nick
         }
         bot.nickname = info.nick
-        bot.self_id = info.uin
+        bot.self_id = Number(info.uin)
         this.uin = bot.self_id
         bot.uin = bot.self_id
         bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)

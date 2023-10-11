@@ -1,11 +1,12 @@
 import { uploadImg, uploadAudio, uploadVideo, uploadFile, getNtPath, roleMap, redPath } from './tool.js'
-import { TMP_DIR } from '../tool.js'
+import { TMP_DIR, sleep } from '../tool.js'
 import { setMsgMap, getMsgMap } from '../msgMap.js'
 import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
 import fs from 'fs'
 import schedule from "node-schedule"
 import _ from 'lodash'
+import os from 'os'
 
 async function makeSendMsg(data, message) {
     if (!Array.isArray(message))
@@ -126,7 +127,48 @@ async function makeSendMsg(data, message) {
                 }
                 break
             case "node":
-                return await sendNodeMsg(data, i.data)
+                if (os.platform() === 'win32') {
+                    return await sendNodeMsg(data, i.data)
+                } else {
+                    let message_id, rand, seq, time
+                    for (const { message: msg } of i.data) {
+                        let peer = {
+                            chatType: data.group_id ? 2 : 1,
+                            peerUin: String(data.group_id || data.user_id)
+                        }
+                        const { msg: elements, log } = await makeSendMsg(data, msg)
+                        if (!elements) continue
+                        const result = await data.bot.sendApi('POST', 'message/send', JSON.stringify({
+                            peer,
+                            elements
+                        }))
+                        if (result.error) {
+                            throw result.error
+                        } else {
+                            const sendRet = {
+                                message_id: result.msgId,
+                                seq: Number(result.msgSeq),
+                                rand: Number(result.msgRandom),
+                                time: Number(result.msgTime),
+                                onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
+                            }
+                            if (data.group_id) {
+                                sendRet.group_id = Number(data.group_id)
+                            } else {
+                                sendRet.user_id = Number(data.user_id)
+                            }
+                            setMsgMap(sendRet)
+                            message_id = result.msgId
+                            seq = Number(result.msgSeq)
+                            rand = Number(result.msgRandom)
+                            time = Number(result.msgTime)
+                            logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id}]`)} 发送群消息：${log}`)
+                        }
+                        // 防止发太快
+                        // await sleep(500)
+                    }
+                    return { message_id, rand, seq, time }
+                }
                 break
             default:
                 log += JSON.stringify(i)
