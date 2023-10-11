@@ -8,9 +8,12 @@ let allSocketList = []
 
 async function createWebSocket(data) {
     const client = new Client(data)
+    if (data.close) {
+        data.closed = data.close
+        client.closed = data.close
+    }
     setAllSocketList(client)
     if (data.address == 'ws_address') return
-    if (data.close) data.closed = data.close
     if (data.closed) return
     sendSocketList = sendSocketList.filter(i => i.name != data.name)
     switch (Number(data.type)) {
