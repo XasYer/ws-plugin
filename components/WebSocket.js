@@ -121,6 +121,7 @@ export {
     modifyWebSocket,
     allSocketList,
     setAllSocketList,
-    sendSocketList
+    sendSocketList,
+    createWebSocket
 }
 

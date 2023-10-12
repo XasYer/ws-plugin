@@ -1,5 +1,5 @@
 import plugin from '../../../lib/plugins/plugin.js'
-import { Config, clearWebSocket, initWebSocket, Render, Version, allSocketList, sendSocketList } from '../components/index.js'
+import { Config, clearWebSocket, initWebSocket, Render, Version, allSocketList, sendSocketList, createWebSocket } from '../components/index.js'
 import lodash from 'lodash'
 
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
@@ -258,7 +258,12 @@ export class setting extends plugin {
                 }
                 break
             case '重新':
-                this.reset()
+                if (regRet[2]) {
+                    await this.resetWs(regRet[2])
+                } else {
+                    this.setContext('checkResetWs', this.e.isGroup)
+                    this.reply('请继续发送需要重新连接的ws连接名字')
+                }
                 break
             case '查看':
                 this.view()
@@ -585,10 +590,35 @@ export class setting extends plugin {
         this.finish('checkDelWs', this.e.isGroup)
     }
 
-    async reset() {
-        clearWebSocket()
-        initWebSocket()
-        this.reply('操作成功~请留意控制台输出~')
+    async checkResetWs() {
+        if (!this.e.msg || !this.e.isMaster) {
+            return false
+        }
+        let msg = this.e.msg
+        await this.resetWs(msg)
+        this.finish('checkDelWs', this.e.isGroup)
+    }
+
+    async resetWs(msg) {
+        for (const i of sendSocketList) {
+            if (i.name == msg) {
+                i.close()
+                setTimeout(async () => {
+                    await createWebSocket({
+                        name: i.name,
+                        address: i.address,
+                        type: i.type,
+                        reconnectInterval: i.reconnectInterval,
+                        maxReconnectAttempts: i.maxReconnectAttempts,
+                        uin: i.uin,
+                        accessToken: i.accessToken
+                    })
+                }, 500)
+                this.reply('操作成功~请留意控制台输出~')
+                return true
+            }
+        }
+        this.reply(`没有连接名字为${msg}的连接或已关闭连接`)
         return true
     }
 
