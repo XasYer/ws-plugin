@@ -140,7 +140,12 @@ function pcmToSilk(input, output, samplingRate) {
         const args = ['-i', input, '-s', samplingRate, '-o', output]
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = dirname(__filename);
-        const child = spawn(join(__dirname, './cli.exe'), args)
+        let child
+        try {
+            child = spawn(join(__dirname, './cli.exe'), args)
+        } catch (error) {
+            reject('red发送语音暂不支持非win系统')
+        }
         child.on('exit', () => {
             fs.access(output, fs.constants.F_OK, (err) => {
                 if (err) {
