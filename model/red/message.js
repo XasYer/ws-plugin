@@ -169,6 +169,53 @@ async function makeSendMsg(data, message) {
                         // await sleep(500)
                     }
                     return { message_id, rand, seq, time }
+                } else if (Config.redSendForwardMsgType == 3) {
+                    let message_id, rand, seq, time, elements = [], logs = ''
+                    for (let index = 0; index < i.data.length; index++) {
+                        const { msg: element, log } = await makeSendMsg(data, i.data[index].message)
+                        if (!element) continue
+                        if (index != i.data.length - 1) {
+                            element.push({
+                                "elementType": 1,
+                                "textElement": {
+                                    "content": '\n'
+                                }
+                            })
+                        }
+                        elements.push(...element)
+                        logs += log
+                    }
+                    let peer = {
+                        chatType: data.group_id ? 2 : 1,
+                        peerUin: String(data.group_id || data.user_id)
+                    }
+                    const result = await data.bot.sendApi('POST', 'message/send', JSON.stringify({
+                        peer,
+                        elements
+                    }))
+                    if (result.error) {
+                        throw result.error
+                    } else {
+                        const sendRet = {
+                            message_id: result.msgId,
+                            seq: Number(result.msgSeq),
+                            rand: Number(result.msgRandom),
+                            time: Number(result.msgTime),
+                            onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
+                        }
+                        if (data.group_id) {
+                            sendRet.group_id = Number(data.group_id)
+                        } else {
+                            sendRet.user_id = Number(data.user_id)
+                        }
+                        setMsgMap(sendRet)
+                        message_id = result.msgId
+                        seq = Number(result.msgSeq)
+                        rand = Number(result.msgRandom)
+                        time = Number(result.msgTime)
+                        logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id || data.user_id}]`)} 发送消息：${_.truncate(logs, { length: 1000 })}`)
+                    }
+                    return { message_id, rand, seq, time }
                 }
                 break
             default:
