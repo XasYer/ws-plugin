@@ -596,7 +596,7 @@ export class setting extends plugin {
         }
         let msg = this.e.msg
         await this.resetWs(msg)
-        this.finish('checkDelWs', this.e.isGroup)
+        this.finish('checkResetWs', this.e.isGroup)
     }
 
     async resetWs(msg) {
