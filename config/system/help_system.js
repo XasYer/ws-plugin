@@ -42,7 +42,7 @@ export const helpList = [
       {
         "icon": 64,
         "title": "#ws重新连接",
-        "desc": "强制断开已有的所有连接并重新连接"
+        "desc": "断开连接并重新连接"
       }
     ]
   },
