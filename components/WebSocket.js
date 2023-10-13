@@ -62,11 +62,15 @@ async function checkVersion(data) {
             logger.warn(`[ws-plugin] ${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
             return false
         } else {
+            let log = false
             for (let i = 0; i < 20; i++) {
                 if (Version.protocol.some(i => i == Bot[data.uin]?.version?.name)) {
                     return true
                 }
-                logger.warn(`[ws-plugin] ${data.name} 未适配的协议或未连接对应协议,20秒后重新判断`)
+                if (!log) {
+                    logger.warn(`[ws-plugin] ${data.name} 未适配的协议或未连接对应协议,20秒后重新判断`)
+                    log = true
+                }
                 await sleep(1000)
             }
             logger.warn(`[ws-plugin] ${data.name} 未适配的协议或未连接对应协议`)
