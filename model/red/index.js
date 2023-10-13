@@ -9,7 +9,7 @@ if (Version.isTrss) {
     logger.info(logger.yellow("- 正在加载 Chronocat(red) 适配器插件"))
 }
 
-export const adapter = new class RedAdapter {
+export const redAdapter = new class RedAdapter {
     constructor() {
         this.id = "QQ"
         this.name = 'chronocat'
@@ -81,8 +81,8 @@ export const adapter = new class RedAdapter {
                 reconnect()
                 return
             }
-            logger.error(`${this.name} Token错误`)
-            logger.error(await info.error.text())
+            logger.error(`${this.name} Token错误或其他未知原因`)
+            logger.error(await info.error.text?.() || info.error)
             return
         }
         if (!info.uin) {
@@ -138,7 +138,7 @@ export const adapter = new class RedAdapter {
         for (const i of allSocketList) {
             if (i.type == 4) {
                 await new Promise(resolve => {
-                    adapter.connect(i).then(resolve)
+                    redAdapter.connect(i).then(resolve)
                     setTimeout(resolve, 5000)
                 })
             }
@@ -147,6 +147,6 @@ export const adapter = new class RedAdapter {
 }
 
 if (Version.isTrss) {
-    Bot.adapter.push(adapter)
+    Bot.adapter.push(redAdapter)
     logger.info(logger.green("- Chronocat(red) 适配器插件 加载完成"))
 }
