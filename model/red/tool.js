@@ -24,6 +24,7 @@ const roleMap = {
 
 async function uploadImg(bot, msg) {
     const file = await upload(bot, msg, 'image/png')
+    if (!file.imageInfo) throw "获取图片信息失败,请检查图片状态"
     return {
         elementType: 2,
         picElement: {
