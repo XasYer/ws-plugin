@@ -68,12 +68,12 @@ async function checkVersion(data) {
                     return true
                 }
                 if (!log) {
-                    logger.warn(`[ws-plugin] ${data.name} 未适配的协议或未连接对应协议,20秒后重新判断`)
+                    logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端,20秒后重新判断`)
                     log = true
                 }
                 await sleep(1000)
             }
-            logger.warn(`[ws-plugin] ${data.name} 未适配的协议或未连接对应协议`)
+            logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端 ${data.uin}`)
             return false
         }
     }
