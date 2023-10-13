@@ -1,8 +1,9 @@
 import Client from "./Client.js";
 import { Config, Version } from './index.js'
 import { sleep } from '../model/index.js'
-import { redAdapter } from '../model/red/index.js'
-import { satoriAdapter } from '../model/satori/index.js'
+import { adapter } from '../model/red/index.js'
+// import { redAdapter } from '../model/red/index.js'
+// import { satoriAdapter } from '../model/satori/index.js'
 
 let sendSocketList = []
 let allSocketList = []
