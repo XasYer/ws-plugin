@@ -14,7 +14,7 @@ const Render = {
       console.log('未找到e.runtime，请升级至最新版Yunzai')
     }
 
-    let BotName = Version.isMiao ? 'Miao-Yunzai' : 'Yunzai-Bot'
+    let BotName = Version.isTrss ? 'Trss-Yunzai' : Version.isMiao ? 'Miao-Yunzai' : 'Yunzai-Bot'
     return e.runtime.render('ws-plugin', path, params, {
       retType: cfg.retMsgId ? 'msgId' : 'default',
       beforeRender({ data }) {
