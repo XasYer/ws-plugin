@@ -1,7 +1,7 @@
 import { Config, Version } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsgMap, setMsgMap } from './msgMap.js'
-import { SendMusicShare, TMP_DIR } from './tool.js'
+import { SendMusicShare, TMP_DIR, decodeHtml } from './tool.js'
 import common from '../../../lib/common/common.js'
 import { randomUUID } from 'crypto'
 import fs from 'fs'
@@ -218,7 +218,8 @@ async function makeSendMsg(params, uin) {
                 sendMsg.push(segment.image(decodeURIComponent(i.data.file)))
                 break
             case 'text':
-                sendMsg.push(i.data.text)
+                let text = decodeHtml(i.data.text)
+                sendMsg.push(text)
                 break
             case 'at':
                 sendMsg.push(segment.at(Number(i.data.qq) || 'all'))
@@ -275,11 +276,7 @@ async function makeSendMsg(params, uin) {
                 sendMsg.push(await makeForwardMsg(data))
                 break
             case 'json':
-                let json = i.data.data
-                json = json.replace(/&#44;/g, ',')
-                json = json.replace(/&amp;/g, '&')
-                json = json.replace(/&#91;/g, '[')
-                json = json.replace(/&#93;/g, ']')
+                let json = decodeHtml(i.data.data)
                 sendMsg.push(segment.json(json))
                 break
             default:

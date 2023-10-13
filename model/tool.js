@@ -127,9 +127,27 @@ const mimeTypes = {
     '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
 }
 
+function decodeHtml(html) {
+    var map = {
+        '&amp;': '&',
+        '&#91;': '[',
+        '&#93;': ']',
+        '&#44;': ','
+    };
+
+    for (var key in map) {
+        const value = map[key];
+        const regex = new RegExp(key, 'g');
+        html = html.replace(regex, value);
+    }
+    return html;
+}
+
+
 export {
     SendMusicShare,
     sleep,
     TMP_DIR,
-    mimeTypes
+    mimeTypes,
+    decodeHtml
 }
