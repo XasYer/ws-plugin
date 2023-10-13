@@ -1,8 +1,7 @@
 import Client from "./Client.js";
 import { Config, Version } from './index.js'
 import { sleep } from '../model/index.js'
-import { adapter } from '../model/red/index.js'
-// import { redAdapter } from '../model/red/index.js'
+import { redAdapter } from '../model/red/index.js'
 // import { satoriAdapter } from '../model/satori/index.js'
 
 let sendSocketList = []
@@ -88,7 +87,7 @@ function modifyWebSocket(target) {
             if (target.data.type == 4) {
                 const client = new Client(target.data)
                 setAllSocketList(client)
-                adapter.connect(client)
+                redAdapter.connect(client)
             } else {
                 createWebSocket(target.data)
             }
