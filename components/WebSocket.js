@@ -1,17 +1,18 @@
 import Client from "./Client.js";
 import { Config, Version } from './index.js'
 import { sleep } from '../model/index.js'
-import { adapter } from '../model/red/index.js'
+import { redAdapter } from '../model/red/index.js'
+import { satoriAdapter } from '../model/satori/index.js'
 
 let sendSocketList = []
 let allSocketList = []
 
 async function createWebSocket(data) {
-    const client = new Client(data)
-    if (data.close) {
+    if (typeof data.close != 'undefined' && typeof data.closed == 'undefined') {
         data.closed = data.close
-        client.closed = data.close
+        delete data.close
     }
+    const client = new Client(data)
     setAllSocketList(client)
     if (data.address == 'ws_address') return
     if (data.closed) return
@@ -60,6 +61,7 @@ async function checkVersion(data) {
             logger.warn(`[ws-plugin] ${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
             return false
         } else {
+            logger.warn(`[ws-plugin] ${data.name} 未适配的协议或未连接对应协议,20秒后重新判断`)
             for (let i = 0; i < 20; i++) {
                 if (Version.protocol.some(i => i == Bot[data.uin]?.version?.name)) {
                     return true

@@ -495,6 +495,7 @@ export class setting extends plugin {
         let servers = Config.servers
         for (let i = 0; i < servers.length; i++) {
             if (servers[i].name == msg) {
+                delete servers[i].close
                 servers[i].closed = false
                 try {
                     Config.setArr('ws-config', 'servers', i, servers[i])
@@ -515,6 +516,7 @@ export class setting extends plugin {
         let servers = Config.servers
         for (let i = 0; i < servers.length; i++) {
             if (servers[i].name == msg) {
+                delete servers[i].close
                 servers[i].closed = true
                 try {
                     Config.setArr('ws-config', 'servers', i, servers[i])
