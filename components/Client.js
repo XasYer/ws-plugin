@@ -409,7 +409,7 @@ export default class Client {
 
     async sendMasterMsg(msg) {
         // const bot = Version.isTrss ? Bot[this.uin] : Bot
-        const bot = Bot[uin] || Bot
+        const bot = Bot[this.uin] || Bot
         let masterQQ = []
         const master = Version.isTrss ? Config.master[this.uin] : Config.masterQQ
         if (Config.howToMaster > 0) {
