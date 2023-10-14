@@ -45,6 +45,8 @@ async function upload(bot, msg, contentType) {
     if (msg instanceof Stream.Readable) {
         buffer = fs.readFileSync(msg.path)
         contentType = contentType.split('/')[0] + '/' + msg.path.substring(msg.path.lastIndexOf('.') + 1)
+    } if (Buffer.isBuffer(msg)) {
+        buffer = msg
     } else if (msg.match(/^base64:\/\//)) {
         buffer = Buffer.from(msg.replace(/^base64:\/\//, ""), 'base64')
     } else if (msg.startsWith('http')) {
@@ -197,21 +199,17 @@ async function saveTmp(data, ext = null) {
 }
 
 async function getNtPath(bot) {
-    let dataPath = await redis.get('ws-plugin:qqnt:dataPath')
-    if (!dataPath) {
-        try {
-            const buffer = fs.readFileSync('./plugins/ws-plugin/resources/common/cont/logo.png')
-            const blob = new Blob([buffer], { type: 'image/png' })
-            const formData = new FormData()
-            formData.append('file', blob, '1.png')
-            const file = await bot.sendApi('POST', 'upload', formData)
-            fs.unlinkSync(file.ntFilePath)
-            const index = file.ntFilePath.indexOf('nt_data');
-            dataPath = file.ntFilePath.slice(0, index + 'nt_data'.length);
-            await redis.set('ws-plugin:qqnt:dataPath', dataPath)
-        } catch (error) {
-            return null
-        }
+    try {
+        const buffer = fs.readFileSync('./plugins/ws-plugin/resources/common/cont/logo.png')
+        const blob = new Blob([buffer], { type: 'image/png' })
+        const formData = new FormData()
+        formData.append('file', blob, '1.png')
+        const file = await bot.sendApi('POST', 'upload', formData)
+        fs.unlinkSync(file.ntFilePath)
+        const index = file.ntFilePath.indexOf('nt_data');
+        dataPath = file.ntFilePath.slice(0, index + 'nt_data'.length);
+    } catch (error) {
+        return null
     }
     return dataPath
 }

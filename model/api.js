@@ -5,7 +5,7 @@ import { Version } from '../components/index.js'
 import fetch from 'node-fetch'
 
 async function getApiData(api, params = {}, name, uin) {
-    const bot = Version.isTrss ? Bot[uin] : Bot
+    const bot = Bot[uin] || Bot
     let sendRet = null
     let ResponseData = null
     let publicApi = {

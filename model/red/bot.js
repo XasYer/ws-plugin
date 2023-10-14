@@ -45,7 +45,7 @@ export class QQRedBot {
         }
         const i = {
             ...this.gl.get(Number(group_id)),
-            self_id: this.self_id,
+            self_id: this.uin,
             bot: this.bot,
             group_id
         }
@@ -60,7 +60,8 @@ export class QQRedBot {
             getInfo: async () => await this.getGroupInfo(group_id),
             muteMember: async (user_id, duration) => await this.setGroupBan(group_id, user_id, duration),
             muteAll: async (enable) => await this.setGroupWholeBan(group_id, enable),
-            kickMember: async (user_id, message, block) => await this.setGroupKick(group_id, user_id, false, message)
+            kickMember: async (user_id, message, block) => await this.setGroupKick(group_id, user_id, false, message),
+            makeForwardMsg: (msg) => { return { type: "node", data: msg } }
         }
     }
 
@@ -68,7 +69,7 @@ export class QQRedBot {
         const user = this.fl.get(Number(user_id))
         const i = {
             ...user,
-            self_id: this.self_id,
+            self_id: this.uin,
             bot: this.bot,
             user_id,
         }
@@ -79,7 +80,8 @@ export class QQRedBot {
             recallMsg: async message_id => await this.deleteMsg(message_id),
             sendFile: async file => await this.sendPrivateMsg(user_id, [{ type: 'file', file }], chatType),
             getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id),
-            getFileUrl: async (fid) => `http://127.0.0.1:${Bot.server.address().port}/ws-plugin?file=${fid}`
+            getFileUrl: async (fid) => `http://127.0.0.1:${Bot.server.address().port}/ws-plugin?file=${fid}`,
+            makeForwardMsg: (msg) => { return { type: "node", data: msg } }
         }
     }
 
@@ -92,7 +94,7 @@ export class QQRedBot {
         if (!info) return {}
         const i = {
             ...info,
-            self_id: this.self_id,
+            self_id: this.uin,
             bot: this.bot,
             group_id: group_id,
             user_id: user_id,
@@ -114,7 +116,7 @@ export class QQRedBot {
     async sendGroupMsg(group_id, message) {
         const data = {
             bot: this.bot,
-            self_id: this.self_id,
+            self_id: this.uin,
             group_id
         }
         const { msg: elements, log, message_id: id, rand, seq, time } = await makeSendMsg(data, message)
@@ -129,7 +131,7 @@ export class QQRedBot {
         if (result.error) {
             throw result.error
         } else {
-            logger.info(`${logger.blue(`[${this.self_id} => ${group_id}]`)} 发送群消息：${log}`)
+            logger.info(`${logger.blue(`[${this.uin} => ${group_id}]`)} 发送群消息：${log}`)
         }
         const sendRet = {
             message_id: result.msgId,
@@ -147,7 +149,7 @@ export class QQRedBot {
         if ([1, 100].indexOf(chatType) == -1) chatType = 1
         const data = {
             bot: this.bot,
-            self_id: this.self_id,
+            self_id: this.uin,
             user_id
         }
         const { msg: elements, log, message_id: id, rand, seq, time } = await makeSendMsg(data, message)
@@ -162,7 +164,7 @@ export class QQRedBot {
         if (result.error) {
             throw result.error
         } else {
-            logger.info(`${logger.blue(`[${this.self_id} => ${user_id}]`)} 发送好友消息：${log}`)
+            logger.info(`${logger.blue(`[${this.uin} => ${user_id}]`)} 发送好友消息：${log}`)
         }
         const sendRet = {
             message_id: result.msgId,
@@ -235,7 +237,7 @@ export class QQRedBot {
             if (result.msgList) {
                 const msgList = []
                 for (const i of result.msgList) {
-                    const message = await makeMessage(this.self_id, i)
+                    const message = await makeMessage(this.uin, i)
                     if (message.bot) delete message.bot
                     msgList.push(message)
                 }
@@ -249,7 +251,7 @@ export class QQRedBot {
         for (const i of (await this.bot.sendApi('get', 'bot/friends'))) {
             this.fl.set(Number(i.uin), {
                 ...i,
-                bot_id: this.self_id,
+                bot_id: this.uin,
                 user_id: i.uin,
                 nickname: i.nick
             })
@@ -261,7 +263,7 @@ export class QQRedBot {
         for (const i of (await this.bot.sendApi('get', 'bot/groups'))) {
             const data = {
                 ...i,
-                bot_id: this.self_id,
+                bot_id: this.uin,
                 group_id: i.groupCode,
                 group_name: i.groupName,
                 max_member_count: i.maxMember,

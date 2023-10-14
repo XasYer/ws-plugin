@@ -32,10 +32,11 @@ async function createWebSocket(data) {
             client.createGSUidWs()
             sendSocketList.push(client)
             break
-        // case 4:
-        //     if (!Version.isTrss) return
-        //     client.createQQNT()
-        //     break
+        case 4:
+            if (Version.isTrss) return
+            // client.createQQNT()
+            redAdapter.connect(client)
+            break
         case 5:
             if (!await checkVersion(data)) return
             client.createHttp()

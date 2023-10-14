@@ -1,13 +1,13 @@
 import { uploadImg, uploadAudio, uploadVideo, uploadFile, getNtPath, roleMap, redPath } from './tool.js'
 import { TMP_DIR, sleep } from '../tool.js'
 import { setMsgMap, getMsgMap } from '../msgMap.js'
-import { Config } from '../../components/index.js'
+import { Config, Version } from '../../components/index.js'
 import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
 import fs from 'fs'
 import schedule from "node-schedule"
 import _ from 'lodash'
-import os from 'os'
+import PluginsLoader from '../../../../lib/plugins/loader.js'
 
 async function makeSendMsg(data, message) {
     if (!Array.isArray(message))
@@ -431,6 +431,27 @@ async function makeMessage(self_id, payload) {
     if (e.group_id) e.group = e.bot.pickGroup(e.group_id)
     if (e.user_id) e.friend = e.bot.pickFriend(e.user_id)
     if (e.group && e.user_id) e.member = e.group.pickMember(e.user_id)
+    if (!Version.isTrss) {
+        e.reply = (msg, quote) => {
+            if (!Array.isArray(msg)) msg = [msg]
+            if (quote && e.message_id) {
+                msg.unshift({ type: 'reply', id: e.message_id })
+            }
+            if (e.isGroup) {
+                if (e.group?.sendMsg) {
+                    return e.group.sendMsg(msg)
+                } else {
+                    return e.bot.pickGroup(e.group_id).sendMsg(msg)
+                }
+            } else {
+                if (e.friend?.sendMsg) {
+                    return e.friend.sendMsg(msg)
+                } else {
+                    return e.bot.pickFriend(e.user_id).sendMsg(msg)
+                }
+            }
+        }
+    }
     return e
 }
 
@@ -616,7 +637,6 @@ async function toQQRedMsg(bot, data) {
 
                 }
             });
-            await getNtPath(bot)
             setTimeout(() => {
                 if (Bot[bot.self_id]?.version) {
                     Bot[bot.self_id].version = {
@@ -671,8 +691,10 @@ async function toQQRedMsg(bot, data) {
                         time: Number(e.time),
                         group_id: Number(e.group_id),
                     })
+                    // Bot.on('message',()=>{})可以监听到消息 但是self_id = 88888
                     Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
-                    // }
+                    // Bot.on('message',()=>{})不可以监听到消息 但是self_id正常
+                    // PluginsLoader.deal(e)
                     break;
                 case 'notice':
                     Bot.em(`${e.post_type}.${e.notice_type}.${e.sub_type}`, e)

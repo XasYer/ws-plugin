@@ -116,8 +116,10 @@ Bot.on('message', async e => {
         msg.isGroup = true
         msg.group_id = e.group_id
         msg.param.group_id = e.group_id
+        msg.self_id = e.group?.bot?.uin || msg.self_id
     } else if (e.message_type == 'private') {
         msg.isPrivate = true
+        msg.self_id = e.friend?.bot?.uin || msg.self_id
     } else {
         return false
     }

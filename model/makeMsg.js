@@ -191,7 +191,7 @@ async function makeGSUidSendMsg(data) {
  * @returns sendMsg , quote
  */
 async function makeSendMsg(params, uin) {
-    const bot = Version.isTrss ? Bot[uin] : Bot
+    const bot = Bot[uin] || Bot
     let msg = params.message
     if (typeof msg == 'string') msg = CQToMsg(msg)
     let target, uid, sendMsg = [], quote = null
@@ -339,7 +339,7 @@ async function makeForwardMsg(params, uin) {
             })
         }
     }
-    const bot = Version.isTrss ? Bot[uin] : Bot
+    const bot = Bot[uin] || Bot
     if (params.group_id) {
         forwardMsg = await bot.pickGroup(params.group_id).makeForwardMsg?.(forwardMsg) || { type: "node", data: forwardMsg }
     } else if (params.user_id) {

@@ -230,7 +230,8 @@ export default class Client {
             const { sendMsg, quote } = await makeGSUidSendMsg(data)
             if (sendMsg.length > 0) {
                 let sendRet, group_id, user_id
-                const bot = Version.isTrss ? Bot[data.bot_self_id] : Bot
+                // const bot = Version.isTrss ? Bot[data.bot_self_id] : Bot
+                const bot = Bot[data.bot_self_id] || Bot
                 switch (data.target_type) {
                     case 'group':
                     case 'channel':
@@ -407,7 +408,8 @@ export default class Client {
     }
 
     async sendMasterMsg(msg) {
-        const bot = Version.isTrss ? Bot[this.uin] : Bot
+        // const bot = Version.isTrss ? Bot[this.uin] : Bot
+        const bot = Bot[uin] || Bot
         let masterQQ = []
         const master = Version.isTrss ? Config.master[this.uin] : Config.masterQQ
         if (Config.howToMaster > 0) {

@@ -393,7 +393,14 @@ export class setting extends plugin {
                 default:
                     break;
             }
-            if (Version.isTrss) config.uin = Number(this.e.self_id) || String(this.e.self_id)
+            // config.uin = Number(this.e.bot.uin || this.e.self_id) || String(this.e.bot.uin || this.e.self_id)
+            if (this.e.group) {
+                const seld_id = this.e.group?.bot?.uin || this.e.self_id
+                config.uin = Number(seld_id) || String(seld_id)
+            } else if (this.e.friend) {
+                const seld_id = this.e.friend?.bot?.uin || this.e.self_id
+                config.uin = Number(seld_id) || String(seld_id)
+            }
             await this.addWs(config)
             this.finish('checkAddWs', this.e.isGroup)
             await redis.del('ws-plugin:addWs:' + this.e.user_id)

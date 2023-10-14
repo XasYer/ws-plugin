@@ -5,9 +5,7 @@ import { Version, allSocketList, setAllSocketList } from '../../components/index
 import WebSocket from 'ws'
 import fetch from "node-fetch"
 
-if (Version.isTrss) {
-    logger.info(logger.yellow("- 正在加载 Chronocat(red) 适配器插件"))
-}
+logger.info(logger.yellow("- 正在加载 Chronocat(red) 适配器插件"))
 
 export const redAdapter = new class RedAdapter {
     constructor() {
@@ -109,10 +107,10 @@ export const redAdapter = new class RedAdapter {
             delete Bot[bot.self_id]
             switch (code) {
                 case 1005:
-                    logger.error(`${this.name}(${this.uin}) 主动断开连接`)
+                    logger.error(`${this.name}(${bot.self_id}) 主动断开连接`)
                     return
                 case 1006:
-                    logger.error(`${this.name}(${this.uin}) QQNT被关闭`)
+                    logger.error(`${this.name}(${bot.self_id}) QQNT被关闭`)
                     reconnect()
                     return
                 default:
@@ -120,6 +118,17 @@ export const redAdapter = new class RedAdapter {
             }
         })
         Bot[bot.self_id] = new QQRedBot(bot)
+        if (!Version.isTrss) {
+            /** 米游社主动推送、椰奶状态pro */
+            if (!Bot?.adapter) {
+                Bot.adapter = [Bot.uin]
+                Bot.adapter.push(bot.self_id)
+            } else {
+                Bot.adapter.push(bot.self_id)
+                /** 去重防止断连后出现多个重复的id */
+                Bot.adapter = Array.from(new Set(Bot.adapter.map(JSON.stringify))).map(JSON.parse)
+            }
+        }
         logger.mark(`${logger.blue(`[${bot.self_id}]`)} ${this.name}(${this.id}) 已连接`)
         data.ws = {
             close: () => {
@@ -148,5 +157,5 @@ export const redAdapter = new class RedAdapter {
 
 if (Version.isTrss) {
     Bot.adapter.push(redAdapter)
-    logger.info(logger.green("- Chronocat(red) 适配器插件 加载完成"))
 }
+logger.info(logger.green("- Chronocat(red) 适配器插件 加载完成"))
