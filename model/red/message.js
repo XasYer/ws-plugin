@@ -262,10 +262,10 @@ async function makeMessage(self_id, payload) {
                     if (qq == e.self_id) {
                         e.atBot = true
                     }
-                    e.raw_message += `[提及：${qq}]`
+                    e.raw_message += `{at:${qq}}`
                 } else if (i.textElement.atType == 1) {
                     e.message.push({ type: 'at', qq: 'all' })
-                    e.raw_message += `[提及：全体成员]`
+                    e.raw_message += `{at:all}`
                 } else if (i.textElement.atType == 0) {
                     e.message.push({ type: 'text', text: i.textElement.content })
                     e.raw_message += i.textElement.content
@@ -278,7 +278,7 @@ async function makeMessage(self_id, payload) {
                     url: `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0`,
                     file: md5
                 })
-                e.raw_message += `[图片: https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0]`
+                e.raw_message += `{image:${md5.toUpperCase()}}`
                 break
             case 3:
                 if (payload.chatType == 2) break
@@ -301,7 +301,7 @@ async function makeMessage(self_id, payload) {
                     md5: i.fileElement.fileMd5,
                     size: i.fileElement.fileSize,
                 })
-                e.raw_message += `[文件: ${i.fileElement.fileName}]`
+                e.raw_message += `{file:${i.fileElement.fileName}}`
                 break
             case 4:
                 e.message.push({
@@ -310,7 +310,7 @@ async function makeMessage(self_id, payload) {
                     md5: i.pttElement.md5HexStr,
                     size: i.pttElement.fileSize
                 })
-                e.raw_message += `[语音: ${i.pttElement.fileName}]`
+                e.raw_message += `{record:${i.pttElement.fileName}}`
                 break
             case 5:
                 e.message.push({
@@ -320,11 +320,11 @@ async function makeMessage(self_id, payload) {
                     md5: i.videoElement.thumbMd5,
                     size: i.videoElement.thumbSize
                 })
-                e.raw_message += `[视频: ${i.videoElement.fileName}]`
+                e.raw_message += `{video:${i.videoElement.fileName}}`
                 break
             case 6:
                 e.message.push({ type: 'face', id: Number(i.faceElement.faceIndex) })
-                e.raw_message += `[表情: ${i.faceElement.faceIndex}]`
+                e.raw_message += `{face:${i.faceElement.faceIndex}}`
                 break
             case 7:
                 // e.message.push({
@@ -350,7 +350,7 @@ async function makeMessage(self_id, payload) {
                     user_id: Number(i.replyElement.senderUid),
                     message: replyMsg
                 }
-                e.raw_message += `[回复: ${msg?.message_id || i.replyElement.replayMsgSeq}]`
+                e.raw_message += `{at:${e.source.user_id}}`
                 break
             case 8:
                 switch (i.grayTipElement.subElementType) {
@@ -397,11 +397,11 @@ async function makeMessage(self_id, payload) {
                     file: i.marketFaceElement.emojiId,
                     text: i.marketFaceElement.faceName
                 })
-                e.raw_message += `[bface: ${i.marketFaceElement.faceName}]`
+                e.raw_message += `{bface:${i.marketFaceElement.faceName}}`
                 break
             case 16:
                 e.message.push({ type: 'xml', data: i.multiForwardMsgElement.xmlContent })
-                e.raw_message += `[xml: ${i.multiForwardMsgElement.xmlContent}]`
+                e.raw_message += `{xml:${i.multiForwardMsgElement.xmlContent}}`
                 break
             default:
                 break;
@@ -458,6 +458,9 @@ async function makeMessage(self_id, payload) {
                     return e.bot.pickFriend(e.user_id).sendMsg(msg)
                 }
             }
+        }
+        e.toString = () => {
+            return e.raw_message
         }
     }
     return e
