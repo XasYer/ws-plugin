@@ -63,6 +63,41 @@ if (Version.isTrss) {
         res.writeHead(404);
         res.end('Page not found')
     })
+} else {
+    const getGroupMemberInfo = Bot.getGroupMemberInfo
+    /** 劫持修改getGroupMemberInfo方法 */
+    Bot.getGroupMemberInfo = async function (group_id, user_id) {
+        let result
+        try {
+            result = await getGroupMemberInfo(group_id, user_id)
+        } catch (error) {
+            let nickname
+            if (error.stack.includes('ws-plugin')) {
+                nickname = 'chronocat'
+            } else {
+                nickname =  String(group_id).includes("qg_") ? "QQGuild-Bot" : "WeChat-Bot"
+            }
+            result = {
+                group_id,
+                user_id,
+                nickname,
+                card: "",
+                sex: "female",
+                age: 6,
+                join_time: "",
+                last_sent_time: "",
+                level: 1,
+                role: "member",
+                title: "",
+                title_expire_time: "",
+                shutup_time: 0,
+                update_time: "",
+                area: "南极洲",
+                rank: "潜水",
+            }
+        }
+        return result
+    }
 }
 
 export { apps }

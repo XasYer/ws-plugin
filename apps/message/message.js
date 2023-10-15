@@ -11,6 +11,7 @@ Bot.on('message', async e => {
         } else if (e.friend?.bot?.uin) {
             e.self_id = e.friend.bot.uin
         }
+        e.bot = Bot[e.self_id]
     }
     // 被禁言或者全体禁言
     if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false

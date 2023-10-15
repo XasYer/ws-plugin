@@ -8,6 +8,7 @@ Bot.on('notice', async e => {
         } else if (e.friend?.bot?.uin) {
             e.self_id = e.friend.bot.uin
         }
+        e.bot = Bot[e.self_id]
     }
     if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false
     if (sendSocketList.length == 0) return false
