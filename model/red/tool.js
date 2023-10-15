@@ -55,8 +55,8 @@ async function upload(bot, msg, contentType) {
         if (type) contentType = type
         const arrayBuffer = await img.arrayBuffer()
         buffer = Buffer.from(arrayBuffer)
-    } else if (msg.startsWith('file:///')) {
-        buffer = fs.readFileSync(msg.replace('file:///', ''))
+    } else if (msg.startsWith('file://')) {
+        buffer = fs.readFileSync(msg.replace(/file:\/{2,3}/, ''))
         contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
     } else {
         buffer = fs.readFileSync(msg)
@@ -81,8 +81,8 @@ async function uploadAudio(file) {
         const http = await fetch(file)
         const arrayBuffer = await http.arrayBuffer()
         buffer = Buffer.from(arrayBuffer)
-    } else if (file.startsWith('file:///')) {
-        buffer = fs.readFileSync(file.replace('file:///', ''))
+    } else if (file.startsWith('file://')) {
+        buffer = fs.readFileSync(file.replace(/file:\/{2,3}/, ''))
     }
     const head = buffer.subarray(0, 7).toString()
     let filePath
@@ -222,7 +222,7 @@ async function uploadVideo(bot, file) {
         file = join(TMP_DIR, randomUUID({ disableEntropyCache: true }) + '.' + type)
         fs.writeFileSync(file, buffer)
     } else {
-        file = file.replace('file:///', '')
+        file = file.replace(/file:\/{2,3}/, '')
         type = file.substring(file.lastIndexOf('.') + 1)
         const Temp = join(TMP_DIR, randomUUID({ disableEntropyCache: true }) + '.' + type)
         fs.copyFileSync(file, Temp)
@@ -356,8 +356,8 @@ async function uploadFile(file) {
         name = file.substring(file.lastIndexOf('/') + 1)
         path = path + name
         fs.writeFileSync(path, buffer);
-    } else if (file.startsWith('file:///')) {
-        buffer = fs.readFileSync(file.replace('file:///', ''))
+    } else if (file.startsWith('file://')) {
+        buffer = fs.readFileSync(file.replace(/file:\/{2,3}/, ''))
         name = file.substring(file.lastIndexOf('/') + 1)
         path = path + name
         fs.copyFileSync(file, path)
