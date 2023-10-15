@@ -199,6 +199,7 @@ async function saveTmp(data, ext = null) {
 }
 
 async function getNtPath(bot) {
+    let dataPath
     try {
         const buffer = fs.readFileSync('./plugins/ws-plugin/resources/common/cont/logo.png')
         const blob = new Blob([buffer], { type: 'image/png' })
