@@ -143,6 +143,7 @@ export class QQRedBot {
             onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
         }
         setMsgMap(sendRet)
+        sendRet.md5 = elements.filter((i) => i.elementType === 2)
         return sendRet
     }
 
@@ -176,6 +177,7 @@ export class QQRedBot {
             onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
         }
         setMsgMap(sendRet)
+        sendRet.md5 = elements.filter((i) => i.elementType === 2)
         return sendRet
     }
 
