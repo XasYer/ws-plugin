@@ -91,7 +91,6 @@ export class QQRedBot {
             this.getConfig[group_id] = true
         }
         const info = this.gml.get(Number(group_id))?.get?.(Number(user_id))
-        if (!info) return {}
         const i = {
             ...info,
             self_id: this.uin,
