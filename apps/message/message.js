@@ -5,6 +5,13 @@ import cfg from '../../../../lib/config/config.js'
 
 
 Bot.on('message', async e => {
+    if (e.self_id == '88888'){
+        if (e.group?.bot?.uin) {
+            e.self_id = e.group.bot.uin
+        } else if (e.friend?.bot?.uin) {
+            e.self_id = e.friend.bot.uin
+        }
+    }
     // 被禁言或者全体禁言
     if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false
     // 如果没有已连接的Websocket
