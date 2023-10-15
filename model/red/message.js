@@ -259,6 +259,9 @@ async function makeMessage(self_id, payload) {
                 if (i.textElement.atType == 2) {
                     const qq = i.textElement.atUid == '0' ? i.textElement.atNtUin : i.textElement.atUid
                     e.message.push({ type: 'at', qq: Number(qq) })
+                    if (qq == e.self_id) {
+                        e.atBot = true
+                    }
                     e.raw_message += `[提及：${qq}]`
                 } else if (i.textElement.atType == 1) {
                     e.message.push({ type: 'at', qq: 'all' })
