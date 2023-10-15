@@ -105,7 +105,8 @@ export class QQRedBot {
             ...this.pickFriend(user_id),
             kick: async (message, block) => await this.setGroupKick(group_id, user_id, false, message),
             mute: async (duration) => await this.setGroupBan(group_id, user_id, duration),
-            getInfo: async () => await this.getGroupMemberInfo(group_id, user_id)
+            getInfo: async () => await this.getGroupMemberInfo(group_id, user_id),
+            getAvatarUrl: () => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${user_id}`
         }
     }
 
