@@ -9,7 +9,11 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 
 ### 可以用ws-plugin实现什么功能
 
-可以在Yunzai-Bot的基础上连接多个使用onebot协议的机器人,比如[NoneBot2](https://github.com/nonebot/nonebot2), [zhenxun_bot](https://github.com/HibiKier/zhenxun_bot), [ZeroBot-Plugin](https://github.com/FloatTech/ZeroBot-Plugin)等
+* 可以在Yunzai-Bot的基础上连接多个使用onebot协议的机器人,比如[NoneBot2](https://github.com/nonebot/nonebot2), [zhenxun_bot](https://github.com/HibiKier/zhenxun_bot), [ZeroBot-Plugin](https://github.com/FloatTech/ZeroBot-Plugin)等
+
+* 作为[Chronocaat](https://chronocat.vercel.app/)适配器 [点击前往寒暄的教程(http://Yunzai.icu)](http://Yunzai.icu)
+  * RedProtocol部分已实现
+  * Satori等待Chronocat更新
 
 ### 支持的Yunzai-bot版本
 
@@ -22,6 +26,9 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
     -  正向http
     -  反向http
   -  [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
+
+作为服务端
+  - RedProtocol
 
 #### [TRSS-Yunzai](https://gitee.com/TimeRainStarSky/Yunzai)
 
