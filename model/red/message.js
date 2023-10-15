@@ -428,10 +428,15 @@ async function makeMessage(self_id, payload) {
             isGroupMsg: true
         })
     }
+
     if (e.group_id) e.group = e.bot.pickGroup(e.group_id)
     if (e.user_id) e.friend = e.bot.pickFriend(e.user_id)
     if (e.group && e.user_id) e.member = e.group.pickMember(e.user_id)
     if (!Version.isTrss) {
+        e.pickFriend = (user_id) => Bot[self_id].pickFriend(user_id)
+        e.pickGroup = (group) => Bot[self_id].pickGroup(group)
+        e.pickMember = (group_id, user_id) => Bot[self_id].pickMember(group_id, user_id)
+        e.pickUser = (user_id) => Bot[self_id].pickUser(user_id)
         e.reply = (msg, quote) => {
             if (!Array.isArray(msg)) msg = [msg]
             if (quote && e.message_id) {
