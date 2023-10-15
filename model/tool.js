@@ -94,16 +94,26 @@ async function SendMusicShare(data) {
         }
         return
     }
-    let body = await CreateMusicShare(data)
-    let payload = await bot.sendOidb("OidbSvc.0xb77_9", core.pb.encode(body));
-    let result = core.pb.decode(payload);
-    if (result[3] != 0) {
-        if (data.message_type === 'group') {//群聊
-            await bot?.pickGroup(data.group_id).sendMsg('歌曲分享失败：' + result[3])
-        } else if (data.message_type === 'private') {//私聊
-            await bot?.pickFriend(data.user_id).sendMsg('歌曲分享失败：' + result[3])
+    try {
+        let body = await CreateMusicShare(data)
+        let payload = await bot.sendOidb("OidbSvc.0xb77_9", core.pb.encode(body));
+        let result = core.pb.decode(payload);
+        if (result[3] != 0) {
+            if (data.message_type === 'group') {//群聊
+                await bot?.pickGroup(data.group_id).sendMsg('歌曲分享失败：' + result[3])
+            } else if (data.message_type === 'private') {//私聊
+                await bot?.pickFriend(data.user_id).sendMsg('歌曲分享失败：' + result[3])
+            }
+            // e.reply('歌曲分享失败：' + result[3], true);
         }
-        // e.reply('歌曲分享失败：' + result[3], true);
+    } catch (error) {
+        const msg = [data.url]
+        if (data.message_type === 'group') {//群聊
+            await bot?.pickGroup?.(data.group_id)?.sendMsg?.(msg)
+        } else if (data.message_type === 'private') {//私聊
+            await bot?.pickFriend?.(data.user_id)?.sendMsg?.(msg)
+        }
+        return
     }
 }
 
