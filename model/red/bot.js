@@ -250,7 +250,7 @@ export class QQRedBot {
     }
 
     async getFriendList() {
-        for (const i of (await this.bot.sendApi('get', 'bot/friends'))) {
+        for (const i of (await this.bot.sendApi('get', 'bot/friends')) || []) {
             this.fl.set(Number(i.uin), {
                 ...i,
                 bot_id: this.uin,
@@ -262,7 +262,7 @@ export class QQRedBot {
     }
 
     async getGroupList() {
-        for (const i of (await this.bot.sendApi('get', 'bot/groups'))) {
+        for (const i of (await this.bot.sendApi('get', 'bot/groups')) || []) {
             const data = {
                 ...i,
                 bot_id: this.uin,
