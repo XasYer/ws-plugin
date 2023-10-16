@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import { initWebSocket, Config, Version } from './components/index.js'
 import { TMP_DIR, mimeTypes } from './model/index.js'
 import { join, extname } from 'path'
+
 const files = fs.readdirSync('./plugins/ws-plugin/apps').filter(file => file.endsWith('.js'))
 
 let ret = []
@@ -75,7 +76,7 @@ if (Version.isTrss) {
             if (error.stack.includes('ws-plugin')) {
                 nickname = 'chronocat'
             } else {
-                nickname =  String(group_id).includes("qg_") ? "QQGuild-Bot" : "WeChat-Bot"
+                nickname = String(group_id).includes("qg_") ? "QQGuild-Bot" : "WeChat-Bot"
             }
             result = {
                 group_id,

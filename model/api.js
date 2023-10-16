@@ -220,7 +220,17 @@ async function getApiData(api, params = {}, name, uin) {
         // --------------------------------------------------------
 
         // 获取图片信息
-        // TODO get_image 不会
+        'get_image': async ({ file }) => {
+            const md5 = file.substring(0,32)
+            const url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
+            const result = await fetch(url)
+            const size = result?.headers?.size || 9999
+            ResponseData = {
+                size,
+                filename: 'image',
+                url
+            }
+        },
         // 检查是否可以发送图片
         // TODO can_send_image 不会
         // 图片 OCR
@@ -825,7 +835,7 @@ async function getApiData(api, params = {}, name, uin) {
         },
 
     }
-    api = api.replace(/_async$/, '')
+    api = api?.replace(/_async$/, '')
     if (typeof publicApi[api] === 'function') {
         await publicApi[api](params)
         if (sendRet) {
