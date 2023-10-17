@@ -76,6 +76,9 @@ async function checkVersion(data) {
             logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端 ${data.uin}`)
             return false
         }
+    } else if (Bot.uin == '88888') {
+        logger.warn(`[ws-plugin] ${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
+        return false
     }
     return true
 }
