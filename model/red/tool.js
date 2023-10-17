@@ -131,7 +131,7 @@ function audioTrans(tmpPath, samplingRate = '24000') {
             try {
                 await pcmToSilk(pcmFile, silkFile, samplingRate)
             } catch (error) {
-                reject('red发送语音暂不支持非win系统')
+                reject('音频转码失败')
             }
             fs.unlink(pcmFile, () => { })
 
@@ -144,10 +144,14 @@ function audioTrans(tmpPath, samplingRate = '24000') {
 
 function pcmToSilk(input, output, samplingRate) {
     return new Promise((resolve, reject) => {
+        let bin = './cli.exe'
+        if (os.platform() == 'linux') {
+            bin = './cli'
+        }
         const args = ['-i', input, '-s', samplingRate, '-o', output]
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = dirname(__filename);
-        const child = spawn(join(__dirname, './cli.exe'), args)
+        const child = spawn(join(__dirname, bin), args)
         child.on('exit', () => {
             fs.access(output, fs.constants.F_OK, (err) => {
                 if (err) {
