@@ -144,18 +144,27 @@ function audioTrans(tmpPath, samplingRate = '24000') {
 
 function pcmToSilk(input, output, samplingRate) {
     return new Promise((resolve, reject) => {
-        let bin = './cli.exe'
-        if (os.platform() == 'linux') {
-            bin = './cli'
-        }
-        const args = ['-i', input, '-s', samplingRate, '-o', output]
         const __filename = fileURLToPath(import.meta.url);
         const __dirname = dirname(__filename);
-        const child = spawn(join(__dirname, bin), args)
+        let bin = join(__dirname, './cli.exe')
+        if (os.platform() == 'linux') {
+            bin = join(__dirname, './cli')
+            fs.access(bin, fs.constants.X_OK | fs.constants.R_OK, (err) => {
+                if (err) {
+                    fs.chmod(bin, 0o755, (err) => {
+                        if (err) {
+                            reject('音频转码失败, code: -3')
+                        }
+                    })
+                }
+            })
+        }
+        const args = ['-i', input, '-s', samplingRate, '-o', output]
+        const child = spawn(bin, args)
         child.on('exit', () => {
             fs.access(output, fs.constants.F_OK, (err) => {
                 if (err) {
-                    reject('音频转码失败')
+                    reject('音频转码失败, code: -1')
                 }
             })
             // fs.stat(output, (err, stats) => {
@@ -174,7 +183,7 @@ function pcmToSilk(input, output, samplingRate) {
         })
         child.on('error', (err) => {
             logger.error(err)
-            reject('音频转码失败')
+            reject('音频转码失败, code: -2')
         });
     })
 }
