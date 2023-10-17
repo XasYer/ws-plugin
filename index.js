@@ -61,7 +61,7 @@ if (Version.isTrss) {
             })
             return
         }
-        res.writeHead(404);
+        res.writeHead(404)
         res.end('Page not found')
     })
 } else {
@@ -70,12 +70,18 @@ if (Version.isTrss) {
     Bot.getGroupMemberInfo = async function (group_id, user_id) {
         let result
         try {
-            result = await getGroupMemberInfo(group_id, user_id)
+            result = await getGroupMemberInfo.call(this, group_id, user_id)
         } catch (error) {
+            let nickname
+            if (error.stack.includes('ws-plugin')) {
+                nickname = 'chronocat'
+            } else {
+                nickname = String(group_id).includes("qg_") ? "QQGuild-Bot" : "WeChat-Bot"
+            }
             result = {
                 group_id,
                 user_id,
-                nickname: Bot.nickname || 'QQ用户',
+                nickname,
                 card: "",
                 sex: "female",
                 age: 6,
