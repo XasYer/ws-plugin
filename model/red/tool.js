@@ -172,6 +172,10 @@ function pcmToSilk(input, output, samplingRate) {
             // });
             resolve()
         })
+        child.on('error', (err) => {
+            logger.error(err)
+            reject('音频转码失败')
+        });
     })
 }
 
