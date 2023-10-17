@@ -77,8 +77,10 @@ async function checkVersion(data) {
             return false
         }
     } else if (Bot.uin == '88888') {
-        logger.warn(`[ws-plugin] ${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
-        return false
+        if (!data.uin) {
+            logger.warn(`[ws-plugin] ${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
+            return false
+        }
     }
     return true
 }
