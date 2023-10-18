@@ -56,7 +56,11 @@ async function upload(bot, msg, contentType) {
         const arrayBuffer = await img.arrayBuffer()
         buffer = Buffer.from(arrayBuffer)
     } else if (msg.startsWith('file://')) {
-        buffer = fs.readFileSync(msg.replace(/file:\/{2,3}/, ''))
+        try {
+            buffer = fs.readFileSync(msg.replace(/^file:\/\//, ''))
+        } catch (error) {
+            buffer = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
+        }
         contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
     } else {
         buffer = fs.readFileSync(msg)
@@ -82,7 +86,11 @@ async function uploadAudio(file) {
         const arrayBuffer = await http.arrayBuffer()
         buffer = Buffer.from(arrayBuffer)
     } else if (file.startsWith('file://')) {
-        buffer = fs.readFileSync(file.replace(/file:\/{2,3}/, ''))
+        try {
+            buffer = fs.readFileSync(msg.replace(/^file:\/\//, ''))
+        } catch (error) {
+            buffer = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
+        }
     }
     const head = buffer.subarray(0, 7).toString()
     let filePath
@@ -374,7 +382,11 @@ async function uploadFile(file) {
         path = path + name
         fs.writeFileSync(path, buffer);
     } else if (file.startsWith('file://')) {
-        buffer = fs.readFileSync(file.replace(/file:\/{2,3}/, ''))
+        try {
+            buffer = fs.readFileSync(msg.replace(/^file:\/\//, ''))
+        } catch (error) {
+            buffer = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
+        }
         name = file.substring(file.lastIndexOf('/') + 1)
         path = path + name
         fs.copyFileSync(file, path)
