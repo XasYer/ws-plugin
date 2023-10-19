@@ -1,5 +1,9 @@
 # ws-plugin
 
+## 圣经
+
+不使用，那开发的用处何在?不提交bug，那 issue的意义在哪里?解决问题是开发者应有的义务，有问题，那就要去解决完善，你的话我甚至觉得你没参与过开发，你如何论证我发视频是错误的?请问你有什么办法解决目前的协议问题?B站不引人注目，那请问QQ群是谁的地盘?我做视频为了引导开发者解决问题，请问你做了什么?如果你真想为bot做贡献，应该去提交is和pr，而不是在这里当鸵鸟以为不用就没人管了，我希望你作为一个开发者面对问题应该去解决它而不是把头埋进沙子假装看不见它,你不让我们用bot的居心何在?
+
 ## 介绍
 Yunzai-Bot 的扩展插件 ws-plugin 提供ontbot协议适配,通过WebSocket连接onebot实现的bot
 
@@ -11,9 +15,6 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 
 * 可以在Yunzai-Bot的基础上连接多个使用onebot协议的机器人,比如[NoneBot2](https://github.com/nonebot/nonebot2), [zhenxun_bot](https://github.com/HibiKier/zhenxun_bot), [ZeroBot-Plugin](https://github.com/FloatTech/ZeroBot-Plugin)等
 
-* 作为[Chronocaat](https://chronocat.vercel.app/)适配器 [点击前往寒暄的教程(http://Yunzai.icu)](http://Yunzai.icu)
-  * RedProtocol部分已实现
-  * Satori等待Chronocat更新
 
 ### 支持的Yunzai-bot版本
 
@@ -27,9 +28,6 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
     -  反向http
   -  [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
 
-作为服务端
-  - RedProtocol
-
 #### [TRSS-Yunzai](https://gitee.com/TimeRainStarSky/Yunzai)
 
 作为客户端:
@@ -39,9 +37,6 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
     -  正向http
     -  反向http
   -  [gsuid_core](https://github.com/Genshin-bots/gsuid_core)
-
-作为服务端
-  - RedProtocol
 
 ## 安装与更新
 
