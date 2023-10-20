@@ -6,7 +6,7 @@ import http from "http"
 import fetch from 'node-fetch'
 
 export default class Client {
-    constructor({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, uin = Bot.uin, closed = false }) {
+    constructor({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, uin = Bot.uin, closed = false, ...other }) {
         this.name = name;
         this.address = address;
         this.type = type;
@@ -17,6 +17,7 @@ export default class Client {
         this.ws = null
         this.status = 0
         this.closed = closed
+        this.other = other
     }
 
     reconnectCount = 1
@@ -296,7 +297,7 @@ export default class Client {
         this.host = parts[0];
         this.port = parts[1];
         this.express = express();
-        this.server = http.createServer(this.express);
+        this.server = http.createServer({ maxHeaderSize: Number(this.other.maxHeaderSize) || 8192 }, this.express);
         this.express.use(express.json({ limit: '50mb' }));
         this.express.use(express.urlencoded({ extended: true, limit: '50mb' }));
         this.express.use((req, res, next) => this.authorization(req, res, next))
