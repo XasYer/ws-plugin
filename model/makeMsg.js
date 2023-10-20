@@ -294,6 +294,7 @@ async function makeSendMsg(params, uin) {
  */
 async function makeForwardMsg(params, uin) {
     let forwardMsg = []
+    if (!Array.isArray(params.messages)) params.messages = [params.messages]
     for (const msg of params.messages) {
         if (typeof msg.data.content == 'string') {
             msg.data.content = [CQToMsg(msg.data.content)]
