@@ -16,7 +16,7 @@ import fetch from 'node-fetch'
 async function makeOneBotReportMsg(e) {
     let reportMsg = await msgToOneBotMsg(e.message, e.source)
 
-    if (!reportMsg) {
+    if (reportMsg.length === 0) {
         return false
     }
     let raw_message = MsgToCQ(reportMsg)
