@@ -55,6 +55,11 @@ class Config {
     return cfg.getOther().whiteGroup
   }
 
+  /** 云崽黑名单QQ */
+  get blackQQ(){
+    return cfg.getOther().blackQQ
+  }
+
   /** 心跳 */
   get heartbeatInterval() {
     return this.getDefOrConfig('ws-config').heartbeatInterval

@@ -5,7 +5,7 @@ import cfg from '../../../../lib/config/config.js'
 
 
 Bot.on('message', async e => {
-    if (e.self_id == '88888'){
+    if (e.self_id == '88888') {
         if (e.group?.bot?.uin) {
             e.self_id = e.group.bot.uin
         } else if (e.friend?.bot?.uin) {
@@ -18,26 +18,30 @@ Bot.on('message', async e => {
     // 如果没有已连接的Websocket
     if (sendSocketList.length == 0) return false
     if (e.group_id) {
-        // 判断云崽白名单
+        // 判断云崽白名单群
         const whiteGroup = Config.whiteGroup
         if (Array.isArray(whiteGroup) && whiteGroup.length > 0) {
             if (!whiteGroup.some(i => i == e.group_id)) return false
         }
-        // 判断插件白名单
+        // 判断插件白名单群
         const yesGroup = Config.yesGroup
         if (Array.isArray(yesGroup) && yesGroup.length > 0) {
             if (!yesGroup.some(i => i == e.group_id)) return false
         }
-        // 判断云崽黑名单
+        // 判断云崽黑名单群
         const blackGroup = Config.blackGroup
         if (Array.isArray(blackGroup) && blackGroup.length > 0) {
             if (blackGroup.some(i => i == e.group_id)) return false
         }
-        // 判断插件黑名单
+        // 判断插件黑名单群
         const noGroup = Config.noGroup
         if (Array.isArray(noGroup) && noGroup.length > 0) {
             if (noGroup.some(i => i == e.group_id)) return false
         }
+    }
+    // 判断云崽黑名单QQ
+    if (e.user_id && Array.isArray(Config.blackQQ)) {
+        if (Config.blackQQ.some(i => i == e.user_id)) return false
     }
     // 判断插件前缀
     if (Array.isArray(Config.noMsgStart) && Config.noMsgStart.length > 0) {
