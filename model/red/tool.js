@@ -2,8 +2,7 @@ import fs from 'fs'
 import { createHash, randomUUID } from 'crypto'
 import { resolve, join, dirname, basename } from 'path'
 import fetch, { FormData, Blob } from 'node-fetch'
-import { fileURLToPath } from 'url'
-import { exec, spawn } from 'child_process'
+import { exec, spawn, execSync } from 'child_process'
 import os from 'os'
 import _ from 'lodash'
 import { Stream } from "stream"
@@ -77,139 +76,62 @@ async function upload(bot, msg, contentType) {
     return file
 }
 
-async function uploadAudio(file) {
-    let buffer
+async function uploadAudio(bot, file) {
+    let voice
     if (file.match(/^base64:\/\//)) {
-        buffer = Buffer.from(file.replace(/^base64:\/\//, ""), 'base64')
+        voice = Buffer.from(file.replace(/^base64:\/\//, ""), 'base64')
     } else if (file.startsWith('http')) {
         const http = await fetch(file)
         const arrayBuffer = await http.arrayBuffer()
-        buffer = Buffer.from(arrayBuffer)
+        voice = Buffer.from(arrayBuffer)
     } else if (file.startsWith('file://')) {
         try {
-            buffer = fs.readFileSync(msg.replace(/^file:\/\//, ''))
+            voice = fs.readFileSync(msg.replace(/^file:\/\//, ''))
         } catch (error) {
-            buffer = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
+            voice = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
         }
-    }
-    const head = buffer.subarray(0, 7).toString()
-    let filePath
-    let duration = 0
-    if (!head.includes('SILK')) {
-        const tmpPath = await saveTmp(buffer)
-        duration = await getDuration(tmpPath)
-        const res = await audioTrans(tmpPath)
-        filePath = res.silkFile
-        buffer = fs.readFileSync(filePath)
     } else {
-        filePath = await saveTmp(buffer)
+        return false
     }
-
-    const hash = createHash('md5')
-    hash.update(buffer.toString('binary'), 'binary')
-    const md5 = hash.digest('hex')
+    const head = voice.subarray(0, 7)
+    if (!head.includes('\x02#!SILK')) {
+        const tmpPath = await saveTmp(voice)
+        const pcm = await audioTransPcm(tmpPath)
+        voice = Buffer.from(await silk.encode(pcm, 24000))
+    }
+    const duration = Math.round(silk.getDuration(voice) / 1000)
+    const blob = new Blob([voice], { type: 'audio/amr' })
+    const formData = new FormData()
+    formData.append('file', blob, 'file.amr')
+    const res = await bot.sendApi('POST', 'upload', formData)
     return {
         elementType: 4,
         pttElement: {
-            md5HexStr: md5,
-            fileSize: buffer.length,
-            fileName: md5 + '.amr',
-            filePath: filePath,
-            // waveAmplitudes: [36, 28, 68, 28, 84, 28],
+            md5HexStr: res.md5,
+            fileSize: String(res.fileSize),
+            fileName: basename(res.ntFilePath),
+            filePath: res.ntFilePath,
             waveAmplitudes: [
-                99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99
+                99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
             ],
-            duration: duration
+            duration,
+            formatType: 1
         }
     }
 }
 
-function audioTrans(tmpPath, samplingRate = '24000') {
+function audioTransPcm(tmpPath, samplingRate = '24000') {
     return new Promise((resolve, reject) => {
-        const pcmFile = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
-        exec(`ffmpeg -y -i "${tmpPath}" -ar ${samplingRate} -ac 1 -f s16le "${pcmFile}"`, async () => {
+        const pcmPath = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
+        exec(`ffmpeg -y -i "${tmpPath}" -ar ${samplingRate} -ac 1 -f s16le "${pcmPath}"`, async () => {
             fs.unlink(tmpPath, () => { })
-            fs.access(pcmFile, fs.constants.F_OK, (err) => {
-                if (err) {
-                    reject('音频转码失败, 请确保你的 ffmpeg 已正确安装')
-                }
-            })
-
-            const silkFile = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
             try {
-                await pcmToSilk(pcmFile, silkFile, samplingRate)
-            } catch (error) {
-                reject('音频转码失败')
-            }
-            fs.unlink(pcmFile, () => { })
-
-            resolve({
-                silkFile
-            })
-        })
-    })
-}
-
-function pcmToSilk(input, output, samplingRate) {
-    return new Promise((resolve, reject) => {
-        const __filename = fileURLToPath(import.meta.url);
-        const __dirname = dirname(__filename);
-        let bin = join(__dirname, './cli.exe')
-        if (os.platform() == 'linux') {
-            bin = join(__dirname, './cli')
-            fs.access(bin, fs.constants.X_OK | fs.constants.R_OK, (err) => {
-                if (err) {
-                    fs.chmod(bin, 0o755, (err) => {
-                        if (err) {
-                            reject('音频转码失败, code: -3')
-                        }
-                    })
-                }
-            })
-        }
-        const args = ['-i', input, '-s', samplingRate, '-o', output]
-        const child = spawn(bin, args)
-        child.on('exit', () => {
-            fs.access(output, fs.constants.F_OK, (err) => {
-                if (err) {
-                    reject('音频转码失败, code: -1')
-                }
-            })
-            // fs.stat(output, (err, stats) => {
-            //     if (err) {
-            //         console.error(err);
-            //         return;
-            //     }
-            //     fs.truncate(output, stats.size - 1, err => {
-            //         if (err) {
-            //             console.error(err);
-            //             return;
-            //         }
-            //     });
-            // });
-            resolve()
-        })
-        child.on('error', (err) => {
-            logger.error(err)
-            reject('音频转码失败, code: -2')
-        });
-    })
-}
-
-function getDuration(file) {
-    return new Promise((resolve, reject) => {
-        exec(`ffmpeg -i ${file}`, function (err, stdout, stderr) {
-            const outStr = stderr.toString()
-            const regDuration = /Duration\: ([0-9\:\.]+),/
-            const rs = regDuration.exec(outStr)
-            if (rs === null) {
-                reject("获取音频时长失败, 请确保你的 ffmpeg 已正确安装")
-            } else if (rs[1]) {
-                const time = rs[1]
-                const parts = time.split(":")
-                const seconds = (+parts[0]) * 3600 + (+parts[1]) * 60 + (+parts[2])
-                const round = seconds.toString().split('.')[0]
-                resolve(+ round)
+                const pcm = fs.readFileSync(pcmPath)
+                resolve(pcm)
+            } catch {
+                reject('音频转码失败, 请确保 ffmpeg 已正确安装')
+            } finally {
+                fs.unlink(pcmPath, () => { })
             }
         })
     })
@@ -444,6 +366,32 @@ function getToken() {
         return false
     }
 }
+
+async function getSilk() {
+    let silk
+    const version = JSON.parse(fs.readFileSync('./plugins/ws-plugin/package.json', 'utf-8'))?.dependencies['silk-wasm'].replace(/^[^\d]*/, '')
+    try {
+        silk = await import('silk-wasm')
+    } catch (error) {
+        const startTime = new Date();
+        logger.warn('[ws-plugin] 未安装silk-wasm依赖,执行安装');
+        execSync(`cd "plugins/ws-plugin" && pnpm add silk-wasm@${version} -w`);
+        const endTime = new Date();
+        logger.mark(`[ws-plugin] 安装完成,耗时${endTime - startTime}ms`);
+    }
+    let installedVersion = execSync('pnpm list silk-wasm', { encoding: 'utf8' });
+    installedVersion = /silk-wasm (\d+\.\d+\.\d+)/.exec(installedVersion)?.[1]
+    if (version != installedVersion) {
+        const startTime = new Date();
+        logger.warn(`[ws-plugin] silk-wasm依赖版本不一致,执行安装`);
+        execSync(`cd "plugins/ws-plugin" && pnpm add silk-wasm@${version} -w`);
+        const endTime = new Date();
+        logger.mark(`[ws-plugin] 安装完成,耗时${endTime - startTime}ms`);
+    }
+    silk = await import('silk-wasm')
+    return silk
+}
+const silk = await getSilk()
 
 export {
     uploadImg,

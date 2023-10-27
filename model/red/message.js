@@ -34,17 +34,12 @@ async function makeSendMsg(data, message) {
                 log += `[图片: ${i.picElement.md5HexStr}]`
                 break
             case "record":
-                const record = await uploadAudio(i.file)
+                const record = await uploadAudio(data.bot, i.file)
                 if (record) {
                     i = record
                     log += `[语音: ${record.pttElement.md5HexStr}]`
                 } else {
-                    i = {
-                        "elementType": 1,
-                        "textElement": {
-                            "content": JSON.stringify(i)
-                        }
-                    }
+                    throw '语音上传失败'
                 }
                 break
             case "face":
