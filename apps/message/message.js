@@ -87,6 +87,8 @@ Bot.on('message', async e => {
     let message = []
     //增加isGroup e.isPrivate
     if (e.guild_id) {
+        // TODO
+        return false
         setGuildLatestMsgId(e.message_id)
         //处理成message
         if (e.content) {
