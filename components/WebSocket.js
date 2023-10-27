@@ -1,6 +1,7 @@
 import Client from "./Client.js";
 import { Config, Version } from './index.js'
 import { sleep } from '../model/index.js'
+import { redAdapter } from '../model/red/index.js'
 
 let sendSocketList = []
 let allSocketList = []
@@ -29,6 +30,11 @@ async function createWebSocket(data) {
         case 3:
             client.createGSUidWs()
             sendSocketList.push(client)
+            break
+        case 4:
+            if (Version.isTrss) return
+            // client.createQQNT()
+            redAdapter.connect(client)
             break
         case 5:
             if (!await checkVersion(data)) return
@@ -83,7 +89,13 @@ function modifyWebSocket(target) {
     switch (target.type) {
         case 'add':
         case 'open':
-            createWebSocket(target.data)
+            if (target.data.type == 4) {
+                const client = new Client(target.data)
+                setAllSocketList(client)
+                redAdapter.connect(client)
+            } else {
+                createWebSocket(target.data)
+            }
             break;
         case 'del':
         case 'close':

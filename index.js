@@ -1,7 +1,7 @@
 import fs from 'node:fs'
 import { initWebSocket, Config, Version } from './components/index.js'
-import { join, basename, extname } from 'path'
-import { pathToFileURL } from 'url'
+import { TMP_DIR, mimeTypes } from './model/index.js'
+import { extname, join } from 'path'
 
 const files = fs.readdirSync('./plugins/ws-plugin/apps').filter(file => file.endsWith('.js'))
 
@@ -38,21 +38,76 @@ for (const item of path) {
     }
 }
 
-const dirPath = join(process.cwd(), 'plugins', 'ws-plugin', 'model');
-fs.readdirSync(dirPath).forEach(file => {
-    const filePath = join(dirPath, file)
-    if (fs.statSync(filePath).isDirectory() && !['db'].includes(file)) {
-        fs.readdirSync(filePath).forEach(async i => {
-            if (basename(i, extname(i)) === 'index') {
-                try {
-                    await import(pathToFileURL(join(filePath, i)))
-                } catch (error) {
-                    logger.error(error)
+if (Version.isTrss) {
+    Bot.express.get('/ws-plugin*', async (req, res) => {
+        const file = req.query.file
+        if (file) {
+            const ext = extname(file)
+            const contentType = mimeTypes[ext]
+            fs.readFile(join(TMP_DIR, file), (err, content) => {
+                if (err) {
+                    res.writeHead(404)
+                    res.end('File not found')
+                } else {
+                    const name = file.split('-')
+                    const filename = encodeURIComponent(name[1]) || encodeURIComponent(name[0]) || encodeURIComponent(file)
+                    res.writeHead(200, {
+                        'Content-Type': contentType,
+                        'Content-Disposition': `attachment filename=${filename}`
+                    })
+                    res.end(content)
                 }
+            })
+            return
+        }
+        res.writeHead(404)
+        res.end('Page not found')
+    })
+} else {
+    const getGroupMemberInfo = Bot.getGroupMemberInfo
+    /** 劫持修改getGroupMemberInfo方法 */
+    Bot.getGroupMemberInfo = async function (group_id, user_id) {
+        let result
+        try {
+            result = await getGroupMemberInfo.call(this, group_id, user_id)
+        } catch (error) {
+            result = {
+                group_id,
+                user_id,
+                nickname: 'QQ用户',
+                card: "",
+                sex: "female",
+                age: 6,
+                join_time: "",
+                last_sent_time: "",
+                level: 1,
+                role: "member",
+                title: "",
+                title_expire_time: "",
+                shutup_time: 0,
+                update_time: "",
+                area: "南极洲",
+                rank: "潜水",
+            }
+        }
+        return result
+    }
+}
+
+function deleteFolderRecursive(directoryPath) {
+    if (fs.existsSync(directoryPath)) {
+        fs.readdirSync(directoryPath).forEach((file) => {
+            const curPath = join(directoryPath, file)
+            if (fs.lstatSync(curPath).isDirectory()) {
+                deleteFolderRecursive(curPath)
+            } else {
+                fs.unlinkSync(curPath)
             }
         })
+        fs.rmdirSync(directoryPath)
     }
-})
+}
+deleteFolderRecursive('./plugins/ws-plugin/model/dlc')
 
 initWebSocket()
 
