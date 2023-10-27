@@ -20,7 +20,7 @@ async function makeOneBotReportMsg(e) {
         return false
     }
     let raw_message = MsgToCQ(reportMsg)
-    if (Config.messagePostFormat == 'string' || Config.messagePostFormat == '1') {
+    if (e.messagePostFormat == 'string' || e.messagePostFormat == '1') {
         reportMsg = raw_message
     }
     setMsgMap({
