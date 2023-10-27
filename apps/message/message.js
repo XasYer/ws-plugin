@@ -150,6 +150,7 @@ Bot.on('message', async e => {
                         if (!Version.protocol.some(i => i == e.bot?.version?.name)) continue
                     }
                     e.reply = reply(e)
+                    msg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
                     reportMsg = await makeOneBotReportMsg(msg)
                     break;
                 case 3:
