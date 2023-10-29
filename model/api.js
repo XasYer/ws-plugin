@@ -221,7 +221,7 @@ async function getApiData(api, params = {}, name, uin) {
 
         // 获取图片信息
         'get_image': async ({ file }) => {
-            const md5 = file.substring(0,32)
+            const md5 = file.substring(0, 32)
             const url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
             const result = await fetch(url)
             const size = result?.headers?.size || 9999
@@ -313,9 +313,30 @@ async function getApiData(api, params = {}, name, uin) {
             ResponseData = list
         },
         // 获取群成员信息
-        'get_group_member_info': async (params) => {
-            const group = await bot.pickGroup(params.group_id).pickMember(params.user_id)
-            ResponseData = group?.info || group.info?.() || group.getInfo?.() || await bot.getGroupMemberInfo?.(params.group_id, params.user_id);
+        'get_group_member_info': async ({ group_id, user_id }) => {
+            const group = await bot.pickGroup(group_id).pickMember(user_id)
+            try {
+                ResponseData = group?.info || group.info?.() || group.getInfo?.() || await bot.getGroupMemberInfo?.(group_id, user_id);
+            } catch (error) {
+                ResponseData = {
+                    group_id,
+                    user_id,
+                    nickname: 'QQ用户',
+                    card: 'QQ用户',
+                    sex: 'unknown',
+                    age: 0,
+                    area: '',
+                    join_time: 0,
+                    last_sent_time: 0,
+                    level: 1,
+                    role: 'member',
+                    unfriendly: false,
+                    title: '',
+                    title_expire_time: 0,
+                    card_changeable: true,
+                    shut_up_timestamp: 0
+                }
+            }
             if (ResponseData.shutup_time) {
                 ResponseData.shut_up_timestamp = ResponseData.shutup_time
             }
