@@ -463,7 +463,7 @@ async function makeMessage(self_id, payload) {
 }
 
 async function sendNodeMsg(data, msg) {
-    const { msgElements, cover } = await makeNodeMsg(data, msg)
+    const msgElements = await makeNodeMsg(data, msg)
     let target
     if (data.group_id) {
         target = {
@@ -478,7 +478,6 @@ async function sendNodeMsg(data, msg) {
     }
     const payload = {
         msgElements,
-        cover,
         srcContact: target,
         dstContact: target
     }
@@ -500,7 +499,6 @@ async function sendNodeMsg(data, msg) {
 }
 
 async function makeNodeMsg(data, msg) {
-    let cover
     const msgElements = []
     let seq = randomBytes(2).readUint16BE()
     for (const item of msg) {
@@ -511,7 +509,6 @@ async function makeNodeMsg(data, msg) {
             if (typeof i === 'string') i = { type: 'text', text: i }
             switch (i.type) {
                 case 'text':
-                    if (!cover) cover = i.text
                     elems.push({
                         text: {
                             str: i.text
@@ -561,7 +558,7 @@ async function makeNodeMsg(data, msg) {
                     })
                     break
                 case 'node':
-                    elems.push(...(await makeNodeMsg(data, i.data).msgElements))
+                    elems.push(...(await makeNodeMsg(data, i.data)))
                     break
                 default:
                     for (const key in i) {
@@ -611,7 +608,7 @@ async function makeNodeMsg(data, msg) {
         }
         msgElements.push(...element)
     }
-    return { msgElements, cover }
+    return msgElements
 }
 
 function convertFileName(filePath) {
