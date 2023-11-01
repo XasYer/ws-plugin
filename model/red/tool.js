@@ -374,21 +374,25 @@ async function getSilk() {
         silk = await import('silk-wasm')
     } catch (error) {
         const startTime = new Date();
-        logger.warn('[ws-plugin] 未安装silk-wasm依赖,执行安装');
-        execSync(`cd "plugins/ws-plugin" && pnpm add silk-wasm@${version} -w`);
+        logger.warn('[ws-plugin] 未安装silk-wasm依赖,开始执行安装');
+        execSync(`pnpm install --filter=ws-plugin`);
         const endTime = new Date();
-        logger.mark(`[ws-plugin] 安装完成,耗时${endTime - startTime}ms`);
+        logger.mark(`[ws-plugin] 安装完成,耗时${endTime - startTime}ms,建议重启以应用更新`);
     }
-    let installedVersion = execSync('pnpm list silk-wasm', { encoding: 'utf8' });
+    let installedVersion = execSync('cd "plugins/ws-plugin" && pnpm list silk-wasm', { encoding: 'utf8' });
     installedVersion = /silk-wasm (\d+\.\d+\.\d+)/.exec(installedVersion)?.[1]
     if (version != installedVersion) {
         const startTime = new Date();
-        logger.warn(`[ws-plugin] silk-wasm依赖版本不一致,执行安装`);
-        execSync(`cd "plugins/ws-plugin" && pnpm add silk-wasm@${version} -w`);
+        logger.warn(`[ws-plugin] silk-wasm依赖版本不一致,开始执行安装`);
+        execSync(`pnpm install --filter=ws-plugin`);
         const endTime = new Date();
-        logger.mark(`[ws-plugin] 安装完成,耗时${endTime - startTime}ms`);
+        logger.mark(`[ws-plugin] 安装完成,耗时${endTime - startTime}ms,建议重启以应用更新`);
     }
-    silk = await import('silk-wasm')
+    try {
+        silk = await import('silk-wasm')
+    } catch (error) {
+        logger.error('[ws-plugin] silk-wasm依赖导入失败,如果是初次安装请重启')
+    }
     return silk
 }
 const silk = await getSilk()
