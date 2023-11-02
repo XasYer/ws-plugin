@@ -58,12 +58,7 @@ async function makeSendMsg(data, message) {
                     i = video
                     log += `[视频: ${video.videoElement.videoMd5}]`
                 } else {
-                    i = {
-                        "elementType": 1,
-                        "textElement": {
-                            "content": JSON.stringify(i)
-                        }
-                    }
+                    throw '视频上传失败'
                 }
                 break
             case "file":
@@ -72,12 +67,7 @@ async function makeSendMsg(data, message) {
                     i = file
                     log += `[文件: ${file.fileElement.fileMd5}]`
                 } else {
-                    i = {
-                        "elementType": 1,
-                        "textElement": {
-                            "content": JSON.stringify(i)
-                        }
-                    }
+                    throw '文件上传失败'
                 }
                 break
             case "at":
@@ -114,12 +104,7 @@ async function makeSendMsg(data, message) {
                         }
                     }
                 } else {
-                    i = {
-                        "elementType": 1,
-                        "textElement": {
-                            "content": JSON.stringify(i)
-                        }
-                    }
+                    i = null
                 }
                 break
             case "node":
@@ -214,15 +199,10 @@ async function makeSendMsg(data, message) {
                 }
                 break
             default:
-                log += JSON.stringify(i)
-                i = {
-                    "elementType": 1,
-                    "textElement": {
-                        "content": JSON.stringify(i)
-                    }
-                }
+                logger.warn('[ws-plugin] 未知消息类型:', i)
+                i = null
         }
-        msgs.push(i)
+        if (i) msgs.push(i)
     }
     return { msg: msgs, log }
 }

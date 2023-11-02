@@ -121,6 +121,9 @@ export class QQRedBot {
         }
         const { msg: elements, log, message_id: id, rand, seq, time } = await makeSendMsg(data, message)
         if (id) return { message_id: id, rand, seq, time }
+        if (elements.length == 0) {
+            throw '[ws-plugin] 发送消息错误: message is empty'
+        }
         const result = await this.bot.sendApi('POST', 'message/send', JSON.stringify({
             peer: {
                 chatType: 2,
@@ -155,6 +158,9 @@ export class QQRedBot {
         }
         const { msg: elements, log, message_id: id, rand, seq, time } = await makeSendMsg(data, message)
         if (id) return { message_id: id, rand, seq, time }
+        if (elements.length == 0) {
+            throw '[ws-plugin] 发送消息错误: message is empty'
+        }
         const result = await this.bot.sendApi('POST', 'message/send', JSON.stringify({
             peer: {
                 chatType,
