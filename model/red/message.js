@@ -257,14 +257,12 @@ async function makeMessage(self_id, payload) {
                     if (qq == e.self_id) {
                         e.atBot = true
                     }
-                    e.raw_message += `{at:${qq}}`
                 } else if (i.textElement.atType == 1) {
                     e.message.push({ type: 'at', qq: 'all' })
-                    e.raw_message += `{at:all}`
                 } else if (i.textElement.atType == 0) {
                     e.message.push({ type: 'text', text: i.textElement.content })
-                    e.raw_message += i.textElement.content
                 }
+                e.raw_message += i.textElement.content
                 break;
             case 2:
                 const md5 = i.picElement.md5HexStr
@@ -274,7 +272,7 @@ async function makeMessage(self_id, payload) {
                     url,
                     file: url
                 })
-                e.raw_message += `{image:${md5.toUpperCase()}}`
+                e.raw_message += `[图片]`
                 break
             case 3:
                 if (payload.chatType == 2) break
@@ -297,7 +295,7 @@ async function makeMessage(self_id, payload) {
                     md5: i.fileElement.fileMd5,
                     size: i.fileElement.fileSize,
                 })
-                e.raw_message += `{file:${i.fileElement.fileName}}`
+                e.raw_message += `[文件]`
                 break
             case 4:
                 e.message.push({
@@ -306,7 +304,7 @@ async function makeMessage(self_id, payload) {
                     md5: i.pttElement.md5HexStr,
                     size: i.pttElement.fileSize
                 })
-                e.raw_message += `{record:${i.pttElement.fileName}}`
+                e.raw_message += `[语音]`
                 break
             case 5:
                 e.message.push({
@@ -316,11 +314,11 @@ async function makeMessage(self_id, payload) {
                     md5: i.videoElement.thumbMd5,
                     size: i.videoElement.thumbSize
                 })
-                e.raw_message += `{video:${i.videoElement.fileName}}`
+                e.raw_message += `[视频]`
                 break
             case 6:
                 e.message.push({ type: 'face', id: Number(i.faceElement.faceIndex) })
-                e.raw_message += `{face:${i.faceElement.faceIndex}}`
+                e.raw_message += `[表情]`
                 break
             case 7:
                 // e.message.push({
@@ -346,7 +344,13 @@ async function makeMessage(self_id, payload) {
                     user_id: Number(i.replyElement.senderUid),
                     message: replyMsg
                 }
-                e.raw_message += `{at:${e.source.user_id}}`
+                let replyText = ''
+                if (payload.chatType == 2) {
+                    replyText += '@' + (e.bot.gml.get(Number(payload.peerUin))?.get(e.source.user_id)?.card || payload.peerUin)
+                } else {
+                    replyText += '@' + (e.bot.fl.get(Number(payload.peerUin))?.nickname || payload.peerUin)
+                }
+                e.raw_message = replyText + e.raw_message
                 break
             case 8:
                 switch (i.grayTipElement.subElementType) {
@@ -393,7 +397,7 @@ async function makeMessage(self_id, payload) {
                     file: i.marketFaceElement.emojiId,
                     text: i.marketFaceElement.faceName
                 })
-                e.raw_message += `{bface:${i.marketFaceElement.faceName}}`
+                e.raw_message += i.marketFaceElement.faceName
                 break
             case 16:
                 e.message.push({ type: 'xml', data: i.multiForwardMsgElement.xmlContent })
