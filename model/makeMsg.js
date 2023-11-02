@@ -260,7 +260,7 @@ async function makeSendMsg(params, uin) {
                 }
                 break
             case 'poke':
-                await bot.pickGroup(params.group_id).pokeMember(Number(i.data.qq))
+                await bot.pickGroup(params.group_id)?.pokeMember(Number(i.data.qq))
                 break
             case 'record':
                 sendMsg.push(segment.record(decodeURIComponent(i.data.file)))
