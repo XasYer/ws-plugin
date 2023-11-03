@@ -1,3 +1,9 @@
+# 0.5.18
+
+* onebot v11 增加API
+    * can_send_image 检查是否可以发送图片
+    * can_send_record 检查是否可以发送语音
+
 # 0.5.17
 
 * 可以自定义每个连接的上报类型,在对应的连接中加上`messagePostFormat: 1`即可
