@@ -221,8 +221,13 @@ async function getApiData(api, params = {}, name, uin) {
 
         // 获取图片信息
         'get_image': async ({ file }) => {
-            const md5 = file.substring(0, 32)
-            const url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
+            let url
+            if (file.startsWith('https://gchat.qpic.cn/gchatpic_new')) {
+                url = file
+            } else {
+                const md5 = file.substring(0, 32)
+                url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0?term=2&is_origin=0`
+            }
             const result = await fetch(url)
             const size = result?.headers?.size || 9999
             ResponseData = {
