@@ -246,11 +246,10 @@ async function makeMessage(self_id, payload) {
                 break;
             case 2:
                 const md5 = i.picElement.md5HexStr
-                const url = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0`
                 e.message.push({
                     type: 'image',
-                    url,
-                    file: url
+                    url: `https://gchat.qpic.cn/gchatpic_new/0/0-0-${md5.toUpperCase()}/0`,
+                    file: `${md5}.image`
                 })
                 e.raw_message += `[图片]`
                 break

@@ -61,6 +61,12 @@ async function upload(bot, msg, contentType) {
             buffer = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
         }
         contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
+    } else if (/.{32}\.image/.test(msg)) {
+        const img = await fetch(`https://gchat.qpic.cn/gchatpic_new/0/0-0-${msg.replace('.image', '').toUpperCase()}/0`)
+        const type = img.headers.get('content-type');
+        if (type) contentType = type
+        const arrayBuffer = await img.arrayBuffer()
+        buffer = Buffer.from(arrayBuffer)
     } else {
         buffer = fs.readFileSync(msg)
         contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
