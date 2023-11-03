@@ -86,9 +86,9 @@ async function uploadAudio(bot, file) {
         voice = Buffer.from(arrayBuffer)
     } else if (file.startsWith('file://')) {
         try {
-            voice = fs.readFileSync(msg.replace(/^file:\/\//, ''))
+            voice = fs.readFileSync(file.replace(/^file:\/\//, ''))
         } catch (error) {
-            voice = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
+            voice = fs.readFileSync(file.replace(/^file:\/\/\//, ''))
         }
     } else {
         return false
@@ -305,9 +305,9 @@ async function uploadFile(file) {
         fs.writeFileSync(path, buffer);
     } else if (file.startsWith('file://')) {
         try {
-            buffer = fs.readFileSync(msg.replace(/^file:\/\//, ''))
+            buffer = fs.readFileSync(file.replace(/^file:\/\//, ''))
         } catch (error) {
-            buffer = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
+            buffer = fs.readFileSync(file.replace(/^file:\/\/\//, ''))
         }
         name = file.substring(file.lastIndexOf('/') + 1)
         path = path + name
