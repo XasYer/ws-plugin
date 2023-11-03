@@ -232,7 +232,12 @@ async function getApiData(api, params = {}, name, uin) {
             }
         },
         // 检查是否可以发送图片
-        // TODO can_send_image 不会
+        'can_send_image': async () => {
+            ResponseData = {
+                // 应该都能发吧
+                yes: true
+            }
+        },
         // 图片 OCR
         // TODO ocr_image .ocr_image 没找到例子
 
@@ -244,7 +249,12 @@ async function getApiData(api, params = {}, name, uin) {
         // 获取语音
         // TODO get_record
         // 检查是否可以发送语音
-        // TODO can_send_record 不会
+        'can_send_record': async () => {
+            ResponseData = {
+                // 应该都能发吧
+                yes: true
+            }
+        },
 
         // --------------------------------------------------------
         // 处理
