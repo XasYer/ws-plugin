@@ -45,9 +45,9 @@ export const redAdapter = new class RedAdapter {
             }).then(r => {
                 if (!r.ok) throw r
                 const contentType = r.headers.get('content-type');
-                if (contentType.includes('application/json')) {
+                if (contentType?.includes('application/json')) {
                     return r.json();
-                } else if (contentType.includes('text/plain')) {
+                } else if (contentType?.includes('text/plain')) {
                     return r.text();
                 } else {
                     return r
@@ -62,29 +62,32 @@ export const redAdapter = new class RedAdapter {
         }
         const reconnect = () => {
             if (!data.stopReconnect && ((this.reconnectCount < data.maxReconnectAttempts) || data.maxReconnectAttempts <= 0)) {
-                logger.warn(`${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
+                logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第${this.reconnectCount}次`);
                 this.reconnectCount++
                 setTimeout(() => {
                     this.connect(data)
                 }, data.reconnectInterval * 1000);
             } else {
                 this.stopReconnect = false
-                logger.warn(`${this.name} 达到最大重连次数或关闭连接,停止重连`);
+                logger.warn(`[ws-plugin] ${this.name} 达到最大重连次数或关闭连接,停止重连`);
             }
         }
         let info = await bot.sendApi('get', 'getSelfProfile')
         if (info.error) {
             if (info.error.code == 'ECONNREFUSED') {
-                logger.error(`${this.name} 请检查是否安装Chronocat并启动QQNT`)
+                logger.error(`[ws-plugin] ${this.name} 请检查是否安装Chronocat并启动QQNT`)
                 reconnect()
                 return
+            } else if (info.error.status == 401) {
+                logger.error(`[ws-plugin] ${this.name} Token错误`)
+                return
             }
-            logger.error(`${this.name} Token错误或其他未知原因`)
+            logger.error(`[ws-plugin] ${this.name} 出现错误`)
             logger.error(await info.error.text?.() || info.error)
             return
         }
         if (!info.uin) {
-            logger.error(`${this.name} 请点击登录`)
+            logger.error(`[ws-plugin] ${this.name} 请点击登录`)
             reconnect()
             return
         }
@@ -107,10 +110,10 @@ export const redAdapter = new class RedAdapter {
             delete Bot[bot.self_id]
             switch (code) {
                 case 1005:
-                    logger.error(`${this.name}(${bot.self_id}) 主动断开连接`)
+                    logger.error(`[ws-plugin] ${this.name}(${bot.self_id}) 主动断开连接`)
                     return
                 case 1006:
-                    logger.error(`${this.name}(${bot.self_id}) QQNT被关闭`)
+                    logger.error(`[ws-plugin] ${this.name}(${bot.self_id}) QQNT被关闭`)
                     reconnect()
                     return
                 default:
