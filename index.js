@@ -39,30 +39,7 @@ for (const item of path) {
 }
 
 if (Version.isTrss) {
-    Bot.express.get('/ws-plugin*', async (req, res) => {
-        const file = req.query.file
-        if (file) {
-            const ext = extname(file)
-            const contentType = mimeTypes[ext]
-            fs.readFile(join(TMP_DIR, file), (err, content) => {
-                if (err) {
-                    res.writeHead(404)
-                    res.end('File not found')
-                } else {
-                    const name = file.split('-')
-                    const filename = encodeURIComponent(name[1]) || encodeURIComponent(name[0]) || encodeURIComponent(file)
-                    res.writeHead(200, {
-                        'Content-Type': contentType,
-                        'Content-Disposition': `attachment filename=${filename}`
-                    })
-                    res.end(content)
-                }
-            })
-            return
-        }
-        res.writeHead(404)
-        res.end('Page not found')
-    })
+    Bot.express.get('/ws-plugin*', createHttp)
 } else {
     const getGroupMemberInfo = Bot.getGroupMemberInfo
     /** 劫持修改getGroupMemberInfo方法 */
@@ -92,6 +69,20 @@ if (Version.isTrss) {
         }
         return result
     }
+    const express = express();
+    const server = http.createServer(express);
+    express.get('/ws-plugin*', createHttp)
+    server.listen(Config.wsPort, () => {
+        const host = server.address().address
+        const port = server.address().port
+        logger.mark(`[ws-plugin] 启动 HTTP 服务器：${logger.green(`http://[${host}]:${port}`)}`)
+    })
+    server.on('error', () => {
+        const host = server.address().address
+        const port = server.address().port
+        logger.error(`[ws-plugin] 启动 HTTP 服务器失败：${logger.green(`http://[${host}]:${port}`)}`)
+        logger.error(error)
+    })
 }
 
 function deleteFolderRecursive(directoryPath) {
@@ -110,5 +101,28 @@ function deleteFolderRecursive(directoryPath) {
 deleteFolderRecursive('./plugins/ws-plugin/model/dlc')
 
 initWebSocket()
-
+async function createHttp(req, res) {
+    const file = req.query.file
+    if (file) {
+        const ext = extname(file)
+        const contentType = mimeTypes[ext]
+        fs.readFile(join(TMP_DIR, file), (err, content) => {
+            if (err) {
+                res.writeHead(404)
+                res.end('File not found')
+            } else {
+                const name = file.split('-')
+                const filename = encodeURIComponent(name[1]) || encodeURIComponent(name[0]) || encodeURIComponent(file)
+                res.writeHead(200, {
+                    'Content-Type': contentType,
+                    'Content-Disposition': `attachment filename=${filename}`
+                })
+                res.end(content)
+            }
+        })
+        return
+    }
+    res.writeHead(404)
+    res.end('Page not found')
+}
 export { apps }

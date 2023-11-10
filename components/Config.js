@@ -35,6 +35,11 @@ class Config {
     }
   }
 
+  /** 获得yunzai Bot.yaml配置 */
+  get bot(){
+    return cfg.bot
+  }
+
   /** 主人QQ */
   get masterQQ() {
     return cfg.masterQQ
@@ -68,6 +73,11 @@ class Config {
   /** 数据上报类型 */
   get messagePostFormat() {
     return this.getDefOrConfig('ws-config').messagePostFormat
+  }
+
+  /** 端口 */
+  get wsPort(){
+    return this.getDefOrConfig('ws-config').wsPort
   }
 
   /** 连接列表 */

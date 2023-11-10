@@ -1,6 +1,12 @@
 import { makeSendMsg, makeMessage } from './message.js'
 import { setMsgMap, getMsgMap } from '../msgMap.js'
 import { roleMap } from './tool.js'
+import { Config, Version } from '../../components/index.js'
+
+let wsPort
+setTimeout(()=>{
+    wsPort = Version.isTrss ? Config.bot.port : Config.wsPort
+},2000)
 
 export class QQRedBot {
     constructor(bot) {
@@ -80,7 +86,7 @@ export class QQRedBot {
             recallMsg: async message_id => await this.deleteMsg(message_id),
             sendFile: async file => await this.sendPrivateMsg(user_id, [{ type: 'file', file }], chatType),
             getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id),
-            getFileUrl: async (fid) => `http://127.0.0.1:${Bot.server.address().port}/ws-plugin?file=${fid}`,
+            getFileUrl: async (fid) => `http://127.0.0.1:${wsPort}/ws-plugin?file=${fid}`,
             makeForwardMsg: (msg) => { return { type: "node", data: msg } }
         }
     }
