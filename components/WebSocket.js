@@ -2,6 +2,7 @@ import Client from "./Client.js";
 import { Config, Version } from './index.js'
 import { sleep } from '../model/index.js'
 import { redAdapter } from '../model/red/index.js'
+import _ from "lodash";
 
 let sendSocketList = []
 let allSocketList = []
@@ -10,6 +11,15 @@ async function createWebSocket(data) {
     if (typeof data.close != 'undefined' && typeof data.closed == 'undefined') {
         data.closed = data.close
         delete data.close
+    }
+    if (Array.isArray(data.uin)) {
+        for (const uin of data.uin) {
+            const i = _.cloneDeep(data)
+            i.name += `(${_.truncate(String(uin), { length: 6 })})`
+            i.uin = uin
+            createWebSocket(i)
+        }
+        return
     }
     const client = new Client(data)
     setAllSocketList(client)
@@ -67,12 +77,12 @@ async function checkVersion(data) {
                     return true
                 }
                 if (!log) {
-                    logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端,20秒后重新判断`)
+                    logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端,20秒后重新判断,uin:${data.uin}`)
                     log = true
                 }
                 await sleep(1000)
             }
-            logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端 ${data.uin}`)
+            logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端,uin:${data.uin}`)
             return false
         }
     } else if (Bot.uin == '88888') {
@@ -100,9 +110,9 @@ function modifyWebSocket(target) {
         case 'del':
         case 'close':
             for (const i of allSocketList) {
-                if (i.name == target.data.name) {
+                const reg = new RegExp(`^${target.data.name}\(.{1,6}\)$`)
+                if (i.name == target.data.name || reg.test(i.name)) {
                     i.close()
-                    break
                 }
             }
             break

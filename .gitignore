@@ -2,6 +2,6 @@ node_modules/
 Temp/
 config/config/*
 model/db/data.db
-model/satori/
+model/satori
 **/test.js
 !.gitignore
