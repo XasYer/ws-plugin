@@ -13,7 +13,7 @@ export default class Client {
         this.reconnectInterval = reconnectInterval;
         this.maxReconnectAttempts = maxReconnectAttempts;
         this.accessToken = accessToken;
-        this.uin = Number(uin)
+        this.uin = Number(uin) || uin
         this.ws = null
         this.status = 0
         this.closed = closed

@@ -293,6 +293,36 @@ export class setting extends plugin {
             return false
         }
         if (addWsMsg.length == 2) {
+            for (const i of Config.servers) {
+                if (i.name == addWsMsg[0]) {
+                    if (Array.isArray(i.uin)) {
+                        if (i.uin.some(m => m == this.e.self_id)) {
+                            this.reply(`已经有连接名为${addWsMsg[0]}的连接并且已添加uin`)
+                            this.finish('checkAddWs', this.e.isGroup)
+                            return
+                        } else {
+                            i.uin.push(Number(this.e.self_id) || this.e.self_id)
+                        }
+                    } else if (i.uin == this.e.self_id) {
+                        this.reply(`已经有连接名为${addWsMsg[0]}的连接并且已添加uin`)
+                        this.finish('checkAddWs', this.e.isGroup)
+                        return
+                    } else {
+                        i.uin = Number(this.e.self_id) || this.e.self_id
+                    }
+                    try {
+                        Config.delServersArr(i.name)
+                        Config.modifyarr('ws-config', 'servers', i)
+                        this.reply('操作成功~请留意控制台输出~')
+                    } catch (error) {
+                        logger.error(error)
+                        this.reply('操作失败~')
+                    } finally {
+                        this.finish('checkAddWs', this.e.isGroup)
+                        return
+                    }
+                }
+            }
             switch (addWsMsg[1]) {
                 case '1':
                     await this.reply([
@@ -621,28 +651,27 @@ export class setting extends plugin {
 
     async view() {
         const msg = []
-        for (const i of Config.servers) {
-            // if (i.type == 4) continue
+        for (const s of allSocketList) {
             if (msg.length != 0) msg.push('\n----------------\n')
             let status = '已关闭'
-            for (const s of allSocketList) {
-                if (s.name == i.name) {
-                    switch (s.status) {
-                        case 0:
-                            status = '已关闭'
-                            break;
-                        case 1:
-                            status = '正常'
-                            break
-                        case 3:
-                            status = '断线重连中'
-                            break
-                        default:
-                            break;
-                    }
-                }
+            switch (s.status) {
+                case 0:
+                    status = '已关闭'
+                    break;
+                case 1:
+                    status = '正常'
+                    break
+                case 3:
+                    status = '断线重连中'
+                    break
+                default:
+                    break;
             }
-            msg.push(`连接名字: ${i.name}\n连接类型: ${i.type}\n当前状态: ${status}`)
+            let str = `连接名字: ${s.name}\n连接类型: ${s.type}\n当前状态: ${status}`
+            if (!this.e.isGroup) {
+                str += `\naddress: ${s.address}\nuin: ${s.uin}`
+            }
+            msg.push(str)
         }
         if (msg.length > 0) {
             await this.reply(msg)
