@@ -2,6 +2,8 @@ import fs from 'node:fs'
 import { initWebSocket, Config, Version } from './components/index.js'
 import { TMP_DIR, mimeTypes } from './model/index.js'
 import { extname, join } from 'path'
+import express from "express"
+import http from "http"
 
 const files = fs.readdirSync('./plugins/ws-plugin/apps').filter(file => file.endsWith('.js'))
 
@@ -69,9 +71,9 @@ if (Version.isTrss) {
         }
         return result
     }
-    const express = express();
-    const server = http.createServer(express);
-    express.get('/ws-plugin*', createHttp)
+    const _express = express();
+    const server = http.createServer(_express);
+    _express.get('/ws-plugin*', createHttp)
     server.listen(Config.wsPort, () => {
         const host = server.address().address
         const port = server.address().port
