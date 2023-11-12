@@ -8,11 +8,13 @@ async function getApiData(api, params = {}, name, uin, adapter) {
     const bot = Bot[uin] || Bot
     let sendRet = null
     let ResponseData = null
-    if (params.user_id) {
-        params.user_id = await getUser_id({ id: params.user_id })
-    }
-    if (params.group_id) {
-        params.group_id = await getGroup_id({ id: params.group_id })
+    if (typeof uin != 'number') {
+        if (params.user_id) {
+            params.user_id = await getUser_id({ id: params.user_id })
+        }
+        if (params.group_id) {
+            params.group_id = await getGroup_id({ id: params.group_id })
+        }
     }
     let publicApi = {
         // --------------------------------------------------------
