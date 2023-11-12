@@ -1,4 +1,4 @@
-import { sequelize, DataTypes, Op, existSQL } from './base.js'
+import { sequelize, DataTypes, Op, existSQL, executeSync } from './base.js'
 import schedule from "node-schedule"
 
 const message_id_table = sequelize.define('message_id', {
@@ -19,87 +19,56 @@ const message_id_table = sequelize.define('message_id', {
     onebot_id: DataTypes.INTEGER,
 })
 
-
 await sequelize.sync()
 
-let lock = Promise.resolve()
-
-async function setMessage_id({ message_id, seq, rand, time, user_id, group_id, onebot_id }) {
-    let _lock = lock
-    lock = new Promise((resolve, reject) => {
-        _lock.then(async () => {
-            try {
-                const [result, created] = await message_id_table.upsert({
-                    message_id,
-                    seq,
-                    rand,
-                    time,
-                    user_id,
-                    group_id,
-                    onebot_id
-                }, {
-                    returning: true
-                })
-                resolve(result?.dataValues)
-            } catch (error) {
-                reject(error)
-            }
-        })
-    })
-
-    return await lock
+async function saveMessage_id({ message_id, seq, rand, time, user_id, group_id, onebot_id }) {
+    return executeSync(async () => {
+        const [result, created] = await message_id_table.upsert({
+            message_id,
+            seq,
+            rand,
+            time,
+            user_id,
+            group_id,
+            onebot_id
+        }, {
+            returning: true
+        });
+        return result?.dataValues;
+    });
 }
 
-async function getMessage_id(where, order = [['createdAt', 'DESC']]) {
-    let _lock = lock
-
-    lock = new Promise((resolve, reject) => {
-        _lock.then(async () => {
-            try {
-                const result = await message_id_table.findOne({
-                    where,
-                    order,
-                })
-                resolve(result?.dataValues)
-            } catch (error) {
-                reject(error)
-            }
+async function findMessage_id(where, order = [['createdAt', 'DESC']]) {
+    return executeSync(async () => {
+        const result = await message_id_table.findOne({
+            where,
+            order,
         })
-    })
-    return await lock
+        return result?.dataValues
+    });
 }
+
 if (existSQL) {
     const job = schedule.scheduleJob('0 30 0 * * ?', async function () {
-        let _lock = lock
+        await executeSync(async () => {
+            const staleData = new Date()
+            // TODO 自定义存储时间
+            staleData.setDate(staleData.getDate() - 7)
 
-        lock = new Promise((resolve, reject) => {
-            _lock.then(async () => {
-                try {
-                    const staleData = new Date()
-                    // TODO 自定义存储时间
-                    staleData.setDate(staleData.getDate() - 7)
-
-                    await message_id_table.destroy({
-                        where: {
-                            createdAt: {
-                                [Op.lt]: staleData
-                            }
-                        }
-                    })
-                    await sequelize.query('VACUUM');
-                    resolve()
-                } catch (error) {
-                    reject(error)
+            await message_id_table.destroy({
+                where: {
+                    createdAt: {
+                        [Op.lt]: staleData
+                    }
                 }
             })
-        })
-
-        await lock
+            await sequelize.query('VACUUM');
+        });
     })
 }
 
 
 export {
-    setMessage_id,
-    getMessage_id
+    saveMessage_id,
+    findMessage_id
 }

@@ -33,11 +33,29 @@ try {
     DataTypes = {};
 }
 
+let lock = Promise.resolve()
 
+function executeSync(callback) {
+    let _lock = lock;
+
+    lock = new Promise((resolve, reject) => {
+        _lock.then(async () => {
+            try {
+                const result = await callback();
+                resolve(result);
+            } catch (error) {
+                reject(error);
+            }
+        });
+    });
+
+    return lock;
+}
 
 export {
     sequelize,
     DataTypes,
     Op,
-    existSQL
+    existSQL,
+    executeSync
 }

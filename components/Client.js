@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsgMap } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsg, getUser_id } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from "express"
 import http from "http"
@@ -14,6 +14,7 @@ export default class Client {
         this.maxReconnectAttempts = maxReconnectAttempts;
         this.accessToken = accessToken;
         this.uin = Number(uin) || uin
+        this.self_id = uin
         this.ws = null
         this.status = 0
         this.closed = closed
@@ -29,7 +30,7 @@ export default class Client {
     createWs() {
         try {
             const headers = {
-                'X-Self-ID': this.uin,
+                'X-Self-ID': this.self_id,
                 'X-Client-Role': 'Universal',
                 'User-Agent': `ws-plugin/${Version.version}`
             }
@@ -37,6 +38,7 @@ export default class Client {
             this.ws = new WebSocket(this.address, { headers })
         } catch (error) {
             logger.error(`[ws-plugin] 出错了,可能是ws地址填错了~\nws名字: ${this.name}\n地址: ${this.address}\n类型: 1`)
+            logger.error(error)
             return
         }
         this.ws.on('open', async () => {
@@ -46,12 +48,12 @@ export default class Client {
             } else if (this.status == 0 && Config.firstconnectToMaster) {
                 await this.sendMasterMsg(`${this.name} 连接成功~`)
             }
-            this.ws.send(lifecycle(this.uin))
+            this.ws.send(lifecycle(this.self_id))
             this.status = 1
             this.reconnectCount = 1
             if (Config.heartbeatInterval > 0) {
                 this.timer = setInterval(async () => {
-                    this.ws.send(heartbeat(this.uin))
+                    this.ws.send(heartbeat(this.self_id))
                 }, Config.heartbeatInterval * 1000)
             }
         })
@@ -120,10 +122,10 @@ export default class Client {
                 if (req.url === '/') {
                     conn.id = req.headers["sec-websocket-key"]
                     let time = null
-                    conn.send(lifecycle(this.uin))
+                    conn.send(lifecycle(this.self_id))
                     if (Config.heartbeatInterval > 0) {
                         time = setInterval(async () => {
-                            conn.send(heartbeat(this.uin))
+                            conn.send(heartbeat(this.self_id))
                         }, Config.heartbeatInterval * 1000)
                     }
                     logger.mark(`[ws-plugin] ${this.name} 接受 WebSocket 连接: ${req.connection.remoteAddress}`);
@@ -161,10 +163,10 @@ export default class Client {
                 } else if (req.url === '/event' || req.url === '/event/') {
                     conn.id = req.headers["sec-websocket-key"]
                     let time = null
-                    conn.send(lifecycle(this.uin))
+                    conn.send(lifecycle(this.self_id))
                     if (Config.heartbeatInterval > 0) {
                         time = setInterval(async () => {
-                            conn.send(heartbeat(this.uin))
+                            conn.send(heartbeat(this.self_id))
                         }, Config.heartbeatInterval * 1000)
                     }
                     logger.mark(`[ws-plugin] ${this.name} 接受 WebSocket event 连接: ${req.connection.remoteAddress}`);
@@ -247,7 +249,7 @@ export default class Client {
                         break;
                 }
                 if (sendRet.rand) {
-                    setMsgMap({
+                    setMsg({
                         message_id: sendRet.message_id,
                         time: sendRet.time,
                         seq: sendRet.seq,
@@ -350,7 +352,7 @@ export default class Client {
                     method: 'POST',
                     headers: {
                         'content-type': 'application/json',
-                        'x-self-id': this.uin,
+                        'x-self-id': this.self_id,
                         'user-agent': `ws-plugin/${Version.version}`
                     },
                     body
@@ -387,7 +389,7 @@ export default class Client {
     async getData(action, params, echo) {
         let result
         try {
-            const data = await getApiData(action, params, this.name, this.uin);
+            const data = await getApiData(action, params, this.name, this.uin, this.adapter);
             result = {
                 status: 'ok',
                 retcode: 0,

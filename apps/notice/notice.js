@@ -1,5 +1,5 @@
 import { sendSocketList, Config, Version } from '../../components/index.js'
-import { setMsgMap } from '../../model/index.js'
+import { setMsg, getMsg, getGroup_id, getUser_id } from '../../model/index.js'
 
 Bot.on('notice', async e => {
     if (e.self_id == '88888') {
@@ -40,17 +40,21 @@ Bot.on('notice', async e => {
     }
     e.reply = reply(e)
     let other = {}
+    const self_id = await getUser_id({ user_id: e.self_id })
+    const user_id = await getUser_id({ user_id: e.user_id })
     if (e.notice_type == 'group') {
-        other.group_id = e.group_id
-        other.user_id = e.user_id
-        other.operator_id = e.operator_id
+        const group_id = await getGroup_id({ group_id: e.group_id })
+        const operator_id = await getUser_id({ user_id: e.operator_id })
+        other.group_id = group_id
+        other.user_id = user_id
+        other.operator_id = operator_id
         switch (e.sub_type) {
             //群员增加
             case 'increase':
                 if (!Config.groupIncrease) return false
                 other.notice_type = 'group_increase'
                 other.sub_type = 'approve'
-                other.operator_id = e.user_id
+                other.operator_id = user_id
                 break;
             //群员减少
             case 'decrease':
@@ -64,8 +68,8 @@ Bot.on('notice', async e => {
                 if (!Config.groupPoke) return false
                 other.notice_type = 'notify'
                 other.sub_type = 'poke'
-                other.user_id = e.operator_id
-                other.target_id = e.target_id
+                other.user_id = operator_id
+                other.target_id = await getUser_id({ user_id: e.target_id })
                 break
             //群管理变动
             case 'admin':
@@ -84,13 +88,14 @@ Bot.on('notice', async e => {
             case 'recall':
                 if (!Config.groupRecall) return false
                 other.notice_type = 'group_recall'
-                other.message_id = e.rand
+                const message_id = await getMsg({ message_id: e.message_id, group_id: e.group_id })
+                other.message_id = message_id?.onebot_id || e.rand
                 break
             default:
                 return false
         }
     } else if (e.notice_type == 'friend') {
-        other.user_id = e.user_id
+        other.user_id = user_id
         switch (e.sub_type) {
             //好友添加
             case 'increase':
@@ -101,7 +106,8 @@ Bot.on('notice', async e => {
             case 'recall':
                 if (!Config.friendRecall) return false
                 other.notice_type = 'friend_recall'
-                other.message_id = e.rand
+                const message_id = await getMsg({ message_id: e.message_id, user_id: e.user_id })
+                other.message_id = message_id?.onebot_id || e.rand
                 break
             default:
                 return false
@@ -111,7 +117,7 @@ Bot.on('notice', async e => {
     }
     let msg = {
         time: Date.parse(new Date()) / 1000,
-        self_id: e.self_id,
+        self_id: self_id,
         post_type: 'notice',
         ...other
     }
@@ -123,7 +129,6 @@ Bot.on('notice', async e => {
                 case 2:
                     if (Version.isTrss) {
                         if (i.uin != e.self_id) continue
-                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) continue
                     }
                     i.ws.send(msg)
                     break;
@@ -140,7 +145,7 @@ function reply(e) {
         return async function (massage, quote = false, data = {}) {
             const ret = await replyNew(massage, quote, data)
             if (ret) {
-                setMsgMap({
+                setMsg({
                     message_id: ret.message_id,
                     time: ret.time,
                     seq: ret.seq,
@@ -170,7 +175,7 @@ function reply(e) {
                     }
                 }
                 if (ret) {
-                    setMsgMap({
+                    setMsg({
                         message_id: ret.message_id,
                         time: ret.time,
                         seq: ret.seq,
