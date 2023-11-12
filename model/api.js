@@ -1,13 +1,19 @@
 import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
-import { getMsgMap, setMsgMap, getGuildLatestMsgId, getLatestMsg } from './msgMap.js'
+import { getMsg, setMsg, getGuildLatestMsgId, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { Version } from '../components/index.js'
 import fetch from 'node-fetch'
 
-async function getApiData(api, params = {}, name, uin) {
+async function getApiData(api, params = {}, name, uin, adapter) {
     const bot = Bot[uin] || Bot
     let sendRet = null
     let ResponseData = null
+    if (params.user_id) {
+        params.user_id = await getUser_id({ id: params.user_id })
+    }
+    if (params.group_id) {
+        params.group_id = await getGroup_id({ id: params.group_id })
+    }
     let publicApi = {
         // --------------------------------------------------------
         // Bot 账号
@@ -17,7 +23,7 @@ async function getApiData(api, params = {}, name, uin) {
         // 获取登录号信息
         'get_login_info': async params => {
             ResponseData = {
-                user_id: bot.uin,
+                user_id: await getUser_id({ user_id: uin }),
                 nickname: bot.nickname
             }
         },
@@ -54,6 +60,14 @@ async function getApiData(api, params = {}, name, uin) {
         // 获取陌生人信息
         'get_stranger_info': async (params) => {
             ResponseData = await bot.getStrangerInfo?.(params.user_id)
+            if (!ResponseData) {
+                ResponseData = {
+                    user_id: await getUser_id({ user_id: params.user_id }),
+                    nickname: 'QQ用户',
+                    sex: 'unknown',
+                    age: 18
+                }
+            }
         },
         // 获取好友列表
         'get_friend_list': async params => {
@@ -62,6 +76,9 @@ async function getApiData(api, params = {}, name, uin) {
                 ResponseData = list
             } else if (list instanceof Map) {
                 ResponseData = Array.from(list.values())
+            }
+            for (const i in ResponseData) {
+                ResponseData[i].user_id = await getUser_id({ user_id: ResponseData[i].user_id })
             }
         },
         // 获取单向好友列表
@@ -90,19 +107,19 @@ async function getApiData(api, params = {}, name, uin) {
 
         // 发送私聊消息
         'send_private_msg': async (params) => {
-            let { sendMsg, quote } = await makeSendMsg(params, uin)
+            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送群聊消息
         'send_group_msg': async (params) => {
-            let { sendMsg, quote } = await makeSendMsg(params, uin)
+            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送消息
         'send_msg': async (params) => {
-            let { sendMsg, quote } = await makeSendMsg(params, uin)
+            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (params.message_type == 'group' || params.group_id) {
                 if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
             } else if (params.message_type == 'private' || params.user_id) {
@@ -112,15 +129,15 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 获取消息
         'get_msg': async (params) => {
-            ResponseData = await getMsgMap({ onebot_id: params.message_id })
+            ResponseData = await getMsg({ onebot_id: params.message_id })
             if (ResponseData) {
                 ResponseData = await bot.getMsg?.(ResponseData.message_id)
                 if (ResponseData) {
-                    if (ResponseData.bot) delete ResponseData.bot
-                    if (ResponseData.friend) delete ResponseData.friend
-                    if (ResponseData.group) delete ResponseData.group
-                    if (ResponseData.member) delete ResponseData.member
-                    ResponseData.group = ResponseData.message_type == 'group' ? true : false
+                    ResponseData.user_id = await getUser_id({ user_id: ResponseData.user_id })
+                    if (ResponseData.group_id) {
+                        ResponseData.group = true
+                        ResponseData.group_id = await getGroup_id({ group_id: ResponseData.group_id })
+                    }
                     ResponseData.real_id = Number(ResponseData.seq)
                     ResponseData.message_id = Number(ResponseData.rand)
                     ResponseData.message = await msgToOneBotMsg(ResponseData.message)
@@ -134,7 +151,7 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 撤回消息
         'delete_msg': async (params) => {
-            let msg = await getMsgMap({ onebot_id: params.message_id })
+            let msg = await getMsg({ onebot_id: params.message_id })
             if (msg) {
                 await bot.deleteMsg?.(msg.message_id)
             }
@@ -152,7 +169,7 @@ async function getApiData(api, params = {}, name, uin) {
                     content: MsgToCQ(await msgToOneBotMsg(item.message)),
                     sender: {
                         nickname: item.nickname,
-                        user_id: item.user_id
+                        user_id: await getUser_id({ user_id: item.user_id })
                     },
                     time: item.time
                 })
@@ -163,7 +180,7 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 发送合并转发 ( 群聊 )
         'send_group_forward_msg': async (params) => {
-            let forwardMsg = await makeForwardMsg(params, uin)
+            let forwardMsg = await makeForwardMsg(params, uin, adapter)
             let forward_id
             if (typeof (forwardMsg.data) === 'object') {
                 let detail = forwardMsg.data?.meta?.detail
@@ -178,7 +195,7 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 发送合并转发 ( 好友 )
         'send_private_forward_msg': async (params) => {
-            let forwardMsg = await makeForwardMsg(params, uin)
+            let forwardMsg = await makeForwardMsg(params, uin, adapter)
             let forward_id
             if (typeof (forwardMsg.data) === 'object') {
                 let detail = forwardMsg.data?.meta?.detail
@@ -193,20 +210,20 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 获取群消息历史记录
         'get_group_msg_history': async params => {
-            let messages, flag = true
+            let messages = [], flag = true, ret
             if (params.message_seq) {
-                let message_id = (await getMsgMap({ onebot_id: params.message_id }))?.message_id
+                let message_id = (await getMsg({ onebot_id: params.message_id }))?.seq
                 if (message_id) {
-                    messages = await bot.getChatHistory?.(message_id)
+                    ret = await bot.pickGroup(params.group_id).getChatHistory?.(message_id)
                     flag = false
                 }
             }
             if (flag) {
-                messages = await bot.pickGroup(params.group_id).getChatHistory?.()
+                ret = await bot.pickGroup(params.group_id).getChatHistory?.()
             }
-            if (messages) {
-                for (let i = 0; i < messages.length; i++) {
-                    messages[i] = await msgToOneBotMsg(messages[i])
+            if (ret) {
+                for (const i of ret) {
+                    messages.push(await msgToOneBotMsg(i.message))
                 }
             }
             ResponseData = {
@@ -297,7 +314,8 @@ async function getApiData(api, params = {}, name, uin) {
         // 获取群信息
         'get_group_info': async params => {
             const group = await bot.pickGroup(params.group_id)
-            ResponseData = group.info || group.info?.() || group.getInfo?.()
+            ResponseData = await group.info || await group.info?.() || await group.getInfo?.()
+            ResponseData.group_id = await getGroup_id({ group_id: ResponseData.group_id })
             if (ResponseData.group_name) {
                 ResponseData.group_memo = ResponseData.group_name
             }
@@ -314,24 +332,25 @@ async function getApiData(api, params = {}, name, uin) {
             if (list instanceof Map) {
                 list = Array.from(list.values())
             }
-            list.map(item => {
-                if (item.group_name) {
-                    item.group_memo = item.group_name
+            for (const i in list) {
+                list[i].group_id = await getGroup_id({ group_id: list[i].group_id })
+                if (list[i].group_name) {
+                    list[i].group_memo = list[i].group_name
                 }
                 if (item.create_time) {
-                    item.group_create_time = item.create_time
+                    list[i].group_create_time = list[i].create_time
                 }
                 if (item.grade) {
-                    item.group_level = item.grade
+                    list[i].group_level = list[i].grade
                 }
-            })
+            }
             ResponseData = list
         },
         // 获取群成员信息
         'get_group_member_info': async ({ group_id, user_id }) => {
             const group = await bot.pickGroup(group_id).pickMember(user_id)
             try {
-                ResponseData = group?.info || group.info?.() || group.getInfo?.() || await bot.getGroupMemberInfo?.(group_id, user_id);
+                ResponseData = await group?.info || await group.info?.() || await group.getInfo?.() || await bot.getGroupMemberInfo?.(group_id, user_id);
             } catch (error) {
                 ResponseData = {
                     group_id,
@@ -352,6 +371,8 @@ async function getApiData(api, params = {}, name, uin) {
                     shut_up_timestamp: 0
                 }
             }
+            ResponseData.group_id = await getGroup_id({ group_id: ResponseData.group_id })
+            ResponseData.user_id = await getUser_id({ user_id: ResponseData.user_id })
             if (ResponseData.shutup_time) {
                 ResponseData.shut_up_timestamp = ResponseData.shutup_time
             }
@@ -366,14 +387,19 @@ async function getApiData(api, params = {}, name, uin) {
             if (list instanceof Map) {
                 list = Array.from(list.values())
             }
-            list.map(item => {
-                if (item.shutup_time) {
-                    item.shut_up_timestamp = item.shutup_time
+            for (const i in list) {
+                list[i].group_id = await getGroup_id({ group_id: list[i].group_id })
+                list[i].user_id = await getUser_id({ user_id: list[i].user_id })
+                if (list[i].group_name) {
+                    list[i].group_memo = list[i].group_name
                 }
-                if (!item.last_sent_time) {
-                    item.last_sent_time = Date.now()
+                if (list[i].shutup_time) {
+                    list[i].shut_up_timestamp = list[i].shutup_time
                 }
-            })
+                if (!list[i].last_sent_time) {
+                    list[i].last_sent_time = Date.now()
+                }
+            }
             ResponseData = list
         },
         // 获取群荣誉信息
@@ -504,12 +530,12 @@ async function getApiData(api, params = {}, name, uin) {
         },
         // 设置精华消息
         'set_essence_msg': async params => {
-            let message_id = (await getMsgMap({ onebot_id: params.message_id }))?.message_id
+            let message_id = (await getMsg({ onebot_id: params.message_id }))?.message_id
             if (message_id) await bot.setEssenceMessage?.(message_id)
         },
         // 移出精华消息
         'delete_essence_msg': async params => {
-            let message_id = (await getMsgMap({ onebot_id: params.message_id }))?.message_id
+            let message_id = (await getMsg({ onebot_id: params.message_id }))?.message_id
             if (message_id) await bot.removeEssenceMessage?.(message_id)
         },
         // 群打卡
@@ -774,6 +800,8 @@ async function getApiData(api, params = {}, name, uin) {
         // .get_word_slices
         // 对事件执行快速操作 ( 隐藏 API )
         '.handle_quick_operation': async ({ context, operation }) => {
+            context.user_id = await getUser_id({ id: context.user_id })
+            context.group_id = await getGroup_id({ id: context.group_id })
             switch (context.post_type) {
                 case 'message':
                     switch (context.message_type) {
@@ -785,14 +813,14 @@ async function getApiData(api, params = {}, name, uin) {
                                 if (!Array.isArray(operation.reply)) {
                                     operation.reply = [{ type: 'text', data: { text: operation.reply } }]
                                 }
-                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin)
+                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin, adapter)
                                 if (operation.at_sender) {
                                     sendMsg.unshift(segment.at(context.user_id))
                                 }
                                 await bot.pickGroup?.(context.group_id).sendMsg?.(sendMsg, quote)
                             }
                             if (operation.delete) {
-                                let msg = await getMsgMap({ onebot_id: context.message_id })
+                                let msg = await getMsg({ onebot_id: context.message_id })
                                 if (msg) {
                                     await bot.deleteMsg?.(msg.message_id)
                                 }
@@ -812,7 +840,7 @@ async function getApiData(api, params = {}, name, uin) {
                                 if (!Array.isArray(operation.reply)) {
                                     operation.reply = [{ type: 'text', data: { text: operation.reply } }]
                                 }
-                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin)
+                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin, adapter)
                                 await bot.pickFriend?.(context.user_id).sendMsg?.(sendMsg, quote)
                             }
                             break
@@ -846,7 +874,7 @@ async function getApiData(api, params = {}, name, uin) {
 
 
         'send_guild_channel_msg': async params => {
-            let { sendMsg } = await makeSendMsg(params, uin)
+            let { sendMsg } = await makeSendMsg(params, uin, adapter)
             sendMsg.unshift({
                 type: 'reply',
                 data: {
@@ -875,12 +903,22 @@ async function getApiData(api, params = {}, name, uin) {
     if (typeof publicApi[api] === 'function') {
         await publicApi[api](params)
         if (sendRet) {
+            switch (adapter) {
+                case 'QQ频道Bot':
+                    sendRet = {
+                        message_id: sendRet.message_id?.[0] || Date.now()
+                    }
+                    break;
+
+                default:
+                    break;
+            }
             const onebot_id = Math.floor(Math.random() * Math.pow(2, 32)) | 0
             ResponseData = {
                 ...sendRet,
                 message_id: onebot_id,
             }
-            setMsgMap({
+            setMsg({
                 message_id: sendRet.message_id,
                 time: sendRet.time,
                 seq: sendRet.seq,
@@ -889,6 +927,12 @@ async function getApiData(api, params = {}, name, uin) {
                 group_id: params.group_id,
                 onebot_id,
             })
+        }
+        const del = ['bot', 'group', 'friend', 'member', 'guild', 'channel']
+        for (const i of del) {
+            if (ResponseData[i] && typeof ResponseData[i] != 'boolean') {
+                delete ResponseData[i]
+            }
         }
         return ResponseData
     } else {

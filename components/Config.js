@@ -236,7 +236,7 @@ class Config {
     if (this.watcher[key]) return
 
     const watcher = chokidar.watch(file)
-    watcher.on('change', path => {
+    watcher.on('change', async path => {
       delete this.config[key]
       if (typeof Bot == 'undefined') return
       logger.mark(`[ws-plugin][修改配置文件][${type}][${name}]`)
@@ -270,7 +270,7 @@ class Config {
             else if (value['newValue'] === false && (value['oldValue'] === true || typeof value['oldValue'] === 'undefined')) {
               target.type = 'open'
             }
-            modifyWebSocket(target)
+            await modifyWebSocket(target)
           }
         }
 

@@ -1,6 +1,6 @@
 import { Config, Version } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
-import { getMsgMap, setMsgMap } from './msgMap.js'
+import { getMsg, setMsg, getGuildLatestMsgId } from './DataBase.js'
 import { SendMusicShare, TMP_DIR, decodeHtml } from './tool.js'
 import common from '../../../lib/common/common.js'
 import { randomUUID } from 'crypto'
@@ -23,7 +23,7 @@ async function makeOneBotReportMsg(e) {
     if (e.messagePostFormat == 'string' || e.messagePostFormat == '1') {
         reportMsg = raw_message
     }
-    setMsgMap({
+    setMsg({
         message_id: e.message_id,
         time: e.time,
         seq: e.seq,
@@ -42,7 +42,7 @@ async function makeOneBotReportMsg(e) {
 }
 
 /**
- * 制作gsuid_core上报消息
+ * 制作gsuid_core上报消息 
  * @param {*} e 
  * @returns 
  */
@@ -190,11 +190,18 @@ async function makeGSUidSendMsg(data) {
  * @param {*} params 
  * @returns sendMsg , quote
  */
-async function makeSendMsg(params, uin) {
+async function makeSendMsg(params, uin, adapter) {
     const bot = Bot[uin] || Bot
     let msg = params.message
     if (typeof msg == 'string') msg = CQToMsg(msg)
     let target, uid, sendMsg = [], quote = null
+    switch (adapter) {
+        case 'QQ频道Bot':
+            sendMsg.push({ type: 'reply', id: getGuildLatestMsgId() })
+            break;
+        default:
+            break;
+    }
     for (const i of msg) {
         switch (i.type) {
             case 'reply':
@@ -206,7 +213,7 @@ async function makeSendMsg(params, uin) {
                         seq: i.data.seq
                     }
                 } else {
-                    quote = await getMsgMap({ onebot_id: i.data.id })
+                    quote = await getMsg({ onebot_id: i.data.id })
                     if (quote) {
                         quote = await bot.getMsg?.(quote.message_id)
                     } else {
@@ -292,7 +299,7 @@ async function makeSendMsg(params, uin) {
  * 制作合并转发的消息
  * @param {*} params 
  */
-async function makeForwardMsg(params, uin) {
+async function makeForwardMsg(params, uin, adapter) {
     let forwardMsg = []
     if (!Array.isArray(params.messages)) params.messages = [params.messages]
     for (const msg of params.messages) {
@@ -363,7 +370,7 @@ async function msgToOneBotMsg(msg, source = null) {
             }
             return obj
         }, {});
-        const msg = await getMsgMap(getData)
+        const msg = await getMsg(getData)
         if (msg) {
             reportMsg.push({
                 "type": "reply",

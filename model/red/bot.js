@@ -1,5 +1,5 @@
 import { makeSendMsg, makeMessage } from './message.js'
-import { setMsgMap, getMsgMap } from '../msgMap.js'
+import { setMsg, getMsg } from '../DataBase.js'
 import { roleMap } from './tool.js'
 import { Config, Version } from '../../components/index.js'
 
@@ -150,7 +150,7 @@ export class QQRedBot {
             group_id: Number(group_id),
             onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
         }
-        setMsgMap(sendRet)
+        setMsg(sendRet)
         sendRet.md5 = elements.filter((i) => i.elementType === 2)
         return sendRet
     }
@@ -187,7 +187,7 @@ export class QQRedBot {
             time: Number(result.msgTime),
             onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
         }
-        setMsgMap(sendRet)
+        setMsg(sendRet)
         sendRet.md5 = elements.filter((i) => i.elementType === 2)
         return sendRet
     }
@@ -202,7 +202,7 @@ export class QQRedBot {
     }
 
     async deleteMsg(message_id) {
-        const msg = await getMsgMap({ message_id })
+        const msg = await getMsg({ message_id })
         if (msg) {
             this.bot.sendApi('POST', 'message/recall', JSON.stringify({
                 peer: {
@@ -218,13 +218,13 @@ export class QQRedBot {
     async getChatHistory(message_id, count, target, target_id) {
         let data = {}
         if (target === 'group') {
-            if (!message_id) message_id = (await getMsgMap({ group_id: target_id }, [['seq', 'DESC']])).seq
+            if (!message_id) message_id = (await getMsg({ group_id: target_id }, [['seq', 'DESC']])).seq
             data = {
                 seq: message_id,
                 group_id: target_id,
             }
         } else if (target === 'friend') {
-            if (!message_id) message_id = (await getMsgMap({ user_id: target_id }, [['time', 'DESC']])).time
+            if (!message_id) message_id = (await getMsg({ user_id: target_id }, [['time', 'DESC']])).time
             data = {
                 time: message_id,
                 user_id: target_id,
@@ -234,7 +234,7 @@ export class QQRedBot {
                 message_id,
             }
         }
-        const msg = await getMsgMap(data)
+        const msg = await getMsg(data)
         if (msg) {
             const result = await this.bot.sendApi('POST', 'message/getHistory', JSON.stringify({
                 peer: {

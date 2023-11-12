@@ -1,5 +1,5 @@
 import { Config, Version } from '../components/index.js'
-import { getLatestMsg } from './msgMap.js'
+import { getLatestMsg } from './DataBase.js'
 /**
  * 生命周期
  * @param {*} socket 

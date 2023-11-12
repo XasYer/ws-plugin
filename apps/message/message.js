@@ -1,5 +1,5 @@
 import { sendSocketList, Config, Version } from '../../components/index.js'
-import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId, setMsgMap } from '../../model/index.js'
+import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId, setMsg, getGroup_id, getUser_id } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
 
@@ -56,6 +56,9 @@ Bot.on('message', async e => {
         }
     }
     const message_id = Math.floor(Math.random() * Math.pow(2, 32)) | 0
+    const self_id = await getUser_id({ user_id: e.self_id })
+    const user_id = await getUser_id({ user_id: e.user_id })
+    const time = (new Date(e.time)).getTime() || Date.now() / 1000
     let msg = {
         time: e.time,
         message_id: e.message_id,
@@ -68,75 +71,39 @@ Bot.on('message', async e => {
         isMaster,
         sender: e.sender,
         param: {
-            time: e.time,
-            self_id: e.self_id,
+            time,
+            self_id,
             post_type: e.post_type,
             message_type: e.message_type,
-            sub_type: e.sub_type,
+            sub_type: e.sub_type || e.message_type == 'group' ? 'normal' : 'friend',
             message_id,
-            user_id: e.user_id,
+            user_id,
             font: 0,
-            sender: e.sender,
-            anonymous: e.anonymous ? {
-                id: e.anonymous.id,
-                name: e.anonymous.name,
-                flag: e.anonymous.flag
-            } : null
+            sender: {
+                user_id,
+                nickname: e.sender.nickname,
+            },
         }
     }
-    let message = []
-    //增加isGroup e.isPrivate
     if (e.guild_id) {
-        // TODO
-        return false
         setGuildLatestMsgId(e.message_id)
-        //处理成message
-        if (e.content) {
-            let content = toMsg(e.content)
-            message.push(...content)
-        }
-        if (e.attachments) {
-            e.attachments.forEach(i => {
-                if (i.content_type.startsWith('image')) {
-                    message.push({
-                        type: 'image',
-                        file: i.filename,
-                        url: i.url
-                    })
-                }
-            })
-        }
-        msg.message = message
-
-        msg.isGuild = true
-        msg.param = {
-            time: Math.floor(new Date(msg.timestamp).getTime() / 1000),
-            post_type: 'message',
-            message_type: 'guild',
-            sub_type: 'channel',
-            guild_id: e.guild_id,
-            channel_id: e.channel_id,
-            user_id: e.author.id,
-            message_id: e.message_id,
-            self_id: e.bot.appID,
-            sender: {
-                user_id: e.author.id,
-                nickname: e.author.username,
-                tiny_id: e.author.id,
-            },
-            self_tiny_id: e.bot.appID,
-        }
-    } else if (e.message_type == 'group') {
+    }
+    let userInfo
+    //增加isGroup e.isPrivate
+    if (e.message_type == 'group') {
         msg.isGroup = true
-        msg.group_id = e.group_id
-        msg.param.group_id = e.group_id
-        msg.self_id = e.group?.bot?.uin || msg.self_id
+        const group_id = await getGroup_id({ group_id: e.group_id })
+        msg.group_id = group_id
+        msg.param.group_id = group_id
+        userInfo = await e.bot.pickMember(e.group_id, e.user_id)
     } else if (e.message_type == 'private') {
+        userInfo = await e.bot.pickFriend(e.user_id)
         msg.isPrivate = true
-        msg.self_id = e.friend?.bot?.uin || msg.self_id
     } else {
         return false
     }
+    const avatar = await userInfo?.getAvatarUrl?.()
+    if (avatar) msg.param.avatar = avatar
     // 判断云崽前缀
     msg = onlyReplyAt(msg)
     if (!msg) return false
@@ -149,7 +116,7 @@ Bot.on('message', async e => {
                 case 6:
                     if (Version.isTrss) {
                         if (i.uin != e.self_id) continue
-                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) continue
+                        // if (!Version.protocol.some(i => i == e.bot?.version?.name)) continue
                     }
                     e.reply = reply(e)
                     msg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
@@ -172,7 +139,7 @@ function reply(e) {
         return async function (massage, quote = false, data = {}) {
             const ret = await replyNew(massage, quote, data)
             if (ret) {
-                setMsgMap({
+                setMsg({
                     message_id: ret.message_id,
                     time: ret.time,
                     seq: ret.seq,
@@ -202,7 +169,7 @@ function reply(e) {
                     }
                 }
                 if (ret) {
-                    setMsgMap({
+                    setMsg({
                         message_id: ret.message_id,
                         time: ret.time,
                         seq: ret.seq,
@@ -215,6 +182,7 @@ function reply(e) {
                 return ret
             }
         }
+        // 暂时先不处理其他协议
         return e.reply
     }
 }
@@ -256,29 +224,4 @@ function hasAlias(e, groupCfg) {
         }
     }
     return false
-}
-
-function toMsg(content) {
-    const regex = /<@!(\d+)>|<emoji:(\d+)>|([^<]+)/g;
-    let match;
-    const result = [];
-    while ((match = regex.exec(content)) !== null) {
-        if (match[1]) {
-            result.push({
-                type: 'at',
-                qq: match[1]
-            });
-        } else if (match[2]) {
-            result.push({
-                type: 'face',
-                id: parseInt(match[2])
-            });
-        } else if (match[3]) {
-            result.push({
-                type: 'text',
-                text: match[3]
-            });
-        }
-    }
-    return result;
 }

@@ -1,11 +1,21 @@
 import Client from "./Client.js";
 import { Config, Version } from './index.js'
-import { sleep } from '../model/index.js'
+import { sleep, getUser_id } from '../model/index.js'
 import { redAdapter } from '../model/red/index.js'
 import _ from "lodash";
 
 let sendSocketList = []
 let allSocketList = []
+
+const adapterName = {
+    'qg_': 'QQ频道Bot',
+    'wx_': '微信Bot',
+    'wxi': 'ComWeChat',
+    'mv_': '米游社大别野Bot',
+    'ko_': 'KOOKBot',
+    'tg_': 'TelegramBot',
+    'dc_': 'DiscordBot'
+}
 
 async function createWebSocket(data) {
     if (typeof data.close != 'undefined' && typeof data.closed == 'undefined') {
@@ -17,11 +27,15 @@ async function createWebSocket(data) {
             const i = _.cloneDeep(data)
             i.name += `(${_.truncate(String(uin), { length: 6 })})`
             i.uin = uin
-            createWebSocket(i)
+            await createWebSocket(i)
         }
         return
     }
     const client = new Client(data)
+    if (typeof client.self_id === 'string') {
+        client.self_id = await getUser_id({ user_id: client.self_id })
+        client.adapter = adapterName[client.uin.substring(0, 3)]
+    }
     setAllSocketList(client)
     if (data.address == 'ws_address') return
     if (data.closed) return
@@ -70,21 +84,22 @@ async function checkVersion(data) {
         if (!data.uin) {
             logger.warn(`[ws-plugin] ${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
             return false
-        } else {
-            let log = false
-            for (let i = 0; i < 20; i++) {
-                if (Version.protocol.some(i => i == Bot[data.uin]?.version?.name)) {
-                    return true
-                }
-                if (!log) {
-                    logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端,20秒后重新判断,uin:${data.uin}`)
-                    log = true
-                }
-                await sleep(1000)
-            }
-            logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端,uin:${data.uin}`)
-            return false
         }
+        // else {
+        //     let log = false
+        //     for (let i = 0; i < 20; i++) {
+        //         if (Version.protocol.some(i => i == Bot[data.uin]?.version?.name)) {
+        //             return true
+        //         }
+        //         if (!log) {
+        //             logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端,20秒后重新判断,uin:${data.uin}`)
+        //             log = true
+        //         }
+        //         await sleep(1000)
+        //     }
+        //     logger.warn(`[ws-plugin] ${data.name} 暂未适配当前协议端或未连接对应协议端,uin:${data.uin}`)
+        //     return false
+        // }
     } else if (Bot.uin == '88888') {
         if (!data.uin) {
             logger.warn(`[ws-plugin] ${data.name} 缺少配置项uin 请删除连接后重新#ws添加连接`)
@@ -94,7 +109,7 @@ async function checkVersion(data) {
     return true
 }
 
-function modifyWebSocket(target) {
+async function modifyWebSocket(target) {
     // if (Version.isTrss) return
     switch (target.type) {
         case 'add':
@@ -104,7 +119,7 @@ function modifyWebSocket(target) {
                 setAllSocketList(client)
                 redAdapter.connect(client)
             } else {
-                createWebSocket(target.data)
+                await createWebSocket(target.data)
             }
             break;
         case 'del':
@@ -128,10 +143,10 @@ function clearWebSocket() {
 }
 
 
-function initWebSocket() {
+async function initWebSocket() {
     // if (Version.isTrss) return
     for (const i of Config.servers) {
-        createWebSocket(i)
+        await createWebSocket(i)
     }
 }
 

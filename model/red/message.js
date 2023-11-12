@@ -1,6 +1,6 @@
 import { uploadImg, uploadAudio, uploadVideo, uploadFile, getNtPath, roleMap, redPath } from './tool.js'
 import { TMP_DIR, sleep } from '../tool.js'
-import { setMsgMap, getMsgMap } from '../msgMap.js'
+import { setMsg, getMsg } from '../DataBase.js'
 import { Config, Version } from '../../components/index.js'
 import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
@@ -92,7 +92,7 @@ async function makeSendMsg(data, message) {
                 }
                 break
             case "reply":
-                const msg = await getMsgMap({ message_id: i.id })
+                const msg = await getMsg({ message_id: i.id })
                 if (msg) {
                     log += `[回复: ${i.id}]`
                     i = {
@@ -138,7 +138,7 @@ async function makeSendMsg(data, message) {
                             } else {
                                 sendRet.user_id = Number(data.user_id)
                             }
-                            setMsgMap(sendRet)
+                            setMsg(sendRet)
                             message_id = result.msgId
                             seq = Number(result.msgSeq)
                             rand = Number(result.msgRandom)
@@ -188,7 +188,7 @@ async function makeSendMsg(data, message) {
                         } else {
                             sendRet.user_id = Number(data.user_id)
                         }
-                        setMsgMap(sendRet)
+                        setMsg(sendRet)
                         message_id = result.msgId
                         seq = Number(result.msgSeq)
                         rand = Number(result.msgRandom)
@@ -314,7 +314,7 @@ async function makeMessage(self_id, payload) {
                 } else if (payload.chatType == 1) {
                     getMsgData.user_id = e.user_id
                 }
-                const msg = await getMsgMap(getMsgData)
+                const msg = await getMsg(getMsgData)
                 e.source = {
                     message_id: msg?.message_id,
                     seq: Number(i.replyElement.replayMsgSeq),
@@ -476,7 +476,7 @@ async function sendNodeMsg(data, msg) {
         time: Number(result.msgTime),
         group_id: Number(data.group_id),
     }
-    setMsgMap(sendRet)
+    setMsg(sendRet)
     logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id || data.user_id}]`)} 发送${target.chatType == 1 ? '好友' : '群'}消息：[转发消息]`)
     return sendRet
 }
@@ -673,7 +673,7 @@ async function toQQRedMsg(bot, data) {
                             })
                         }
                     }
-                    setMsgMap({
+                    setMsg({
                         message_id: e.message_id,
                         seq: Number(e.seq),
                         rand: Number(e.rand),

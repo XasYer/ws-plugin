@@ -1,7 +1,7 @@
 import { lifecycle, heartbeat } from './meta.js'
 import { makeOneBotReportMsg, makeGSUidReportMsg, makeGSUidSendMsg } from './makeMsg.js'
 import { getApiData } from './api.js'
-import { setGuildLatestMsgId, getGuildLatestMsgId, setMsgMap } from './msgMap.js'
+import { setGuildLatestMsgId, getGuildLatestMsgId, setMsg, getMsg, getGroup_id, getUser_id } from './DataBase.js'
 import { TMP_DIR, sleep, mimeTypes, decodeHtml } from './tool.js'
 
 export {
@@ -13,7 +13,10 @@ export {
     makeGSUidSendMsg,
     setGuildLatestMsgId,
     getGuildLatestMsgId,
-    setMsgMap,
+    setMsg,
+    getMsg,
+    getUser_id,
+    getGroup_id,
     TMP_DIR,
     sleep,
     mimeTypes,
