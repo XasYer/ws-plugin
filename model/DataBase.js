@@ -1,4 +1,4 @@
-// import { Config } from "../components/index.js"
+import { Config } from "../components/index.js"
 import { saveMessage_id, findMessage_id, existSQL, findUser_id, saveUser_id, findGroup_id, saveGroup_id } from './db/index.js'
 
 let latestMsg = null
