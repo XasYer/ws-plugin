@@ -339,10 +339,10 @@ async function getApiData(api, params = {}, name, uin, adapter) {
                 if (list[i].group_name) {
                     list[i].group_memo = list[i].group_name
                 }
-                if (item.create_time) {
+                if (list[i].create_time) {
                     list[i].group_create_time = list[i].create_time
                 }
-                if (item.grade) {
+                if (list[i].grade) {
                     list[i].group_level = list[i].grade
                 }
             }
@@ -931,9 +931,11 @@ async function getApiData(api, params = {}, name, uin, adapter) {
             })
         }
         const del = ['bot', 'group', 'friend', 'member', 'guild', 'channel']
-        for (const i of del) {
-            if (ResponseData[i] && typeof ResponseData[i] != 'boolean') {
-                delete ResponseData[i]
+        if (ResponseData) {
+            for (const i of del) {
+                if (ResponseData[i] && typeof ResponseData[i] != 'boolean') {
+                    delete ResponseData[i]
+                }
             }
         }
         return ResponseData

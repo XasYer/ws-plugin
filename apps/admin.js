@@ -308,7 +308,7 @@ export class setting extends plugin {
                         this.finish('checkAddWs', this.e.isGroup)
                         return
                     } else {
-                        i.uin = Number(this.e.self_id) || this.e.self_id
+                        i.uin = [i.uin, Number(this.e.self_id) || this.e.self_id]
                     }
                     try {
                         Config.delServersArr(i.name)
