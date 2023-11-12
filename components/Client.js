@@ -387,6 +387,7 @@ export default class Client {
     }
 
     async getData(action, params, echo) {
+        logger.debug(`[ws-plugin] name:${this.name} action:${action} params:${JSON.stringify(params)}`)
         let result
         try {
             const data = await getApiData(action, params, this.name, this.uin, this.adapter);
