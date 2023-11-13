@@ -1,0 +1,27 @@
+{{extend defaultLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{_res_path}}/chatHistory/index.css" />
+{{/block}}
+
+{{block 'main'}}
+
+<div id="cBody">
+    {{each data i}}
+    <div class="message">
+        <div class="avatar">
+            {{@ i.avatar}}
+        </div>
+        <div class="column">
+            <div class="nickname">
+                {{i.nickname}}
+            </div>
+            <div class="text">
+                {{@ i.message}}
+            </div>
+        </div>
+    </div>
+    {{/each}}
+</div>
+
+{{/block}}

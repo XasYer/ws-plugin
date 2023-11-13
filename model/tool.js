@@ -1,6 +1,10 @@
 import _ from 'lodash'
 import fs from 'fs'
 import { Version } from '../components/index.js'
+import { join } from 'path'
+import { randomUUID } from 'crypto'
+import { Stream } from "stream"
+import fetch from 'node-fetch'
 
 async function CreateMusicShare(data) {
     let appid, appname, appsign, style = 4;
@@ -153,11 +157,94 @@ function decodeHtml(html) {
     return html;
 }
 
+/**
+ * 
+ * @param {Array} data 
+ */
+async function toHtml(data, e) {
+    let html = []
+    if (!Array.isArray(data)) data = [data]
+    for (const i of data) {
+        let message = ''
+        let node
+        if (typeof i.message === 'string') i.message = { type: 'text', text: i.message }
+        if (!Array.isArray(i.message)) i.message = [i.message]
+        for (const m of i.message) {
+            switch (m.type) {
+                case 'text':
+                    message += m.text.replace(/\n/g, '<br/>')
+                    break;
+                case 'image':
+                    message += `<img src="${await saveImg(m.file || m.url)}"/>`
+                    break;
+                case 'node':
+                    node = await toHtml(m.data, e)
+                    break
+                default:
+                    message += JSON.stringify(m, null, '<br/>')
+                    break;
+            }
+        }
+        if (node) {
+            html.push(...node)
+        } else {
+            let avatar
+            if (i.uin && !Array.isArray(i.uin)) {
+                avatar = `https://q1.qlogo.cn/g?b=qq&s=0&nk=${i.uin}`
+            } else if (e.bot.avatar) {
+                avatar = e.bot.avatar
+            } else {
+                avatar = `https://q1.qlogo.cn/g?b=qq&s=0&nk=${e.bot.uin}`
+            }
+            if (i.avatar) {
+                avatar = i.avatar
+            }
+            html.push({
+                avatar: `<img src="${avatar}"/>`,
+                nickname: i.nickname || e.bot.nickname,
+                message
+            })
+        }
+    }
+    return html
+}
+
+async function saveImg(data) {
+    let buffer
+    if (data instanceof Stream.Readable) {
+        buffer = fs.readFileSync(data.path)
+    } if (Buffer.isBuffer(data)) {
+        buffer = data
+    } else if (data.match(/^base64:\/\//)) {
+        buffer = Buffer.from(data.replace(/^base64:\/\//, ""), 'base64')
+    } else if (data.startsWith('http')) {
+        const img = await fetch(data)
+        const arrayBuffer = await img.arrayBuffer()
+        buffer = Buffer.from(arrayBuffer)
+    } else if (data.startsWith('file://')) {
+        try {
+            buffer = fs.readFileSync(data.replace(/^file:\/\//, ''))
+        } catch (error) {
+            buffer = fs.readFileSync(data.replace(/^file:\/\/\//, ''))
+        }
+    } else if (/^.{32}\.image$/.test(data)) {
+        const img = await fetch(`https://gchat.qpic.cn/gchatpic_new/0/0-0-${data.replace('.image', '').toUpperCase()}/0`)
+        const arrayBuffer = await img.arrayBuffer()
+        buffer = Buffer.from(arrayBuffer)
+    } else {
+        buffer = fs.readFileSync(data)
+    }
+    let path = join(TMP_DIR, `${randomUUID({ disableEntropyCache: true })}.png`)
+    fs.writeFileSync(path, buffer)
+    return path
+}
+
 
 export {
     SendMusicShare,
     sleep,
     TMP_DIR,
     mimeTypes,
-    decodeHtml
+    decodeHtml,
+    toHtml
 }
