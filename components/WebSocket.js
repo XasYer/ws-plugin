@@ -13,7 +13,8 @@ const adapterName = {
     'mv_': '米游社大别野Bot',
     'ko_': 'KOOKBot',
     'tg_': 'TelegramBot',
-    'dc_': 'DiscordBot'
+    'dc_': 'DiscordBot',
+    'std': 'stdin'
 }
 
 async function createWebSocket(data) {

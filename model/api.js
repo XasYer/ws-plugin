@@ -8,7 +8,7 @@ async function getApiData(api, params = {}, name, uin, adapter) {
     const bot = Bot[uin] || Bot
     let sendRet = null
     let ResponseData = null
-    if (typeof uin != 'number') {
+    if (adapter) {
         if (params.user_id) {
             params.user_id = await getUser_id({ id: params.user_id })
         }
