@@ -1,5 +1,6 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { Config, clearWebSocket, initWebSocket, Render, Version, allSocketList, sendSocketList, createWebSocket } from '../components/index.js'
+import { toHtml } from '../model/index.js'
 import lodash from 'lodash'
 
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
@@ -33,6 +34,11 @@ export class setting extends plugin {
                 {
                     reg: groupReg,
                     fnc: 'modifyGroup',
+                    permission: 'master'
+                },
+                {
+                    reg: '^#ws状态$',
+                    fnc: 'view',
                     permission: 'master'
                 }
             ]
@@ -266,7 +272,7 @@ export class setting extends plugin {
                 }
                 break
             case '查看':
-                this.view()
+                await this.view()
                 break
             default:
                 break
@@ -664,7 +670,6 @@ export class setting extends plugin {
     async view() {
         const msg = []
         for (const s of allSocketList) {
-            if (msg.length != 0) msg.push('\n----------------\n')
             let status = '已关闭'
             switch (s.status) {
                 case 0:
@@ -683,10 +688,16 @@ export class setting extends plugin {
             if (!this.e.isGroup) {
                 str += `\naddress: ${s.address}\nuin: ${s.uin}`
             }
-            msg.push(str)
+            msg.push({
+                avatar: Bot[s.uin]?.avatar || `https://q1.qlogo.cn/g?b=qq&s=0&nk=${s.uin}`,
+                nickname: Bot[s.uin]?.nickname || '未知',
+                message: str
+            })
         }
         if (msg.length > 0) {
-            await this.reply(msg)
+            await Render.render('chatHistory/index', {
+                data: await toHtml(msg, this.e)
+            }, { e: this.e, scale: 1.2 })
         } else {
             await this.reply('暂无连接')
         }

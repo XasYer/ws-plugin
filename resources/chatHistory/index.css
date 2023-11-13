@@ -1,0 +1,51 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+body {
+    width: 600px;
+    background: url("./imgs/bg.jpg") left top repeat-y;
+    background-size: 100% auto;
+    padding-top: 24px;
+}
+
+#cBody{
+    font-size: 24px;
+}
+
+.message {
+    display: flex;
+    margin-bottom: 10px;
+    padding-left: 0;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-left: 6px;
+}
+
+.avatar img {
+    margin-left: 15px;
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+}
+
+.text {
+    margin-top: 6px;
+    width: 460px;
+    border: 1px black solid;
+    border-radius: 12px;
+    padding: 12px;
+    background-color: rgba(255, 255, 255, 0.8);
+    line-height: 1.5;
+}
+
+.text img {
+    width: 100%;
+}
