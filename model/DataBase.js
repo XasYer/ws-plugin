@@ -3,7 +3,7 @@ import { saveMessage_id, findMessage_id, existSQL, findUser_id, saveUser_id, fin
 
 let latestMsg = null
 
-let guildLatestMesId = null
+let guildLatestMesId = {}
 
 async function getMsg(where, other) {
     if (existSQL) {
@@ -36,12 +36,12 @@ function getLatestMsg() {
     return latestMsg
 }
 
-function getGuildLatestMsgId() {
-    return guildLatestMesId
+function getGuildLatestMsgId(guild_id) {
+    return guildLatestMesId[guild_id]
 }
 
-function setGuildLatestMsgId(message_id) {
-    guildLatestMesId = message_id
+function setGuildLatestMsgId(message_id, guild_id) {
+    guildLatestMesId[guild_id] = message_id
 }
 
 async function getUser_id(where) {

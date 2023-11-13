@@ -880,7 +880,7 @@ async function getApiData(api, params = {}, name, uin, adapter) {
             sendMsg.unshift({
                 type: 'reply',
                 data: {
-                    id: getGuildLatestMsgId()
+                    id: getGuildLatestMsgId(params.group_id)
                 }
             })
             await bot.pickGroup?.(`qg_${params.guild_id}-${params.channel_id}`)?.sendMsg?.(sendMsg)
