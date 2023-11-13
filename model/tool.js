@@ -188,7 +188,7 @@ async function toHtml(data, e) {
         if (node) {
             html.push(...node)
         } else {
-            let avatar
+            let avatar, uin = i.uin || e.bot.uin
             if (i.uin && !Array.isArray(i.uin)) {
                 avatar = `https://q1.qlogo.cn/g?b=qq&s=0&nk=${i.uin}`
             } else if (e.bot.avatar) {
@@ -199,8 +199,15 @@ async function toHtml(data, e) {
             if (i.avatar) {
                 avatar = i.avatar
             }
+            const path = join(TMP_DIR, `${uin}.png`)
+            if (!fs.existsSync(path)) {
+                const img = await fetch(avatar)
+                const arrayBuffer = await img.arrayBuffer()
+                const buffer = Buffer.from(arrayBuffer)
+                fs.writeFileSync(path, buffer)
+            }
             html.push({
-                avatar: `<img src="${avatar}"/>`,
+                avatar: `<img src="${path}"/>`,
                 nickname: i.nickname || e.bot.nickname,
                 message
             })
