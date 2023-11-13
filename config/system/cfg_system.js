@@ -95,7 +95,7 @@ export const cfgSchema = {
         type: 'num',
         def: 1,
         desc: 'red 发送伪造转发消息方式 1:伪造转发 2:陆续发送 3:合并发送',
-        input: (n) => Math.min(3, Math.max(n * 1 || 0, 1)),
+        input: (n) => Math.min(4, Math.max(n * 1 || 0, 1)),
         fileName: 'msg-config'
       },
       msgStoreTime: {

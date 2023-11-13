@@ -1,13 +1,14 @@
 import { uploadImg, uploadAudio, uploadVideo, uploadFile, getNtPath, roleMap, redPath } from './tool.js'
-import { TMP_DIR, sleep } from '../tool.js'
+import { TMP_DIR, sleep, toHtml } from '../tool.js'
 import { setMsg, getMsg } from '../DataBase.js'
-import { Config, Version } from '../../components/index.js'
+import { Config, Version, Render } from '../../components/index.js'
 import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
 import fs from 'fs'
 import schedule from "node-schedule"
 import _ from 'lodash'
 import PluginsLoader from '../../../../lib/plugins/loader.js'
+import Runtime from '../../../../lib/plugins/runtime.js'
 
 async function makeSendMsg(data, message) {
     if (!Array.isArray(message))
@@ -196,6 +197,18 @@ async function makeSendMsg(data, message) {
                         logger.info(`${logger.blue(`[${data.self_id} => ${data.group_id || data.user_id}]`)} 发送消息：${_.truncate(logs, { length: 1000 })}`)
                     }
                     return { message_id, rand, seq, time }
+                } else if (Config.redSendForwardMsgType == 4) {
+                    data.reply = msg => {
+                        if (data.group_id) {
+                            return data.bot.pickGroup(data.group_id).sendMsg(msg)
+                        } else if (data.user_id) {
+                            return data.bot.pickFriend(data.user_id).sendMsg(msg)
+                        }
+                    }
+                    data.runtime = new Runtime(data)
+                    return await Render.render('chatHistory/index', {
+                        data: await toHtml(i.data, data)
+                    }, { e: data, scale: 1.4, retMsgId: true })
                 }
                 break
             default:
