@@ -86,7 +86,7 @@ Bot.on('message', async e => {
         }
     }
     if (e.guild_id) {
-        setGuildLatestMsgId(e.message_id)
+        setGuildLatestMsgId(e.message_id, e.group_id)
     }
     let userInfo
     //增加isGroup e.isPrivate
