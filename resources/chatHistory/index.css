@@ -20,6 +20,7 @@ body {
     display: flex;
     margin-bottom: 10px;
     padding-left: 0;
+    word-wrap: break-word;
 }
 
 .column {
