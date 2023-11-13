@@ -35,7 +35,7 @@ async function createWebSocket(data) {
     const client = new Client(data)
     if (typeof client.self_id === 'string') {
         client.self_id = await getUser_id({ user_id: client.self_id })
-        client.adapter = adapterName[client.uin.substring(0, 3)]
+        client.adapter = adapterName[client.uin?.substring?.(0, 3)]
     }
     setAllSocketList(client)
     if (data.address == 'ws_address') return
