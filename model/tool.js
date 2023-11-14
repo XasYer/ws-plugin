@@ -165,26 +165,32 @@ async function toHtml(data, e) {
     let html = []
     if (!Array.isArray(data)) data = [data]
     for (const i of data) {
-        let message = ''
+        let message = '<div class="text">'
         let node
         if (typeof i.message === 'string') i.message = { type: 'text', text: i.message }
         if (!Array.isArray(i.message)) i.message = [i.message]
-        for (const m of i.message) {
+        let img = 0, text = 0
+        for (let m of i.message) {
+            if (typeof m === 'string') m = { type: 'text', text: m }
             switch (m.type) {
                 case 'text':
-                    message += m.text.replace(/\n/g, '<br/>')
+                    message += m.text.replace(/\n/g, '<br />')
+                    text++
                     break;
                 case 'image':
-                    message += `<img src="${await saveImg(m.file || m.url)}"/>`
+                    message += `<img src="${await saveImg(m.file || m.url)}" />`
+                    img++
                     break;
                 case 'node':
                     node = await toHtml(m.data, e)
                     break
                 default:
-                    message += JSON.stringify(m, null, '<br/>')
+                    message += JSON.stringify(m, null, '<br />')
+                    text++
                     break;
             }
         }
+        message += '</div>'
         if (node) {
             html.push(...node)
         } else {
@@ -198,8 +204,12 @@ async function toHtml(data, e) {
                 const buffer = Buffer.from(arrayBuffer)
                 fs.writeFileSync(path, buffer)
             }
+            // 只有一张图片
+            if (img === 1 && text === 0) {
+                message = message.replace('<div class="text">','<div class="img">')
+            }
             html.push({
-                avatar: `<img src="${path}"/>`,
+                avatar: `<img src="${path}" />`,
                 nickname: i.nickname || e.bot.nickname,
                 message
             })
