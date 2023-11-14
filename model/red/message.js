@@ -200,9 +200,9 @@ async function makeSendMsg(data, message) {
                 } else if (Config.redSendForwardMsgType == 4) {
                     data.reply = msg => {
                         if (data.group_id) {
-                            return data.bot.pickGroup(data.group_id).sendMsg(msg)
+                            return Bot[data.self_id].pickGroup(data.group_id).sendMsg(msg)
                         } else if (data.user_id) {
-                            return data.bot.pickFriend(data.user_id).sendMsg(msg)
+                            return Bot[data.self_id].pickFriend(data.user_id).sendMsg(msg)
                         }
                     }
                     data.runtime = new Runtime(data)
