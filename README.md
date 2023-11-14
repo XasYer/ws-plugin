@@ -18,10 +18,10 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 
 ### 支持的Yunzai-bot版本
 
-#### [Miao-Yunzai](https://gitee.com/yoimiya-kokomi/Miao-Yunzai) && [Yunzai-Bot](https://gitee.com/yoimiya-kokomi/Yunzai-Bot)
+#### [Miao-Yunzai](https://gitee.com/yoimiya-kokomi/Miao-Yunzai) && [Yunzai-Bot](https://gitee.com/yoimiya-kokomi/Yunzai-Bot) (即将停止对原版云崽的支持)
 
 作为客户端:
-  - onebot v11
+  - onebot v11 (暂未适配 [铃音Lain-plugin](https://gitee.com/Zyy955/Lain-plugin))
     -  反向 WebSocket
     -  正向 WebSocket
     -  正向http
@@ -31,7 +31,7 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 #### [TRSS-Yunzai](https://gitee.com/TimeRainStarSky/Yunzai)
 
 作为客户端:
-  - onebot v11 (目前仅支持 [ICQQ-Plugin](https://gitee.com/TimeRainStarSky/Yunzai-ICQQ-Plugin) & Red)
+  - onebot v11 (已适配所有协议,如果对应协议的user_id和group_id为string则会转换成number,从1开始自增)
     -  反向 WebSocket
     -  正向 WebSocket
     -  正向http
