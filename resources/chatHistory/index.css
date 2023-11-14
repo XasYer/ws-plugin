@@ -12,7 +12,7 @@ body {
     padding-top: 24px;
 }
 
-#cBody{
+#cBody {
     font-size: 24px;
 }
 
@@ -47,6 +47,13 @@ body {
     line-height: 1.5;
 }
 
-.text img {
+.img {
+    margin-top: 6px;
+    width: 460px;
+}
+
+.text img,
+.img img {
+    border-radius: 12px;
     width: 100%;
 }
