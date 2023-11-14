@@ -188,17 +188,9 @@ async function toHtml(data, e) {
         if (node) {
             html.push(...node)
         } else {
-            let avatar, uin = i.uin || e.bot.uin
-            if (i.uin && !Array.isArray(i.uin)) {
-                avatar = `https://q1.qlogo.cn/g?b=qq&s=0&nk=${i.uin}`
-            } else if (e.bot.avatar) {
-                avatar = e.bot.avatar
-            } else {
-                avatar = `https://q1.qlogo.cn/g?b=qq&s=0&nk=${e.bot.uin}`
-            }
-            if (i.avatar) {
-                avatar = i.avatar
-            }
+            let uin = i.uin || i.user_id == 88888 ? e.bot.uin : i.user_id
+            if (Array.isArray(uin)) uin = e.bot.uin
+            const avatar = i.avatar ? i.avatar : `https://q1.qlogo.cn/g?b=qq&s=0&nk=${uin}`
             const path = join(TMP_DIR, `${uin}.png`)
             if (!fs.existsSync(path)) {
                 const img = await fetch(avatar)
