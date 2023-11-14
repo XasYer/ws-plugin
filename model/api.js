@@ -73,7 +73,7 @@ async function getApiData(api, params = {}, name, uin, adapter) {
         },
         // 获取好友列表
         'get_friend_list': async params => {
-            let list = await bot.getFriendList?.()
+            let list = await bot.getFriendArray?.() || await bot.getFriendList?.() || []
             if (Array.isArray(list)) {
                 ResponseData = list
             } else if (list instanceof Map) {
@@ -135,7 +135,9 @@ async function getApiData(api, params = {}, name, uin, adapter) {
             if (ResponseData) {
                 ResponseData = await bot.getMsg?.(ResponseData.message_id)
                 if (ResponseData) {
-                    ResponseData.user_id = await getUser_id({ user_id: ResponseData.user_id })
+                    if (ResponseData.user_id) {
+                        ResponseData.user_id = await getUser_id({ user_id: ResponseData.user_id })
+                    }
                     if (ResponseData.group_id) {
                         ResponseData.group = true
                         ResponseData.group_id = await getGroup_id({ group_id: ResponseData.group_id })
@@ -330,7 +332,7 @@ async function getApiData(api, params = {}, name, uin, adapter) {
         },
         // 获取群列表
         'get_group_list': async params => {
-            let list = await bot.getGroupList?.()
+            let list = await bot.getGroupArray?.() || await bot.getGroupList?.() || []
             if (list instanceof Map) {
                 list = Array.from(list.values())
             }
@@ -373,13 +375,16 @@ async function getApiData(api, params = {}, name, uin, adapter) {
                     shut_up_timestamp: 0
                 }
             }
-            ResponseData.group_id = await getGroup_id({ group_id: ResponseData.group_id })
+            ResponseData.group_id = await getGroup_id({ group_id })
             ResponseData.user_id = await getUser_id({ user_id: ResponseData.user_id })
             if (ResponseData.shutup_time) {
                 ResponseData.shut_up_timestamp = ResponseData.shutup_time
             }
             if (!ResponseData.last_sent_time) {
                 ResponseData.last_sent_time = Date.now()
+            }
+            if (!ResponseData.role) {
+                ResponseData.role = 'member'
             }
         },
         // 获取群成员列表
@@ -389,8 +394,9 @@ async function getApiData(api, params = {}, name, uin, adapter) {
             if (list instanceof Map) {
                 list = Array.from(list.values())
             }
+            const group_id = await getGroup_id({ group_id: params.group_id })
             for (const i in list) {
-                list[i].group_id = await getGroup_id({ group_id: list[i].group_id })
+                list[i].group_id = group_id
                 list[i].user_id = await getUser_id({ user_id: list[i].user_id })
                 if (list[i].group_name) {
                     list[i].group_memo = list[i].group_name
@@ -400,6 +406,9 @@ async function getApiData(api, params = {}, name, uin, adapter) {
                 }
                 if (!list[i].last_sent_time) {
                     list[i].last_sent_time = Date.now()
+                }
+                if (!list[i].role) {
+                    list[i].role = 'member'
                 }
             }
             ResponseData = list
