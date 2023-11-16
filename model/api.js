@@ -837,8 +837,10 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         // .get_word_slices
         // 对事件执行快速操作 ( 隐藏 API )
         '.handle_quick_operation': async ({ context, operation }) => {
-            context.user_id = await getUser_id({ id: context.user_id })
-            context.group_id = await getGroup_id({ id: context.group_id })
+            if (adapter) {
+                context.user_id = await getUser_id({ id: context.user_id })
+                context.group_id = await getGroup_id({ id: context.group_id })
+            }
             switch (context.post_type) {
                 case 'message':
                     switch (context.message_type) {
