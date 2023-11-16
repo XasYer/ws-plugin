@@ -402,7 +402,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                 }
             }
             ResponseData.group_id = await getGroup_id({ group_id })
-            ResponseData.user_id = await getUser_id({ user_id: ResponseData.user_id })
+            ResponseData.user_id = await getUser_id({ user_id })
             if (ResponseData.shutup_time) {
                 ResponseData.shut_up_timestamp = ResponseData.shutup_time
             }
