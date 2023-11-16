@@ -1,7 +1,9 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { Config, clearWebSocket, initWebSocket, Render, Version, allSocketList, sendSocketList, createWebSocket } from '../components/index.js'
-import { toHtml } from '../model/index.js'
+import { toHtml, resetLock, TMP_DIR } from '../model/index.js'
 import lodash from 'lodash'
+import fs from 'fs'
+import { join } from 'path'
 
 let keys = lodash.map(Config.getCfgSchemaMap(), (i) => i.key)
 let sysCfgReg = new RegExp(`^#ws设置\\s*(${keys.join('|')})?\\s*(.*)$`)
@@ -39,6 +41,11 @@ export class setting extends plugin {
                 {
                     reg: '^#ws状态$',
                     fnc: 'view',
+                    // permission: 'master'
+                },
+                {
+                    reg: '^#ws清除缓存$',
+                    fnc: 'clearCache',
                     permission: 'master'
                 }
             ]
@@ -689,6 +696,20 @@ export class setting extends plugin {
         } else {
             await this.reply('暂无连接')
         }
+        return true
+    }
+
+    async clearCache(e) {
+        // 重置数据库同步锁
+        resetLock()
+        // 清除Temp目录下所有文件
+        try {
+            const files = fs.readdirSync(TMP_DIR)
+            for (const file of files) {
+                fs.unlink(join(TMP_DIR, file), () => { })
+            }
+        } catch (error) { }
+        e.reply('操作成功~')
         return true
     }
 }
