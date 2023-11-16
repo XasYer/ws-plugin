@@ -82,6 +82,9 @@ Bot.on('message', async e => {
             sender: {
                 user_id,
                 nickname: e.sender.nickname,
+                card: e.sender.card,
+                sex: e.sender.sex || 'unknown',
+                role: e.sender.role || 'member'
             },
         }
     }
