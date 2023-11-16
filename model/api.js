@@ -1,10 +1,12 @@
 import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
 import { getMsg, setMsg, getGuildLatestMsgId, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
+import { toHtml } from './tool.js'
+import Runtime from '../../../lib/plugins/runtime.js'
 import { Version } from '../components/index.js'
 import fetch from 'node-fetch'
 
-async function getApiData(api, params = {}, name, uin, adapter) {
+async function getApiData(api, params = {}, name, uin, adapter, other) {
     const bot = Bot[uin] || Bot
     let sendRet = null
     let ResponseData = null
@@ -193,8 +195,20 @@ async function getApiData(api, params = {}, name, uin, adapter) {
                 let match = forwardMsg.data.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
-            sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
-            sendRet.forward_id = forward_id
+            if (other.sendForward) {
+                const e = {
+                    reply: msg => {
+                        return bot.pickGroup(params.group_id).sendMsg(msg)
+                    }
+                }
+                e.runtime = new Runtime(e)
+                sendRet = await Render.render('chatHistory/index', {
+                    data: await toHtml(forwardMsg, bot)
+                }, { e, scale: 1.4, retMsgId: true })
+            } else {
+                sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
+                sendRet.forward_id = forward_id
+            }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送合并转发 ( 好友 )
@@ -208,8 +222,20 @@ async function getApiData(api, params = {}, name, uin, adapter) {
                 let match = forwardMsg.data.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
-            sendRet = await bot.pickFriend(params.group_id).sendMsg(forwardMsg)
-            sendRet.forward_id = forward_id
+            if (other.sendForward) {
+                const e = {
+                    reply: msg => {
+                        return bot.pickFriend(params.user_id).sendMsg(msg)
+                    }
+                }
+                e.runtime = new Runtime(e)
+                sendRet = await Render.render('chatHistory/index', {
+                    data: await toHtml(forwardMsg, bot)
+                }, { e, scale: 1.4, retMsgId: true })
+            } else {
+                sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
+                sendRet.forward_id = forward_id
+            }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 获取群消息历史记录
