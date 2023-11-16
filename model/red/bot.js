@@ -106,7 +106,10 @@ export class QQRedBot {
         }
         return {
             ...i,
-            info,
+            info: {
+                ...info,
+                ...i
+            },
             ...this.pickFriend(user_id),
             kick: async (message, block) => await this.setGroupKick(group_id, user_id, false, message),
             mute: async (duration) => await this.setGroupBan(group_id, user_id, duration),
