@@ -3,6 +3,7 @@ import { makeOneBotReportMsg, makeGSUidReportMsg, makeGSUidSendMsg } from './mak
 import { getApiData } from './api.js'
 import { setGuildLatestMsgId, getGuildLatestMsgId, setMsg, getMsg, getGroup_id, getUser_id } from './DataBase.js'
 import { TMP_DIR, sleep, mimeTypes, decodeHtml, toHtml } from './tool.js'
+import { resetLock } from './db/index.js'
 
 export {
     lifecycle,
@@ -21,5 +22,6 @@ export {
     sleep,
     mimeTypes,
     decodeHtml,
-    toHtml
+    toHtml,
+    resetLock
 }

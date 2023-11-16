@@ -34,12 +34,17 @@ try {
 }
 
 let lock = Promise.resolve()
+let shouldCancel = false;
 
 function executeSync(callback) {
     let _lock = lock;
 
     lock = new Promise((resolve, reject) => {
         _lock.then(async () => {
+            if (shouldCancel) {
+                reject('Cancelled');
+                return;
+            }
             try {
                 const result = await callback();
                 resolve(result);
@@ -52,10 +57,16 @@ function executeSync(callback) {
     return lock;
 }
 
+function resetLock() {
+    shouldCancel = true;
+    lock = Promise.resolve();
+}
+
 export {
     sequelize,
     DataTypes,
     Op,
     existSQL,
-    executeSync
+    executeSync,
+    resetLock
 }

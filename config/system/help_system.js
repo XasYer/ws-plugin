@@ -78,6 +78,11 @@ export const helpList = [
         "icon": 94,
         "title": "#ws设置",
         "desc": "插件设置"
+      },
+      {
+        "icon": 67,
+        "title": "#ws清除缓存",
+        "desc": "重置数据库同步锁并清除Temp目录下所有文件"
       }
     ]
   }
