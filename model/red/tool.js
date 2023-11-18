@@ -21,8 +21,12 @@ const roleMap = {
     4: 'owner'
 }
 
-async function uploadImg(bot, msg) {
-    const file = await upload(bot, msg, 'image/png')
+async function uploadImg(bot, msg, name) {
+    let contentType = 'image/png'
+    if (name && name?.include('.')) {
+        contentType = 'image/' + name.substring(name.lastIndexOf('.') + 1)
+    }
+    const file = await upload(bot, msg, contentType)
     if (!file.imageInfo) throw "获取图片信息失败,请检查图片状态"
     return {
         elementType: 2,
@@ -33,7 +37,7 @@ async function uploadImg(bot, msg) {
             picWidth: file.imageInfo.width,
             fileName: basename(file.ntFilePath),
             sourcePath: file.ntFilePath,
-            picType: file.imageInfo.type === 'gif' ? 2000 : 1000
+            picType: (file.imageInfo.type === 'gif' || file.contentType === 'image/gif') ? 2000 : 1000
         }
     }
 }

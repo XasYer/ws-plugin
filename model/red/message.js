@@ -31,7 +31,7 @@ async function makeSendMsg(data, message) {
                 }
                 break
             case "image":
-                i = await uploadImg(data.bot, i.file || i.url)
+                i = await uploadImg(data.bot, i.file || i.url, i.name)
                 log += `[图片: ${i.picElement.md5HexStr}]`
                 break
             case "record":
