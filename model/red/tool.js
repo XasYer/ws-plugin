@@ -23,7 +23,7 @@ const roleMap = {
 
 async function uploadImg(bot, msg, name) {
     let contentType = 'image/png'
-    if (name && name?.include('.')) {
+    if (name) {
         contentType = 'image/' + name.substring(name.lastIndexOf('.') + 1)
     }
     const file = await upload(bot, msg, contentType)
