@@ -63,7 +63,7 @@ async function makeSendMsg(data, message) {
                 }
                 break
             case "file":
-                const file = await uploadFile(i.file)
+                const file = await uploadFile(data.bot, i.file, i.name)
                 if (file) {
                     i = file
                     log += `[文件: ${file.fileElement.fileMd5}]`

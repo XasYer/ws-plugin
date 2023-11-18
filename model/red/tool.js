@@ -1,13 +1,13 @@
 import fs from 'fs'
 import { createHash, randomUUID } from 'crypto'
-import { resolve, join, dirname, basename } from 'path'
+import { resolve, join, basename, extname } from 'path'
 import fetch, { FormData, Blob } from 'node-fetch'
-import { exec, spawn, execSync } from 'child_process'
+import { exec } from 'child_process'
 import os from 'os'
 import _ from 'lodash'
 import { Stream } from "stream"
 import YAML from 'yaml'
-import { TMP_DIR } from '../tool.js'
+import { TMP_DIR, mimeTypes } from '../tool.js'
 
 const user = os.userInfo().username
 let redPath = `C:/Users/${user}/.chronocat`
@@ -21,13 +21,28 @@ const roleMap = {
     4: 'owner'
 }
 
-async function uploadImg(bot, msg, name) {
+async function uploadImg(bot, data, name) {
     let contentType = 'image/png'
-    if (name) {
-        contentType = 'image/' + name.substring(name.lastIndexOf('.') + 1)
+    if (name && name.includes?.('.')) {
+        contentType = mimeTypes[extname(name)] || contentType
     }
-    const file = await upload(bot, msg, contentType)
+    if (/^.{32}\.image$/.test(data)) {
+        data = await fetch(`https://gchat.qpic.cn/gchatpic_new/0/0-0-${data.replace('.image', '').toUpperCase()}/0`)
+    }
+    const file = await upload(bot, data, contentType)
     if (!file.imageInfo) throw "获取图片信息失败,请检查图片状态"
+    let picType = 1000
+    switch (file.imageInfo.type) {
+        case 'gif':
+            picType = 2000
+            break;
+        case 'png':
+            picType = 1001
+            break
+        case 'webp':
+            picType = 1002
+            break
+    }
     return {
         elementType: 2,
         picElement: {
@@ -37,90 +52,96 @@ async function uploadImg(bot, msg, name) {
             picWidth: file.imageInfo.width,
             fileName: basename(file.ntFilePath),
             sourcePath: file.ntFilePath,
-            picType: (file.imageInfo.type === 'gif' || file.contentType === 'image/gif') ? 2000 : 1000
+            picType
         }
     }
 }
 
-async function upload(bot, msg, contentType) {
-    if (!msg) throw { noLog: true }
-    let buffer
-    if (msg instanceof Stream.Readable) {
-        buffer = fs.readFileSync(msg.path)
-        contentType = contentType.split('/')[0] + '/' + msg.path.substring(msg.path.lastIndexOf('.') + 1)
-    } if (Buffer.isBuffer(msg)) {
-        buffer = msg
-    } else if (msg.match(/^base64:\/\//)) {
-        buffer = Buffer.from(msg.replace(/^base64:\/\//, ""), 'base64')
-    } else if (msg.startsWith('http')) {
-        const img = await fetch(msg)
+/**
+ * @param {*} data 
+ * @returns 
+ */
+async function getFileInfo(data) {
+    let buffer, contentType
+    if (data instanceof Stream.Readable) {
+        buffer = fs.readFileSync(data.path)
+        contentType = mimeTypes[extname(data.path)]
+    } else if (Buffer.isBuffer(data)) {
+        buffer = data
+    } else if (data.match(/^base64:\/\//)) {
+        buffer = Buffer.from(data.replace(/^base64:\/\//, ""), 'base64')
+    } else if (data.startsWith('http')) {
+        const img = await fetch(data)
         const type = img.headers.get('content-type');
         if (type) contentType = type
         const arrayBuffer = await img.arrayBuffer()
         buffer = Buffer.from(arrayBuffer)
-    } else if (msg.startsWith('file://')) {
+    } else if (data.startsWith('file://')) {
         try {
-            buffer = fs.readFileSync(msg.replace(/^file:\/\//, ''))
+            buffer = fs.readFileSync(data.replace(/^file:\/\//, ''))
         } catch (error) {
-            buffer = fs.readFileSync(msg.replace(/^file:\/\/\//, ''))
+            buffer = fs.readFileSync(data.replace(/^file:\/\/\//, ''))
         }
-        contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
-    } else if (/^.{32}\.image$/.test(msg)) {
-        const img = await fetch(`https://gchat.qpic.cn/gchatpic_new/0/0-0-${msg.replace('.image', '').toUpperCase()}/0`)
-        const type = img.headers.get('content-type');
-        if (type) contentType = type
-        const arrayBuffer = await img.arrayBuffer()
-        buffer = Buffer.from(arrayBuffer)
+        contentType = mimeTypes[extname(data)]
     } else {
-        buffer = fs.readFileSync(msg)
-        contentType = contentType.split('/')[0] + '/' + msg.substring(msg.lastIndexOf('.') + 1)
+        buffer = fs.readFileSync(data)
+        contentType = mimeTypes[extname(data)]
+    }
+    return { buffer, contentType }
+}
+
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
+}
+
+/**
+ * 
+ * @param {*} bot 
+ * @param {*} data 需要upload的数据
+ * @param {string} contentType 
+ * @param {boolean} getBuffer 是否需要处理成buffer
+ * @returns 
+ */
+async function upload(bot, data, contentType, getBuffer = true) {
+    if (!data) throw { noLog: true }
+    let buffer
+    if (getBuffer) {
+        const file = await getFileInfo(data)
+        buffer = file.buffer
+        if (file.contentType) {
+            contentType = file.contentType
+        }
+    } else {
+        buffer = data
     }
     const blob = new Blob([buffer], { type: contentType })
     const formData = new FormData()
-    formData.append('file', blob, 'ws-plugin.' + contentType.split('/')[1])
-    const file = await bot.sendApi('POST', 'upload', formData)
-    if (file.error) {
-        throw file.error
+    formData.append('file', blob, 'ws-plugin' + (getKeyByValue(mimeTypes, contentType) || contentType.split('/').pop()))
+    const result = await bot.sendApi('POST', 'upload', formData)
+    if (result.error) {
+        throw result.error
     }
-    file.contentType = contentType
-    return file
+    result.contentType = contentType
+    return result
 }
 
-async function uploadAudio(bot, file) {
-    let voice
-    if (file.match(/^base64:\/\//)) {
-        voice = Buffer.from(file.replace(/^base64:\/\//, ""), 'base64')
-    } else if (file.startsWith('http')) {
-        const http = await fetch(file)
-        const arrayBuffer = await http.arrayBuffer()
-        voice = Buffer.from(arrayBuffer)
-    } else if (file.startsWith('file://')) {
-        try {
-            voice = fs.readFileSync(file.replace(/^file:\/\//, ''))
-        } catch (error) {
-            voice = fs.readFileSync(file.replace(/^file:\/\/\//, ''))
-        }
-    } else {
-        return false
-    }
-    const head = voice.subarray(0, 7)
+async function uploadAudio(bot, data) {
+    let buffer = (await getFileInfo(data)).buffer
+    const head = buffer.subarray(0, 7)
     if (!head.includes('\x02#!SILK')) {
-        const tmpPath = await saveTmp(voice)
+        const tmpPath = await saveTmp(buffer)
         const pcm = await audioTransPcm(tmpPath)
-        voice = Buffer.from(await silk.encode(pcm, 24000))
+        buffer = Buffer.from(await silk.encode(pcm, 24000))
     }
-    const duration = Math.round(silk.getDuration(voice) / 1000)
-    const blob = new Blob([voice], { type: 'audio/amr' })
-    const formData = new FormData()
-    formData.append('file', blob, 'file.amr')
-    const res = await bot.sendApi('POST', 'upload', formData)
+    const duration = Math.round(silk.getDuration(buffer) / 1000)
+    const result = await upload(bot, buffer, 'audio/amr', false)
     return {
         elementType: 4,
         pttElement: {
-            md5HexStr: res.md5,
-            fileSize: String(res.fileSize),
-            fileName: basename(res.ntFilePath),
-            filePath: res.ntFilePath,
+            md5HexStr: result.md5,
+            fileSize: String(result.fileSize),
+            fileName: basename(result.ntFilePath),
+            filePath: result.ntFilePath,
             waveAmplitudes: [
                 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99, 99,
             ],
@@ -193,12 +214,13 @@ async function uploadVideo(bot, file) {
     const date = `${year}-${month.toString().padStart(2, '0')}`;
     const video = await getVideoInfo(file)
 
-    let oriPath = `${ntPath}/Video`
-    if (!fs.existsSync(oriPath)) fs.mkdirSync(oriPath)
-    oriPath = `${oriPath}/${date}`
-    if (!fs.existsSync(oriPath)) fs.mkdirSync(oriPath)
-    oriPath = `${oriPath}/Ori`
-    if (!fs.existsSync(oriPath)) fs.mkdirSync(oriPath)
+    let oriPath = ntPath
+    for (const i of ['Video', date, 'Ori']) {
+        oriPath = join(oriPath, i)
+        if (!fs.existsSync(oriPath)) {
+            fs.mkdirSync(oriPath)
+        }
+    }
     oriPath = `${oriPath}/${video.videoMd5}.${type}`
 
     let thumbPath = `${ntPath}/Video/${date}/Thumb`
@@ -304,46 +326,17 @@ function getImageSize(file) {
     return { thumbWidth, thumbHeight };
 }
 
-async function uploadFile(file) {
-    let buffer, name, path = process.cwd() + '/plugins/ws-plugin/Temp/'
-    if (file.startsWith('http')) {
-        const http = await fetch(file)
-        const arrayBuffer = await http.arrayBuffer()
-        buffer = Buffer.from(arrayBuffer)
-        name = file.substring(file.lastIndexOf('/') + 1)
-        path = path + name
-        fs.writeFileSync(path, buffer);
-    } else if (file.startsWith('file://')) {
-        try {
-            buffer = fs.readFileSync(file.replace(/^file:\/\//, ''))
-        } catch (error) {
-            buffer = fs.readFileSync(file.replace(/^file:\/\/\//, ''))
-        }
-        name = file.substring(file.lastIndexOf('/') + 1)
-        path = path + name
-        fs.copyFileSync(file, path)
-    } else if (Buffer.isBuffer(file)) {
-        buffer = file
-        name = 'buffer'
-        path = path + name
-        fs.writeFileSync(path, buffer);
-    } else {
-        buffer = fs.readFileSync(file)
-        name = file.substring(file.lastIndexOf('/') + 1)
-        path = path + name
-        fs.copyFileSync(file, path)
-    }
-    const size = buffer.length
-    const hash = createHash('md5');
-    hash.update(buffer);
-    const md5 = hash.digest('hex')
+async function uploadFile(bot, data, name) {
+    const ext = (typeof data === 'string' ? data : '') || name
+    const result = await upload(bot, data, mimeTypes[extname(ext)])
+    const fileName = basename(ext || result.ntFilePath)
     return {
         elementType: 3,
         fileElement: {
-            fileMd5: md5,
-            fileName: name,
-            filePath: path,
-            fileSize: size,
+            fileMd5: result.md5,
+            fileName,
+            filePath: result.ntFilePath,
+            fileSize: result.fileSize,
         }
     }
 }
@@ -353,25 +346,20 @@ function getToken() {
     try {
         if (os.platform() === 'win32') {
             tokenPath = `${redPath}/config/chronocat.yml`
-            if (fs.existsSync(tokenPath)) {
-                const data = YAML.parse(fs.readFileSync(tokenPath, 'utf-8'))
-                for (const i of data?.servers || []) {
-                    if (i.type === 'red') {
-                        return i.token
-                    }
+            const data = YAML.parse(fs.readFileSync(tokenPath, 'utf-8'))
+            for (const i of data?.servers || []) {
+                if (i.type === 'red') {
+                    return i.token
                 }
-                logger.error('[ws-plugin] 请检查chronocat配置是否开启red服务')
-                return false
-            } else {
-                tokenPath = `${redPath}/RED_PROTOCOL_TOKEN`
-                return fs.readFileSync(tokenPath, 'utf-8')
             }
+            logger.error('[ws-plugin] 请检查chronocat配置是否开启red服务')
+            return false
         } else {
             logger.error('[ws-plugin] 非Windows系统请自行获取Token')
             return false
         }
     } catch (error) {
-        logger.error('[ws-plugin] QQNT自动获取Token失败,请检查是否已安装Chronocat并尝试手动获取')
+        logger.error('[ws-plugin] 自动获取Token失败,请检查是否已安装Chronocat并尝试手动获取')
         logger.error(error)
         return false
     }
@@ -379,31 +367,12 @@ function getToken() {
 
 async function getSilk() {
     let silk
-    const version = JSON.parse(fs.readFileSync('./plugins/ws-plugin/package.json', 'utf-8'))?.dependencies['silk-wasm'].replace(/^[^\d]*/, '')
     try {
         silk = await import('silk-wasm')
+        return silk
     } catch (error) {
-        const startTime = new Date();
-        logger.warn('[ws-plugin] 未安装silk-wasm依赖,开始执行安装');
-        execSync(`pnpm install --filter=ws-plugin`);
-        const endTime = new Date();
-        logger.mark(`[ws-plugin] 安装完成,耗时${endTime - startTime}ms,建议重启以应用更新`);
+        logger.warn('[ws-plugin] 未安装silk-wasm依赖,发送语音可能会失败');
     }
-    let installedVersion = execSync('cd "plugins/ws-plugin" && pnpm list silk-wasm', { encoding: 'utf8' });
-    installedVersion = /silk-wasm (\d+\.\d+\.\d+)/.exec(installedVersion)?.[1]
-    if (version != installedVersion) {
-        const startTime = new Date();
-        logger.warn(`[ws-plugin] silk-wasm依赖版本不一致,开始执行安装`);
-        execSync(`pnpm install --filter=ws-plugin`);
-        const endTime = new Date();
-        logger.mark(`[ws-plugin] 安装完成,耗时${endTime - startTime}ms,建议重启以应用更新`);
-    }
-    try {
-        silk = await import('silk-wasm')
-    } catch (error) {
-        logger.error('[ws-plugin] silk-wasm依赖导入失败,如果是初次安装请重启')
-    }
-    return silk
 }
 const silk = await getSilk()
 
