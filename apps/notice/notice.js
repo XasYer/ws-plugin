@@ -44,7 +44,10 @@ Bot.on('notice', async e => {
     const user_id = await getUser_id({ user_id: e.user_id })
     if (e.notice_type == 'group') {
         const group_id = await getGroup_id({ group_id: e.group_id })
-        const operator_id = await getUser_id({ user_id: e.operator_id })
+        let operator_id
+        if (e.operator_id) {
+            operator_id = await getUser_id({ user_id: e.operator_id })
+        }
         other.group_id = group_id
         other.user_id = user_id
         other.operator_id = operator_id
