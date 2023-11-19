@@ -84,8 +84,13 @@ async function getFileInfo(data) {
         }
         contentType = mimeTypes[extname(data)]
     } else {
-        buffer = fs.readFileSync(data)
-        contentType = mimeTypes[extname(data)]
+        try {
+            buffer = fs.readFileSync(data)
+            contentType = mimeTypes[extname(data)]
+        } catch (error) {
+            buffer = Buffer.from(data, 'base64')
+            contentType = 'image/png'
+        }
     }
     return { buffer, contentType }
 }
