@@ -3,7 +3,7 @@ import { getMsg, setMsg, getGuildLatestMsgId, getLatestMsg, getUser_id, getGroup
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { toHtml } from './tool.js'
 import Runtime from '../../../lib/plugins/runtime.js'
-import { Version } from '../components/index.js'
+import { Version, Render } from '../components/index.js'
 import fetch from 'node-fetch'
 
 async function getApiData(api, params = {}, name, uin, adapter, other) {
