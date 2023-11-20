@@ -11,9 +11,6 @@ import { TMP_DIR, mimeTypes } from '../tool.js'
 
 const user = os.userInfo().username
 let redPath = `C:/Users/${user}/.chronocat`
-if (!fs.existsSync(redPath)) {
-    redPath = `C:/Users/${user}/AppData/Roaming/BetterUniverse/QQNT`
-}
 
 const roleMap = {
     2: 'member',
