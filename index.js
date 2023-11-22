@@ -75,13 +75,13 @@ if (Version.isTrss) {
     const server = http.createServer(_express);
     _express.get('/ws-plugin*', createHttp)
     server.listen(Config.wsPort, () => {
-        const host = server.address().address
-        const port = server.address().port
+        const host = 'localhost'
+        const port = Config.wsPort
         logger.mark(`[ws-plugin] 启动 HTTP 服务器：${logger.green(`http://[${host}]:${port}`)}`)
     })
     server.on('error', () => {
-        const host = server.address().address
-        const port = server.address().port
+        const host = 'localhost'
+        const port = Config.wsPort
         logger.error(`[ws-plugin] 启动 HTTP 服务器失败：${logger.green(`http://[${host}]:${port}`)}`)
         logger.error(error)
     })
