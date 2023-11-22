@@ -693,18 +693,25 @@ export class setting extends plugin {
             }
             let str = `连接名字: ${s.name}\n连接类型: ${s.type}\n当前状态: ${status}`
             if (!this.e.isGroup) {
-                str += `\naddress: ${s.address}\nuin: ${s.uin}`
+                str += `\n连接地址: ${s.address}\nBot账号: ${s.uin}`
+                if (msg.length != 0) str = '\n' + str
+                msg.push(str)
+            } else {
+                msg.push({
+                    avatar: Bot[s.uin]?.avatar || `https://q1.qlogo.cn/g?b=qq&s=0&nk=${s.uin}`,
+                    nickname: Bot[s.uin]?.nickname || '未知',
+                    message: str
+                })
             }
-            msg.push({
-                avatar: Bot[s.uin]?.avatar || `https://q1.qlogo.cn/g?b=qq&s=0&nk=${s.uin}`,
-                nickname: Bot[s.uin]?.nickname || '未知',
-                message: str
-            })
         }
         if (msg.length > 0) {
-            await Render.render('chatHistory/index', {
-                data: await toHtml(msg, this.e)
-            }, { e: this.e, scale: 1.2 })
+            if (!this.e.isGroup) {
+                await this.reply(msg)
+            } else {
+                await Render.render('chatHistory/index', {
+                    data: await toHtml(msg, this.e)
+                }, { e: this.e, scale: 1.2 })
+            }
         } else {
             await this.reply('暂无连接')
         }
