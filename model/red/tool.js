@@ -197,7 +197,11 @@ async function getNtPath(bot) {
 
 async function uploadVideo(bot, file) {
     let type = 'mp4'
-    if (file.match(/^base64:\/\//)) {
+    if (Buffer.isBuffer(file)) {
+        const buffer = file
+        file = join(TMP_DIR, randomUUID({ disableEntropyCache: true }) + '.' + type)
+        fs.writeFileSync(file, buffer)
+    } else if (file.match?.(/^base64:\/\//)) {
         const buffer = Buffer.from(file.replace(/^base64:\/\//, ""), 'base64')
         file = join(TMP_DIR, randomUUID({ disableEntropyCache: true }) + '.' + type)
         fs.writeFileSync(file, buffer)
