@@ -15,7 +15,6 @@ import fetch from 'node-fetch'
  */
 async function makeOneBotReportMsg(e) {
     let reportMsg = await msgToOneBotMsg(e.message, e.source)
-
     if (reportMsg.length === 0) {
         return false
     }
@@ -371,6 +370,7 @@ async function msgToOneBotMsg(msg, source = null) {
             return obj
         }, {});
         const msg = await getMsg(getData)
+        logger.debug('[ws-plugin]', 'getSourceKey', getData, 'getSourceResult', JSON.stringify(msg))
         if (msg) {
             reportMsg.push({
                 "type": "reply",
