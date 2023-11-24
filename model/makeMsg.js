@@ -15,7 +15,6 @@ import fetch from 'node-fetch'
  */
 async function makeOneBotReportMsg(e) {
     let reportMsg = await msgToOneBotMsg(e.message, e.source)
-
     if (reportMsg.length === 0) {
         return false
     }
@@ -149,6 +148,9 @@ async function makeGSUidSendMsg(data) {
         for (const msg of content) {
             switch (msg.type) {
                 case 'image':
+                    if (!/^(http|base64)/.test(msg.data)) {
+                        msg.data = 'base64://' + msg.data
+                    }
                     sendMsg.push(segment.image(msg.data))
                     break;
                 case 'text':
@@ -371,6 +373,7 @@ async function msgToOneBotMsg(msg, source = null) {
             return obj
         }, {});
         const msg = await getMsg(getData)
+        logger.debug('[ws-plugin]', 'getSourceKey', getData, 'getSourceResult', JSON.stringify(msg))
         if (msg) {
             reportMsg.push({
                 "type": "reply",

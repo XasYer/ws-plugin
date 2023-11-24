@@ -40,10 +40,12 @@ async function saveMessage_id({ message_id, seq, rand, time, user_id, group_id, 
 
 async function findMessage_id(where, order = [['createdAt', 'DESC']]) {
     return executeSync(async () => {
+        logger.debug('[ws-plugin]', 'findMessage_id:where', JSON.stringify(where))
         const result = await message_id_table.findOne({
             where,
             order,
         })
+        logger.debug('[ws-plugin]', 'findMessage_id:result', JSON.stringify(result?.dataValues))
         return result?.dataValues
     });
 }
