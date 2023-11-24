@@ -148,6 +148,9 @@ async function makeGSUidSendMsg(data) {
         for (const msg of content) {
             switch (msg.type) {
                 case 'image':
+                    if (!/^(http|base64)/.test(msg.data)) {
+                        msg.data = 'base64://' + msg.data
+                    }
                     sendMsg.push(segment.image(msg.data))
                     break;
                 case 'text':
