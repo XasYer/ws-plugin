@@ -710,6 +710,9 @@ function getConfig(key) {
     return config || defConfig
 }
 
+// 默认删除red upload的文件
+const redTempPath = redPath + '/redprotocol-upload'
+
 schedule.scheduleJob(getConfig('deleteDirCron'), () => {
     let deleteDir = getConfig('deleteDir')
     if (deleteDir) {
@@ -718,6 +721,7 @@ schedule.scheduleJob(getConfig('deleteDirCron'), () => {
             deleteFolder(i, true)
         }
     }
+    deleteFolder(redTempPath, true)
 })
 
 
