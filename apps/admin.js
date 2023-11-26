@@ -697,9 +697,14 @@ export class setting extends plugin {
                 if (msg.length != 0) str = '\n' + str
                 msg.push(str)
             } else {
+                let uin = s.uin
+                if (Array.isArray(uin)) {
+                    uin = this.e.user_id
+                }
                 msg.push({
-                    avatar: Bot[s.uin]?.avatar || `https://q1.qlogo.cn/g?b=qq&s=0&nk=${s.uin}`,
-                    nickname: Bot[s.uin]?.nickname || '未知',
+                    user_id: uin,
+                    avatar: Bot[uin]?.avatar || `https://q1.qlogo.cn/g?b=qq&s=0&nk=${uin}`,
+                    nickname: Bot[uin]?.nickname || '未知',
                     message: str
                 })
             }
