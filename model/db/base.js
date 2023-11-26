@@ -49,13 +49,17 @@ function executeSync(callback) {
                 const result = await callback();
                 resolve(result);
             } catch (error) {
+                logger.error('[ws-plugin] callback', error)
                 reject(error);
             }
+        }).catch(error => {
+            logger.error('[ws-plugin] promise', error);
         });
     });
 
     return lock;
 }
+
 
 function resetLock() {
     shouldCancel = true;

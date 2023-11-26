@@ -365,20 +365,20 @@ async function makeForwardMsg(params, uin, adapter) {
 async function msgToOneBotMsg(msg, source = null) {
     let reportMsg = []
     if (source) {
-        const keys = ['message_id', 'rand', 'time', 'seq']
+        const keys = ['message_id', 'rand', 'seq']
         const getData = keys.reduce((obj, key) => {
             if (source[key] !== undefined) {
                 obj[key] = source[key]
             }
             return obj
         }, {});
-        const msg = await getMsg(getData)
-        logger.debug('[ws-plugin]', 'getSourceKey', getData, 'getSourceResult', JSON.stringify(msg))
-        if (msg) {
+        const replyMsg = await getMsg(getData)
+        logger.debug('[ws-plugin]', 'getSourceKey', getData, 'getSourceResult', replyMsg)
+        if (replyMsg) {
             reportMsg.push({
                 "type": "reply",
                 "data": {
-                    "id": msg.onebot_id
+                    "id": replyMsg.onebot_id
                 }
             })
         }
@@ -394,7 +394,7 @@ async function msgToOneBotMsg(msg, source = null) {
                 })
                 break
             case 'text':
-                if (Array.isArray(Config.noMsgStart) && Config.noMsgInclude.length > 0) {
+                if (Array.isArray(Config.noMsgInclude) && Config.noMsgInclude.length > 0) {
                     if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
                         return false
                     }
