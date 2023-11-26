@@ -5,6 +5,7 @@ import { join } from 'path'
 import { randomUUID } from 'crypto'
 import { Stream } from "stream"
 import fetch from 'node-fetch'
+import schedule from "node-schedule"
 
 async function CreateMusicShare(data) {
     let appid, appname, appsign, style = 4;
@@ -128,6 +129,16 @@ function sleep(ms) {
 const TMP_DIR = process.cwd() + '/plugins/ws-plugin/Temp'
 if (!fs.existsSync(TMP_DIR)) fs.mkdirSync(TMP_DIR)
 
+schedule.scheduleJob('0 0 0 * * ?', function () {
+    logger.mark('[ws-plugin] 执行定时任务: 删除Temp')
+    try {
+        const files = fs.readdirSync(TMP_DIR)
+        for (const file of files) {
+            fs.unlink(join(TMP_DIR, file), () => { })
+        }
+    } catch (error) { }
+});
+
 const mimeTypes = {
     '.html': 'text/html',
     '.js': 'text/javascript',
@@ -206,7 +217,7 @@ async function toHtml(data, e) {
             }
             // 只有一张图片
             if (img === 1 && text === 0) {
-                message = message.replace('<div class="text">','<div class="img">')
+                message = message.replace('<div class="text">', '<div class="img">')
             }
             html.push({
                 avatar: `<img src="${path}" />`,
