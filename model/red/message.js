@@ -625,12 +625,7 @@ async function toQQRedMsg(bot, data) {
     switch (data.type) {
         case 'meta::connect':
             const job = schedule.scheduleJob('0 0 4 * * ?', function () {
-                logger.mark('[ws-plugin] 执行定时任务: 删除Temp')
                 try {
-                    const files = fs.readdirSync(TMP_DIR)
-                    for (const file of files) {
-                        fs.unlink(join(TMP_DIR, file), () => { })
-                    }
                     const path = `${redPath}/redprotocol-upload`
                     const redTemp = fs.readdirSync(path)
                     for (const file of redTemp) {
