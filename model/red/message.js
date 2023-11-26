@@ -698,12 +698,15 @@ async function toQQRedMsg(bot, data) {
 
 // 不想用Config读,免得和主分支冲突
 function getConfig(key) {
-    const defConfig = YAML.parse(
-        fs.readFileSync('./plugins/ws-plugin/config/default_config/red.yaml', 'utf8')
-    )[key]
-    const config = YAML.parse(
-        fs.readFileSync('./plugins/ws-plugin/config/config/red.yaml', 'utf8')
-    )[key]
+    let defConfig, config
+    try {
+        defConfig = YAML.parse(
+            fs.readFileSync('./plugins/ws-plugin/config/default_config/red.yaml', 'utf8')
+        )[key]
+        config = YAML.parse(
+            fs.readFileSync('./plugins/ws-plugin/config/config/red.yaml', 'utf8')
+        )[key]
+    } catch (error) { }
     return config || defConfig
 }
 
