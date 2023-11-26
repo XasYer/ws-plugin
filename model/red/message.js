@@ -707,18 +707,15 @@ function getConfig(key) {
     return config || defConfig
 }
 
-// ReferenceError: Cannot access 'Config' before initialization
-setTimeout(() => {
-    schedule.scheduleJob(getConfig('deleteDirCron'), () => {
-        let deleteDir = getConfig('deleteDir')
-        if (deleteDir) {
-            if (!Array.isArray(deleteDir)) deleteDir = [deleteDir]
-            for (const i of deleteDir) {
-                deleteFolder(i, true)
-            }
+schedule.scheduleJob(getConfig('deleteDirCron'), () => {
+    let deleteDir = getConfig('deleteDir')
+    if (deleteDir) {
+        if (!Array.isArray(deleteDir)) deleteDir = [deleteDir]
+        for (const i of deleteDir) {
+            deleteFolder(i, true)
         }
-    })
-}, 5000)
+    }
+})
 
 
 export {
