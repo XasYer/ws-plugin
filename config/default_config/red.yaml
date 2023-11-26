@@ -1,0 +1,5 @@
+# 需要删除的文件夹 绝对路径或对于云崽的相对路径
+deleteDir: []
+
+# 删除的cron
+deleteDirCron: 0 0 4 * * ?

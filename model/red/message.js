@@ -1,10 +1,11 @@
 import { uploadImg, uploadAudio, uploadVideo, uploadFile, getNtPath, roleMap, redPath } from './tool.js'
-import { TMP_DIR, sleep, toHtml } from '../tool.js'
+import { TMP_DIR, sleep, toHtml, deleteFolder } from '../tool.js'
 import { setMsg, getMsg } from '../DataBase.js'
 import { Config, Version, Render } from '../../components/index.js'
 import { randomBytes } from 'crypto'
 import { join, extname, basename } from 'path'
 import fs from 'fs'
+import YAML from 'yaml'
 import schedule from "node-schedule"
 import _ from 'lodash'
 import PluginsLoader from '../../../../lib/plugins/loader.js'
@@ -624,17 +625,6 @@ async function toQQRedMsg(bot, data) {
     data = JSON.parse(data)
     switch (data.type) {
         case 'meta::connect':
-            const job = schedule.scheduleJob('0 0 4 * * ?', function () {
-                try {
-                    const path = `${redPath}/redprotocol-upload`
-                    const redTemp = fs.readdirSync(path)
-                    for (const file of redTemp) {
-                        fs.unlink(join(path, file), () => { })
-                    }
-                } catch (error) {
-
-                }
-            });
             setTimeout(() => {
                 if (Bot[bot.self_id]?.version) {
                     Bot[bot.self_id].version = {
@@ -706,6 +696,29 @@ async function toQQRedMsg(bot, data) {
     }
 }
 
+// 不想用Config读,免得和主分支冲突
+function getConfig(key) {
+    const defConfig = YAML.parse(
+        fs.readFileSync('./plugins/ws-plugin/config/default_config/red.yaml', 'utf8')
+    )[key]
+    const config = YAML.parse(
+        fs.readFileSync('./plugins/ws-plugin/config/config/red.yaml', 'utf8')
+    )[key]
+    return config || defConfig
+}
+
+// ReferenceError: Cannot access 'Config' before initialization
+setTimeout(() => {
+    schedule.scheduleJob(getConfig('deleteDirCron'), () => {
+        let deleteDir = getConfig('deleteDir')
+        if (deleteDir) {
+            if (!Array.isArray(deleteDir)) deleteDir = [deleteDir]
+            for (const i of deleteDir) {
+                deleteFolder(i)
+            }
+        }
+    })
+}, 5000)
 
 
 export {
