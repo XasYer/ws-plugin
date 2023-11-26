@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import { initWebSocket, Config, Version } from './components/index.js'
-import { TMP_DIR, mimeTypes } from './model/index.js'
+import { TMP_DIR, mimeTypes, deleteFolder } from './model/index.js'
 import { extname, join } from 'path'
 import express from "express"
 import http from "http"
@@ -87,20 +87,7 @@ if (Version.isTrss) {
     })
 }
 
-function deleteFolderRecursive(directoryPath) {
-    if (fs.existsSync(directoryPath)) {
-        fs.readdirSync(directoryPath).forEach((file) => {
-            const curPath = join(directoryPath, file)
-            if (fs.lstatSync(curPath).isDirectory()) {
-                deleteFolderRecursive(curPath)
-            } else {
-                fs.unlinkSync(curPath)
-            }
-        })
-        fs.rmdirSync(directoryPath)
-    }
-}
-deleteFolderRecursive('./plugins/ws-plugin/model/dlc')
+deleteFolder('./plugins/ws-plugin/model/dlc')
 
 initWebSocket()
 async function createHttp(req, res) {
