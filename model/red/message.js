@@ -714,7 +714,7 @@ setTimeout(() => {
         if (deleteDir) {
             if (!Array.isArray(deleteDir)) deleteDir = [deleteDir]
             for (const i of deleteDir) {
-                deleteFolder(i)
+                deleteFolder(i, true)
             }
         }
     })
