@@ -24,7 +24,7 @@ async function uploadImg(bot, data, name) {
         contentType = mimeTypes[extname(name)] || contentType
     }
     if (/^.{32}\.image$/.test(data)) {
-        data = await fetch(`https://gchat.qpic.cn/gchatpic_new/0/0-0-${data.replace('.image', '').toUpperCase()}/0`)
+        data = `https://gchat.qpic.cn/gchatpic_new/0/0-0-${data.replace('.image', '').toUpperCase()}/0`
     }
     const file = await upload(bot, data, contentType)
     if (!file.imageInfo) throw "获取图片信息失败,请检查图片状态"
