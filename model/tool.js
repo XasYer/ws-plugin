@@ -259,6 +259,30 @@ async function saveImg(data) {
     return path
 }
 
+/**
+ * 删除指定路径下的所有文件
+ * @param {string} directoryPath 文件夹绝对路径或对于云崽的相对路径
+ * @param {boolean} keepDirectory 是否保留传入的文件夹
+ */
+function deleteFolder(directoryPath, keepDirectory = false) {
+    try {
+        if (fs.existsSync(directoryPath)) {
+            fs.readdirSync(directoryPath).forEach((file) => {
+                const curPath = join(directoryPath, file)
+                if (fs.lstatSync(curPath).isDirectory()) {
+                    deleteFolder(curPath)
+                } else {
+                    fs.unlinkSync(curPath)
+                }
+            });
+            if (!keepDirectory) {
+                fs.rmdirSync(directoryPath)
+            }
+        }
+    } catch (error) {
+        logger.error(`[ws-plugin] 删除文件失败`, error)
+    }
+}
 
 export {
     SendMusicShare,
@@ -266,5 +290,6 @@ export {
     TMP_DIR,
     mimeTypes,
     decodeHtml,
-    toHtml
+    toHtml,
+    deleteFolder
 }
