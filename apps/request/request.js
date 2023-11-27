@@ -51,9 +51,9 @@ Bot.on('request', async e => {
             switch (Number(i.type)) {
                 case 1:
                 case 2:
-                    if (Version.isTrss) {
+                case 6:
+                    if (Version.isTrss || e.adapter) {
                         if (i.uin != e.self_id) return
-                        if (!Version.protocol.some(i => i == e.bot?.version?.name)) return
                     }
                     i.ws.send(msg)
                     break;

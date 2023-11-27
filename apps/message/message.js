@@ -119,9 +119,8 @@ Bot.on('message', async e => {
                 case 1:
                 case 2:
                 case 6:
-                    if (Version.isTrss) {
+                    if (Version.isTrss || e.adapter) {
                         if (i.uin != e.self_id) continue
-                        // if (!Version.protocol.some(i => i == e.bot?.version?.name)) continue
                     }
                     e.reply = reply(e)
                     msg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
@@ -141,8 +140,8 @@ Bot.on('message', async e => {
 function reply(e) {
     if (!Version.isTrss) {
         const replyNew = e.reply
-        return async function (massage, quote = false, data = {}) {
-            const ret = await replyNew(massage, quote, data)
+        return async function () {
+            const ret = await replyNew.apply(this, arguments)
             if (ret) {
                 setMsg({
                     message_id: ret.message_id,
