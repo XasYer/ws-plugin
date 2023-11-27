@@ -680,9 +680,9 @@ export class setting extends plugin {
                     break;
             }
             let str = `连接名字: ${s.name}\n连接类型: ${s.type}\n当前状态: ${status}`
-            if (!this.e.isGroup) {
+            if (!this.e.isGroup && e.isMaster) {
                 str += `\n连接地址: ${s.address}\nBot账号: ${s.uin}`
-                if (msg.length != 0) str = '\n' + str
+                if (msg.length != 0) str = '\n---------------\n' + str
                 msg.push(str)
             } else {
                 let uin = s.uin
