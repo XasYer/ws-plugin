@@ -1,6 +1,7 @@
 import _ from 'lodash'
 import fs from 'fs'
-import { Version } from '../components/index.js'
+import { Version, Render } from '../components/index.js'
+import Runtime from '../../../lib/plugins/runtime.js'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
 import { Stream } from "stream"
@@ -171,8 +172,10 @@ function decodeHtml(html) {
 /**
  * 
  * @param {Array} data 
+ * @param {*} e 
+ * @param {boolean} 是否发送
  */
-async function toHtml(data, e) {
+async function toHtml(data, e, send = false) {
     let html = []
     if (!Array.isArray(data)) data = [data]
     for (const i of data) {
@@ -225,6 +228,36 @@ async function toHtml(data, e) {
                 message
             })
         }
+    }
+    if (send) {
+        const configPath = process.cwd() + '/plugins/ws-plugin/resources/chatHistory'
+        let config
+        if (fs.existsSync(`${configPath}/config.js`)) {
+            config = await import(`file://${configPath}/config.js`)
+        } else {
+            config = await import(`file://${configPath}/config_default.js`)
+        }
+        const allTHeme = fs.readdirSync(configPath).filter(files => {
+            const fullPath = join(configPath, files);
+            const stat = fs.statSync(fullPath);
+            if (stat.isDirectory()) {
+                return fullPath
+            }
+        })
+        let target = 'default'
+        if (typeof config.theme === 'string') {
+            if (config.theme === 'all') {
+                target = allTHeme[_.random(0, allTHeme.length - 1)]
+            } else {
+                target = config.theme
+            }
+        } else if (Array.isArray(config.theme)) {
+            target = config.theme[_.random(0, config.theme.length - 1)]
+        }
+        return await Render.render(`chatHistory/${target}/index`, {
+            data: html,
+            target
+        }, { e, scale: 1.2, retMsgId: true })
     }
     return html
 }

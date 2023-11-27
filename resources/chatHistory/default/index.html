@@ -1,7 +1,7 @@
 {{extend defaultLayout}}
 
 {{block 'css'}}
-<link rel="stylesheet" type="text/css" href="{{_res_path}}/chatHistory/index.css" />
+<link rel="stylesheet" type="text/css" href="{{_res_path}}/chatHistory/{{target}}/index.css" />
 {{/block}}
 
 {{block 'main'}}
@@ -16,9 +16,7 @@
             <div class="nickname">
                 {{i.nickname}}
             </div>
-            <!-- <div class="text"> -->
-                {{@ i.message}}
-            <!-- </div> -->
+            {{@ i.message}}
         </div>
     </div>
     {{/each}}

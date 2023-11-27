@@ -7,7 +7,7 @@
 
 body {
     width: 600px;
-    background: url("./imgs/bg.jpg") left top repeat-y;
+    background: url("./bg.jpg") left top repeat-y;
     background-size: 100% auto;
     padding-top: 24px;
 }
