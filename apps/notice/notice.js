@@ -130,7 +130,8 @@ Bot.on('notice', async e => {
             switch (Number(i.type)) {
                 case 1:
                 case 2:
-                    if (Version.isTrss) {
+                case 6:
+                    if (Version.isTrss || e.adapter) {
                         if (i.uin != e.self_id) continue
                     }
                     i.ws.send(msg)
@@ -145,8 +146,8 @@ Bot.on('notice', async e => {
 function reply(e) {
     if (!Version.isTrss) {
         const replyNew = e.reply
-        return async function (massage, quote = false, data = {}) {
-            const ret = await replyNew(massage, quote, data)
+        return async function () {
+            const ret = await replyNew.apply(this, arguments)
             if (ret) {
                 setMsg({
                     message_id: ret.message_id,
