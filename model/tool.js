@@ -186,6 +186,7 @@ async function toHtml(data, e, send = false) {
         let img = 0, text = 0
         for (let m of i.message) {
             if (typeof m === 'string') m = { type: 'text', text: m }
+            message += '<div>'
             switch (m.type) {
                 case 'text':
                     message += m.text.replace(/\n/g, '<br />')
@@ -203,6 +204,7 @@ async function toHtml(data, e, send = false) {
                     text++
                     break;
             }
+            message += '</div>'
         }
         message += '</div>'
         if (node) {
