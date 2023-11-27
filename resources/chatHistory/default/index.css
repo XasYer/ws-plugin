@@ -28,6 +28,7 @@ body {
     flex-direction: column;
     justify-content: flex-start;
     margin-left: 6px;
+    width: 460px;
 }
 
 .avatar img {
@@ -38,8 +39,9 @@ body {
 }
 
 .text {
+    align-self: flex-start;
+    max-width: 100%;
     margin-top: 6px;
-    width: 460px;
     border: 1px black solid;
     border-radius: 12px;
     padding: 12px;
