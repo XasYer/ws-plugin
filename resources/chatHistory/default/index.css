@@ -57,5 +57,5 @@ body {
 .text img,
 .img img {
     border-radius: 12px;
-    width: 100%;
+    max-width: 100%;
 }
