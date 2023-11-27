@@ -207,9 +207,7 @@ async function makeSendMsg(data, message) {
                         }
                     }
                     data.runtime = new Runtime(data)
-                    return await Render.render('chatHistory/index', {
-                        data: await toHtml(i.data, data)
-                    }, { e: data, scale: 1.4, retMsgId: true })
+                    return await toHtml(i.data, data, true)
                 }
                 break
             default:
