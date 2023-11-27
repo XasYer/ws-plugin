@@ -680,7 +680,7 @@ export class setting extends plugin {
                     break;
             }
             let str = `连接名字: ${s.name}\n连接类型: ${s.type}\n当前状态: ${status}`
-            if (!this.e.isGroup && e.isMaster) {
+            if (!this.e.isGroup && this.e.isMaster) {
                 str += `\n连接地址: ${s.address}\nBot账号: ${s.uin}`
                 if (msg.length != 0) str = '\n---------------\n' + str
                 msg.push(str)
@@ -701,9 +701,7 @@ export class setting extends plugin {
             if (!this.e.isGroup) {
                 await this.reply(msg)
             } else {
-                await Render.render('chatHistory/index', {
-                    data: await toHtml(msg, this.e)
-                }, { e: this.e, scale: 1.2 })
+                await toHtml(msg, this.e, true)
             }
         } else {
             await this.reply('暂无连接')
