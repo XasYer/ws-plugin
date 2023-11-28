@@ -2,6 +2,7 @@ import { makeSendMsg, makeMessage } from './message.js'
 import { setMsg, getMsg } from '../DataBase.js'
 import { roleMap } from './tool.js'
 import { Config, Version } from '../../components/index.js'
+import { findAll } from './memberList.js'
 
 let wsPort
 setTimeout(() => {
@@ -313,8 +314,12 @@ export class QQRedBot {
         if (!this.gml.has(group_id)) {
             this.gml.set(group_id, new Map())
         }
-        const memberList = await this.bot.sendApi('POST', 'group/getMemberList', JSON.stringify(body))
+        let memberList = await this.bot.sendApi('POST', 'group/getMemberList', JSON.stringify(body))
         if (memberList.error) throw memberList.error
+        // 如果是0就去数据库中找一下
+        if (memberList.length === 0) {
+            memberList = await findAll(group_id)
+        }
         for (const i of memberList) {
             this.gml.get(group_id).set(Number(i.detail.uin), {
                 ...i.detail,
@@ -327,6 +332,7 @@ export class QQRedBot {
                 sex: 'unknown'
             })
         }
+
         return this.gml.get(group_id)
     }
 
