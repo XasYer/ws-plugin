@@ -4,9 +4,9 @@ import { roleMap } from './tool.js'
 import { Config, Version } from '../../components/index.js'
 
 let wsPort
-setTimeout(()=>{
+setTimeout(() => {
     wsPort = Version.isTrss ? Config.bot.port : Config.wsPort
-},2000)
+}, 2000)
 
 export class QQRedBot {
     constructor(bot) {
@@ -305,14 +305,18 @@ export class QQRedBot {
     }
 
     async getGroupMemberList(group_id) {
+        group_id = Number(group_id)
         const body = {
-            group: Number(group_id),
+            group: group_id,
             size: 9999
+        }
+        if (!this.gml.has(group_id)) {
+            this.gml.set(group_id, new Map())
         }
         const memberList = await this.bot.sendApi('POST', 'group/getMemberList', JSON.stringify(body))
         if (memberList.error) throw memberList.error
         for (const i of memberList) {
-            this.gml.get(Number(group_id)).set(Number(i.detail.uin), {
+            this.gml.get(group_id).set(Number(i.detail.uin), {
                 ...i.detail,
                 card: i.detail.cardName || i.detail.nick,
                 nickname: i.detail.nick,
@@ -323,7 +327,7 @@ export class QQRedBot {
                 sex: 'unknown'
             })
         }
-        return this.gml.get(Number(group_id))
+        return this.gml.get(group_id)
     }
 
     async getGroupMemberInfo(group_id, user_id) {
