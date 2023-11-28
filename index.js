@@ -79,7 +79,7 @@ if (Version.isTrss) {
         const port = Config.wsPort
         logger.mark(`[ws-plugin] 启动 HTTP 服务器：${logger.green(`http://[${host}]:${port}`)}`)
     })
-    server.on('error', () => {
+    server.on('error', error => {
         const host = 'localhost'
         const port = Config.wsPort
         logger.error(`[ws-plugin] 启动 HTTP 服务器失败：${logger.green(`http://[${host}]:${port}`)}`)
