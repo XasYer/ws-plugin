@@ -8,7 +8,6 @@ import fs from 'fs'
 import YAML from 'yaml'
 import schedule from "node-schedule"
 import _ from 'lodash'
-import PluginsLoader from '../../../../lib/plugins/loader.js'
 import Runtime from '../../../../lib/plugins/runtime.js'
 
 async function makeSendMsg(data, message) {
@@ -641,6 +640,7 @@ async function toQQRedMsg(bot, data) {
             const payload = data.payload[0]
             const e = await makeMessage(bot.self_id, payload)
             if (!e || (e.post_type === 'message' && e.message.length == 0)) return
+            let event = ''
             switch (e.post_type) {
                 case 'message':
                     if (e.message_type == 'group') {
@@ -677,16 +677,24 @@ async function toQQRedMsg(bot, data) {
                         time: Number(e.time),
                         group_id: Number(e.group_id),
                     })
-                    // Bot.on('message',()=>{})可以监听到消息 但是self_id = 88888
-                    Bot.em(`${e.post_type}.${e.message_type}.${e.sub_type}`, e)
-                    // Bot.on('message',()=>{})不可以监听到消息 但是self_id正常
-                    // PluginsLoader.deal(e)
+                    event = `${e.post_type}.${e.message_type}.${e.sub_type}`
                     break;
                 case 'notice':
-                    Bot.em(`${e.post_type}.${e.notice_type}.${e.sub_type}`, e)
+                    event = `${e.post_type}.${e.notice_type}.${e.sub_type}`
                     break
                 default:
-                    break;
+                    return
+            }
+            if (Version.isTrss) {
+                Bot.em(event, e)
+            } else {
+                e.bot.self_id = e.self_id
+                while (true) {
+                    Bot.emit(event, e)
+                    const i = event.lastIndexOf(".")
+                    if (i == -1) break
+                    event = event.slice(0, i)
+                }
             }
             break
         default:
