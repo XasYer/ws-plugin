@@ -265,7 +265,11 @@ async function makeSendMsg(params, uin, adapter) {
                     data.group_id = params.group_id
                     await SendMusicShare(data)
                 } else {
-                    await bot[target](uid).shareMusic(i.data.type, i.data.id)
+                    try {
+                        await bot[target](uid).shareMusic(i.data.type, i.data.id)
+                    } catch (error) {
+                        logger.warn('[ws-plugin] 分享歌曲失败,可能是当前协议不支持分享音乐')
+                    }
                 }
                 break
             case 'poke':

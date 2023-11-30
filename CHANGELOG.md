@@ -1,3 +1,9 @@
+# 0.6.3
+
+* onebot v11 增加api
+    * send_forward_msg 发送转发消息
+    * download_file 下载文件到缓存目录
+
 # 0.6.2
 
 * 新增指令`#ws清除缓存`
