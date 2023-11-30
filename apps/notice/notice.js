@@ -2,14 +2,6 @@ import { sendSocketList, Config, Version } from '../../components/index.js'
 import { setMsg, getMsg, getGroup_id, getUser_id } from '../../model/index.js'
 
 Bot.on('notice', async e => {
-    if (e.self_id == '88888') {
-        if (e.group?.bot?.uin) {
-            e.self_id = e.group.bot.uin
-        } else if (e.friend?.bot?.uin) {
-            e.self_id = e.friend.bot.uin
-        }
-        e.bot = Bot[e.self_id]
-    }
     if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false
     if (sendSocketList.length == 0) return false
     if (e.group_id) {

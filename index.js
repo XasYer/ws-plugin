@@ -1,7 +1,5 @@
 import fs from 'node:fs'
 import { initWebSocket, Config, Version } from './components/index.js'
-import { join, basename, extname } from 'path'
-import { pathToFileURL } from 'url'
 
 const files = fs.readdirSync('./plugins/ws-plugin/apps').filter(file => file.endsWith('.js'))
 
@@ -37,22 +35,6 @@ for (const item of path) {
         logger.error(e)
     }
 }
-
-const dirPath = join(process.cwd(), 'plugins', 'ws-plugin', 'model');
-fs.readdirSync(dirPath).forEach(file => {
-    const filePath = join(dirPath, file)
-    if (fs.statSync(filePath).isDirectory() && !['db'].includes(file)) {
-        fs.readdirSync(filePath).forEach(async i => {
-            if (basename(i, extname(i)) === 'index') {
-                try {
-                    await import(pathToFileURL(join(filePath, i)))
-                } catch (error) {
-                    logger.error(error)
-                }
-            }
-        })
-    }
-})
 
 initWebSocket()
 
