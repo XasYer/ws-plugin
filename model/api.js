@@ -203,7 +203,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                 }
                 e.runtime = new Runtime(e)
                 sendRet = await Render.render('chatHistory/index', {
-                    data: await toHtml(forwardMsg, bot)
+                    data: await toHtml(forwardMsg.data, bot)
                 }, { e, scale: 1.4, retMsgId: true })
             } else {
                 sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
@@ -230,7 +230,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                 }
                 e.runtime = new Runtime(e)
                 sendRet = await Render.render('chatHistory/index', {
-                    data: await toHtml(forwardMsg, bot)
+                    data: await toHtml(forwardMsg.data, bot)
                 }, { e, scale: 1.4, retMsgId: true })
             } else {
                 sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
