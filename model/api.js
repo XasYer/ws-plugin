@@ -1,10 +1,13 @@
-import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
-import { getMsg, setMsg, getGuildLatestMsgId, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
+import { join } from 'path'
+import fetch from 'node-fetch'
+import { randomUUID } from 'crypto'
+import { toHtml, TMP_DIR } from './tool.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
-import { toHtml } from './tool.js'
+import common from '../../../lib/common/common.js'
 import Runtime from '../../../lib/plugins/runtime.js'
 import { Version, Render } from '../components/index.js'
-import fetch from 'node-fetch'
+import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
+import { getMsg, setMsg, getGuildLatestMsgId, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
 
 async function getApiData(api, params = {}, name, uin, adapter, other) {
     const bot = Bot[uin] || Bot
@@ -184,6 +187,25 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                 messages
             }
         },
+        // 发送合并转发
+        'send_forward_msg': async (params) => {
+            let forwardMsg = await makeForwardMsg(params, uin, adapter)
+            let forward_id
+            if (typeof (forwardMsg.data) === 'object') {
+                let detail = forwardMsg.data?.meta?.detail
+                if (detail) forward_id = detail.resid
+            } else {
+                let match = forwardMsg.data.match(/m_resid="(.*?)"/);
+                if (match) forward_id = match[1];
+            }
+            if (params.group_id) {
+                sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
+            } else if (params.user_id) {
+                sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
+            }
+            sendRet.forward_id = forward_id
+            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+        },
         // 发送合并转发 ( 群聊 )
         'send_group_forward_msg': async (params) => {
             let forwardMsg = await makeForwardMsg(params, uin, adapter)
@@ -195,20 +217,8 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                 let match = forwardMsg.data.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
-            if (other.sendForward) {
-                const e = {
-                    reply: msg => {
-                        return bot.pickGroup(params.group_id).sendMsg(msg)
-                    }
-                }
-                e.runtime = new Runtime(e)
-                sendRet = await Render.render('chatHistory/index', {
-                    data: await toHtml(forwardMsg.data, bot)
-                }, { e, scale: 1.4, retMsgId: true })
-            } else {
-                sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
-                sendRet.forward_id = forward_id
-            }
+            sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
+            sendRet.forward_id = forward_id
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送合并转发 ( 好友 )
@@ -222,20 +232,8 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                 let match = forwardMsg.data.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
-            if (other.sendForward) {
-                const e = {
-                    reply: msg => {
-                        return bot.pickFriend(params.user_id).sendMsg(msg)
-                    }
-                }
-                e.runtime = new Runtime(e)
-                sendRet = await Render.render('chatHistory/index', {
-                    data: await toHtml(forwardMsg.data, bot)
-                }, { e, scale: 1.4, retMsgId: true })
-            } else {
-                sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
-                sendRet.forward_id = forward_id
-            }
+            sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
+            sendRet.forward_id = forward_id
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 获取群消息历史记录
@@ -830,7 +828,15 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         // 重载事件过滤器
         // TODO reload_event_filter 这是啥
         // 下载文件到缓存目录
-        // TODO download_file 这又是啥
+        'download_file': async params => {
+            // 暂不支持 headers 自定义请求头
+            const file = join(TMP_DIR, randomUUID({ disableEntropyCache: true }))
+            if (await common.downFile(params.url, file)) {
+                ResponseData = {
+                    file
+                }
+            }
+        },
         // 检查链接安全性
         // TODO check_url_safely 不会
         // 获取中文分词 ( 隐藏 API )
