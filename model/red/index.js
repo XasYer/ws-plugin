@@ -196,17 +196,19 @@ if (Version.isTrss) {
     const _express = express();
     const server = http.createServer(_express);
     _express.get('/ws-plugin*', createHttp)
-    server.listen(Config.wsPort, () => {
-        const host = 'localhost'
-        const port = Config.wsPort
-        logger.mark(`[ws-plugin] 启动 HTTP 服务器：${logger.green(`http://[${host}]:${port}`)}`)
-    })
-    server.on('error', error => {
-        const host = 'localhost'
-        const port = Config.wsPort
-        logger.error(`[ws-plugin] 启动 HTTP 服务器失败：${logger.green(`http://[${host}]:${port}`)}`)
-        logger.error(error)
-    })
+    setTimeout(() => {
+        server.listen(Config.wsPort, () => {
+            const host = 'localhost'
+            const port = Config.wsPort
+            logger.mark(`[ws-plugin] 启动 HTTP 服务器：${logger.green(`http://[${host}]:${port}`)}`)
+        })
+        server.on('error', error => {
+            const host = 'localhost'
+            const port = Config.wsPort
+            logger.error(`[ws-plugin] 启动 HTTP 服务器失败：${logger.green(`http://[${host}]:${port}`)}`)
+            logger.error(error)
+        })
+    }, 5000)
 }
 async function createHttp(req, res) {
     const file = req.query.file
