@@ -25,8 +25,9 @@ async function createWebSocket(data) {
     }
     if (Array.isArray(data.uin)) {
         for (const uin of data.uin) {
+            const str = String(uin)
             const i = _.cloneDeep(data)
-            i.name += `(${_.truncate(String(uin), { length: 6 })})`
+            i.name += `(${str.slice(0, 4) + "..." + str.slice(-2)})`
             i.uin = uin
             await createWebSocket(i)
         }
