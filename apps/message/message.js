@@ -1,5 +1,5 @@
 import { sendSocketList, Config, Version } from '../../components/index.js'
-import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId, setMsg, getGroup_id, getUser_id } from '../../model/index.js'
+import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId, setQQBotLateseReply, setMsg, getGroup_id, getUser_id } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
 
@@ -81,7 +81,9 @@ Bot.on('message', async e => {
         }
     }
     if (e.guild_id) {
-        setGuildLatestMsgId(e.message_id, e.group_id)
+        setGuildLatestMsgId(e.message_id, e.group_id || e.user_id)
+    } else if (e.bot?.adapter?.id === 'QQBot') {
+        setQQBotLateseReply(e.reply, e.group_id || e.user_id)
     }
     let userInfo
     //增加isGroup e.isPrivate

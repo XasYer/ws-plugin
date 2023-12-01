@@ -1,3 +1,7 @@
+# 0.6.4
+
+* 适配`TRSS-Yunza`的`QQBot-Plugin`
+
 # 0.6.3
 
 * onebot v11 增加api

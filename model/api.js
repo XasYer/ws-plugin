@@ -7,14 +7,14 @@ import common from '../../../lib/common/common.js'
 import Runtime from '../../../lib/plugins/runtime.js'
 import { Version, Render } from '../components/index.js'
 import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
-import { getMsg, setMsg, getGuildLatestMsgId, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
+import { getMsg, setMsg, getGuildLatestMsgId, getQQBotLateseReply, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
 
 async function getApiData(api, params = {}, name, uin, adapter, other) {
     const bot = Bot[uin] || Bot
     let sendRet = null
     let ResponseData = null
     if (adapter) {
-        if (params.user_id) {
+        if (params.user_id && params.user_id != uin) {
             params.user_id = await getUser_id({ id: params.user_id })
         }
         if (params.group_id) {
@@ -115,22 +115,42 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         // 发送私聊消息
         'send_private_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
-            if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
+            if (adapter == 'QQBot') {
+                const reply = getQQBotLateseReply(params.user_id)
+                if (reply) await reply(sendMsg)
+            } else {
+                if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
+            }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送群聊消息
         'send_group_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
-            if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
+            if (adapter == 'QQBot') {
+                const reply = getQQBotLateseReply(params.group_id)
+                reply(sendMsg)
+            } else {
+                if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
+            }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送消息
         'send_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (params.message_type == 'group' || params.group_id) {
-                if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
+                if (adapter == 'QQBot') {
+                    const reply = getQQBotLateseReply(params.group_id)
+                    if (reply) await reply(sendMsg)
+                } else {
+                    if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
+                }
             } else if (params.message_type == 'private' || params.user_id) {
-                if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
+                if (adapter == 'QQBot') {
+                    const reply = getQQBotLateseReply(params.user_id)
+                    if (reply) await reply(sendMsg)
+                } else {
+                    if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
+                }
             }
             logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
@@ -844,7 +864,9 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         // 对事件执行快速操作 ( 隐藏 API )
         '.handle_quick_operation': async ({ context, operation }) => {
             if (adapter) {
-                context.user_id = await getUser_id({ id: context.user_id })
+                if (context.user_id != uin) {
+                    context.user_id = await getUser_id({ id: context.user_id })
+                }
                 context.group_id = await getGroup_id({ id: context.group_id })
             }
             switch (context.post_type) {
