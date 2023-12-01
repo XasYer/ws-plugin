@@ -199,7 +199,7 @@ async function makeSendMsg(params, uin, adapter) {
     let target, uid, sendMsg = [], quote = null
     switch (adapter) {
         case 'QQ频道Bot':
-            sendMsg.push({ type: 'reply', id: getGuildLatestMsgId(params.group_id) })
+            sendMsg.push({ type: 'reply', id: getGuildLatestMsgId(params.group_id || params.user_id) })
             break;
         default:
             break;

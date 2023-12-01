@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, lifecycle, heartbeat, setMsg, getUser_id } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, getQQBotLateseReply, getGuildLatestMsgId, lifecycle, heartbeat, setMsg, getUser_id } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from "express"
 import http from "http"
@@ -239,16 +239,36 @@ export default class Client {
                     case 'group':
                     case 'channel':
                         group_id = data.target_id
-                        sendRet = await bot.pickGroup(group_id).sendMsg(sendMsg, quote)
+                        if (group_id.startsWith(data.bot_self_id)) {
+                            const reply = getQQBotLateseReply(data.target_id)
+                            if (reply) {
+                                reply(sendMsg)
+                            }
+                        } else if (group_id.startsWith('qg_')) {
+                            const msg_id = getGuildLatestMsgId(group_id)
+                            sendMsg.unshift({ type: 'reply', id: msg_id })
+                        } else {
+                            sendRet = await bot.pickGroup(group_id).sendMsg(sendMsg, quote)
+                        }
                         break;
                     case 'direct':
                         user_id = data.target_id
-                        sendRet = await bot.pickFriend(user_id).sendMsg(sendMsg, quote)
+                        if (user_id.startsWith(data.bot_self_id)) {
+                            const reply = getQQBotLateseReply(data.target_id)
+                            if (reply) {
+                                reply(sendMsg)
+                            }
+                        } else if (user_id.startsWith('qg_')) {
+                            const msg_id = getGuildLatestMsgId(user_id)
+                            sendMsg.unshift({ type: 'reply', id: msg_id })
+                        } else {
+                            sendRet = await bot.pickFriend(user_id).sendMsg(sendMsg, quote)
+                        }
                         break;
                     default:
                         break;
                 }
-                if (sendRet.rand) {
+                if (sendRet?.message_id) {
                     setMsg({
                         message_id: sendRet.message_id,
                         time: sendRet.time,

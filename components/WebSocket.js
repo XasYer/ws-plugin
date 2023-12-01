@@ -36,6 +36,11 @@ async function createWebSocket(data) {
     if (typeof client.self_id === 'string') {
         client.self_id = await getUser_id({ user_id: client.self_id })
         client.adapter = adapterName[client.uin?.substring?.(0, 3)]
+    } else {
+        const self_id = String(client.self_id)
+        if (/^(2854|3889)/.test(self_id) && self_id.length === 10) {
+            client.adapter = 'QQBot'
+        }
     }
     setAllSocketList(client)
     if (data.address == 'ws_address') return

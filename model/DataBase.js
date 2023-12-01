@@ -3,7 +3,8 @@ import { saveMessage_id, findMessage_id, existSQL, findUser_id, saveUser_id, fin
 
 let latestMsg = null
 
-let guildLatestMesId = {}
+let guildLatestMsgId = {}
+let QQBotLatestReply = {}
 
 async function getMsg(where, other) {
     if (existSQL) {
@@ -37,11 +38,19 @@ function getLatestMsg() {
 }
 
 function getGuildLatestMsgId(guild_id) {
-    return guildLatestMesId[guild_id]
+    return guildLatestMsgId[guild_id]
 }
 
 function setGuildLatestMsgId(message_id, guild_id) {
-    guildLatestMesId[guild_id] = message_id
+    guildLatestMsgId[guild_id] = message_id
+}
+
+function getQQBotLateseReply(group_id) {
+    return QQBotLatestReply[group_id]
+}
+
+function setQQBotLateseReply(reply, group_id) {
+    QQBotLatestReply[group_id] = reply
 }
 
 async function getUser_id(where) {
@@ -82,6 +91,8 @@ export {
     getLatestMsg,
     getGuildLatestMsgId,
     setGuildLatestMsgId,
+    getQQBotLateseReply,
+    setQQBotLateseReply,
     getUser_id,
     getGroup_id
 }
