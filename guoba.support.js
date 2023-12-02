@@ -108,7 +108,7 @@ export function supportGuoba() {
           },
         },
         {
-          field: 'ws.redSendForwardMsgType',
+          field: 'msg.redSendForwardMsgType',
           label: 'red伪造转发',
           bottomHelpMessage: '可选: 1:伪造转发 2:陆续发送 3:合并发送 4:图片方式',
           component: 'RadioGroup',
