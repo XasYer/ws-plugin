@@ -121,7 +121,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
             } else {
                 if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
             }
-            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+            logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送群聊消息
         'send_group_msg': async (params) => {
@@ -132,7 +132,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
             } else {
                 if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
             }
-            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+            logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送消息
         'send_msg': async (params) => {
@@ -152,7 +152,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                     if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
                 }
             }
-            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+            logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 获取消息
         'get_msg': async (params) => {
@@ -224,7 +224,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                 sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
             }
             sendRet.forward_id = forward_id
-            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+            logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送合并转发 ( 群聊 )
         'send_group_forward_msg': async (params) => {
@@ -239,7 +239,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
             }
             sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
             sendRet.forward_id = forward_id
-            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+            logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送合并转发 ( 好友 )
         'send_private_forward_msg': async (params) => {
@@ -254,7 +254,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
             }
             sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
             sendRet.forward_id = forward_id
-            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+            logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 获取群消息历史记录
         'get_group_msg_history': async params => {
@@ -949,7 +949,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                 }
             })
             await bot.pickGroup?.(`qg_${params.guild_id}-${params.channel_id}`)?.sendMsg?.(sendMsg)
-            logger.mark(`[ws-plugin] 连接名字:${name} 处理完成`)
+            logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         'get_guild_service_profile': async params => {
             ResponseData = {
