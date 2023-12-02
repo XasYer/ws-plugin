@@ -279,7 +279,7 @@ export default class Client {
                         onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
                     })
                 }
-                logger.mark(`[ws-plugin] 连接名字:${this.name} 处理完成`)
+                logger.info(`[ws-plugin] 连接名字:${this.name} 处理完成`)
             }
         })
 
