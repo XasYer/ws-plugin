@@ -108,6 +108,18 @@ export function supportGuoba() {
           },
         },
         {
+          field: 'msg.renderScale',
+          label: '图片渲染精度',
+          bottomHelpMessage: '设置高精度会提高图片的精细度，但因图片较大可能会影响渲染与发送速度',
+          component: 'InputNumber',
+          required: true,
+          componentProps: {
+            min: 50,
+            max: 200,
+            placeholder: '请输入图片渲染精度',
+          },
+        },
+        {
           component: 'Divider',
           label: '上报设置'
         },

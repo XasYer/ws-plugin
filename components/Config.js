@@ -61,7 +61,7 @@ class Config {
   }
 
   /** 云崽黑名单QQ */
-  get blackQQ(){
+  get blackQQ() {
     return cfg.getOther().blackQQ
   }
 
@@ -133,8 +133,13 @@ class Config {
   }
 
   /** red 发送伪造转发消息方式 */
-  get redSendForwardMsgType(){
+  get redSendForwardMsgType() {
     return this.getDefOrConfig('msg-config').redSendForwardMsgType
+  }
+
+  /** 渲染精度 */
+  get renderScale() {
+    return this.getDefOrConfig('msg-config').renderScale
   }
 
   /**群管理员变动是否上报 */
