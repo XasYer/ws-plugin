@@ -1,8 +1,7 @@
-import { Version } from '../components/index.js'
+import { Version, Config } from '../components/index.js'
 
 function scale(pct = 1) {
-  let scale = 100
-  scale = Math.min(2, Math.max(0.5, scale / 100))
+  let scale = Math.min(2, Math.max(0.5, Config.renderScale / 100))
   pct = pct * scale
   return `style=transform:scale(${pct})`
 }

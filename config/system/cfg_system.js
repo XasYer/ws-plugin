@@ -97,7 +97,16 @@ export const cfgSchema = {
         def: 600,
         desc: '用于撤回和回复消息,如果超过时间去获取就会获取不到,单位秒,0不存储',
         fileName: 'msg-config'
-      }
+      },
+      renderScale: {
+        title: '渲染精度',
+        key: '渲染',
+        type: 'num',
+        def: 100,
+        input: (n) => Math.min(200, Math.max(50, (n * 1 || 100))),
+        desc: '可选值50~200，建议100。设置高精度会提高图片的精细度，但因图片较大可能会影响渲染与发送速度',
+        fileName: 'msg-config'
+      },
     }
   },
   notice: {
