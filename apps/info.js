@@ -25,21 +25,27 @@ export class info extends plugin {
     }
     async getId(e) {
         const user_id = await getUser_id({ user_id: e.user_id })
-        const group_id = await getGroup_id({ group_id: e.group_id })
-        e.reply([
-            '',
-            '群真实id:',
-            e.group_id,
-            '',
-            '群虚拟id:',
-            group_id,
+        const msg = [
             '',
             '用户真实id:',
             e.user_id,
             '',
             '用户虚拟id:',
             user_id,
-        ].join('\n'), false, { at: true })
+        ]
+        if (e.group_id) {
+            const group_id = await getGroup_id({ group_id: e.group_id })
+            msg.push(...[
+                '',
+                '群真实id:',
+                e.group_id,
+                '',
+                '群虚拟id:',
+                group_id,
+    
+            ])
+        }
+        e.reply(msg.join('\n'), false, { at: true })
         return true
     }
 
@@ -55,7 +61,11 @@ export class info extends plugin {
         const custom = target[0]
         let result
         if (type === 'group_id') {
-            result = await setGroup_id(where, custom)
+            if (where[type]) {
+                result = await setGroup_id(where, custom)
+            } else {
+                result = '修改失败,未包含群真实id'
+            }
         } else {
             result = await setUser_id(where, custom)
         }
