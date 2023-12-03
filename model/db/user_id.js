@@ -1,6 +1,6 @@
-import { sequelize, DataTypes, executeSync } from './base.js'
+import { sequelize, DataTypes, executeSync, Op } from './base.js'
 
-const user_id_table = sequelize.define('user_id', {
+let user_id_table = sequelize.define('user_id', {
     id: {
         type: DataTypes.BIGINT,
         primaryKey: true,
@@ -10,6 +10,26 @@ const user_id_table = sequelize.define('user_id', {
 })
 
 await sequelize.sync()
+
+async function checkColumn() {
+    const attributes = await sequelize.queryInterface.describeTable('user_ids')
+    if (!attributes.custom) {
+        await sequelize.queryInterface.addColumn('user_ids', 'custom', {
+            type: DataTypes.STRING,
+        })
+    }
+    user_id_table = sequelize.define('user_id', {
+        id: {
+            type: DataTypes.BIGINT,
+            primaryKey: true,
+            autoIncrement: true,
+        },
+        user_id: DataTypes.STRING,
+        custom: DataTypes.STRING
+    })
+    await sequelize.sync()
+}
+await checkColumn()
 
 async function saveUser_id(user_id) {
     return executeSync(async () => {
@@ -23,6 +43,17 @@ async function saveUser_id(user_id) {
 }
 
 async function findUser_id(where, order = [['createdAt', 'DESC']]) {
+    if (where.custom) {
+        where = {
+            [Op.or]: [
+                { id: where.custom },
+                { custom: where.custom }
+            ],
+            user_id: {
+                [Op.like]: (where.like || '') + '%'
+            }
+        }
+    }
     return executeSync(async () => {
         const result = await user_id_table.findOne({
             where,
@@ -32,8 +63,19 @@ async function findUser_id(where, order = [['createdAt', 'DESC']]) {
     });
 }
 
+async function updateUser_id(where, custom) {
+    return executeSync(async () => {
+        const result = await user_id_table.update({
+            custom: custom
+        }, {
+            where
+        });
+        return result;
+    });
+}
 
 export {
     saveUser_id,
-    findUser_id
+    findUser_id,
+    updateUser_id
 }
