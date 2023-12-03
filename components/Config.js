@@ -141,6 +141,11 @@ class Config {
   get renderScale() {
     return this.getDefOrConfig('msg-config').renderScale
   }
+  
+  /** 数据库同步锁 */
+  get taskQueue(){
+    return this.getDefOrConfig('msg-config').taskQueue
+  }
 
   /**群管理员变动是否上报 */
   get groupAdmin() {

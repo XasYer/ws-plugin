@@ -36,3 +36,6 @@ redSendForwardMsgType: 1
 
 # 图片渲染精度
 renderScale: 100
+
+# 数据库同步锁最多可同时执行多少次
+taskQueue: 1
