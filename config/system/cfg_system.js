@@ -107,6 +107,21 @@ export const cfgSchema = {
         desc: '可选值50~200，建议100。设置高精度会提高图片的精细度，但因图片较大可能会影响渲染与发送速度',
         fileName: 'msg-config'
       },
+      taskQueue: {
+        title: '数据库同步锁',
+        key: '同步',
+        type: 'num',
+        input: (n) => {
+          if (n >= 0) {
+            return n * 1
+          } else {
+            return 1
+          }
+        },
+        def: 1,
+        desc: '数据库同步锁,设置同时可执行的数据库操作最大次数,改动此项需要重启,0为关闭同步锁',
+        fileName: 'msg-config'
+      }
     }
   },
   notice: {

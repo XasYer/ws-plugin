@@ -1,5 +1,8 @@
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url'
+import TaskQueue from './TaskQueue.js';
+import fs from 'fs'
+import YAML from 'yaml'
 
 let Sequelize, DataTypes, sequelize, Op, existSQL = true
 try {
@@ -33,32 +36,38 @@ try {
     DataTypes = {};
 }
 
-let lock = Promise.resolve()
-let shouldCancel = false;
-
-function executeSync(callback) {
-    let _lock = lock;
-
-    lock = new Promise((resolve, reject) => {
-        _lock.then(async () => {
-            if (shouldCancel) {
-                reject('Cancelled');
-                return;
-            }
-            try {
-                const result = await callback();
-                resolve(result);
-            } catch (error) {
-                logger.error('[ws-plugin] callback', error)
-                reject(error);
-            }
-        }).catch(error => {
-            logger.error('[ws-plugin] promise', error);
-        });
-    });
-
-    return lock;
+// ReferenceError: Cannot access 'Config' before initialization 呜呜
+function getConfig(key) {
+    let defConfig, config
+    try {
+        defConfig = YAML.parse(
+            fs.readFileSync('./plugins/ws-plugin/config/default_config/msg-config.yaml', 'utf8')
+        )[key]
+        config = YAML.parse(
+            fs.readFileSync('./plugins/ws-plugin/config/config/msg-config.yaml', 'utf8')
+        )[key]
+        config = Number(config)
+    } catch (error) { }
+    return typeof config === 'number' ? config : defConfig
 }
+const taskQueueConfig = getConfig('taskQueue')
+let shouldCancel = false;
+let executeSync
+
+if (taskQueueConfig > 0) {
+    const taskQueue = new TaskQueue(taskQueueConfig);
+    executeSync = (callback) => {
+        if (shouldCancel) {
+            return Promise.reject('Cancelled');
+        }
+        return taskQueue.runTask(callback);
+    }
+} else {
+    executeSync = (callback) => {
+        return callback()
+    }
+}
+
 
 
 function resetLock() {
