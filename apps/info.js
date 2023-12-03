@@ -11,7 +11,7 @@ export class info extends plugin {
             priority: 1,
             rule: [
                 {
-                    reg: '^#ws(me|id|ID)$',
+                    reg: '^#ws[_-]?(me|id|ID)$',
                     fnc: 'getId'
                 },
                 {
@@ -26,7 +26,6 @@ export class info extends plugin {
     async getId(e) {
         const user_id = await getUser_id({ user_id: e.user_id })
         const msg = [
-            '',
             '用户真实id:',
             e.user_id,
             '',
@@ -45,7 +44,7 @@ export class info extends plugin {
     
             ])
         }
-        e.reply(msg.join('\n'), false, { at: true })
+        e.reply(msg.join('\n'), true)
         return true
     }
 
