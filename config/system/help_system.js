@@ -47,6 +47,26 @@ export const helpList = [
     ]
   },
   {
+    "group": "用户信息",
+    "list": [
+      {
+        "icon": 67,
+        "title": "#wsid",
+        "desc": "查看自己的虚拟id和真实id"
+      },
+      {
+        "icon": 68,
+        "title": "#ws修改id 654321 qg_123",
+        "desc": "将用户qg_123的真实id对应的虚拟id修改为654321"
+      },
+      {
+        "icon": 69,
+        "title": "#ws修改群id 234567",
+        "desc": "修改当前群的虚拟id为234567,不带群id或用户id则默认当前群或用户"
+      },
+    ]
+  },
+  {
     "group": "其他设置",
     "list": [
       {

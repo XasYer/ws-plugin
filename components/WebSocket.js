@@ -8,14 +8,38 @@ let sendSocketList = []
 let allSocketList = []
 
 const adapterName = {
-    'qg_': 'QQ频道Bot',
-    'wx_': '微信Bot',
-    'wxi': 'ComWeChat',
-    'mv_': '米游社大别野Bot',
-    'ko_': 'KOOKBot',
-    'tg_': 'TelegramBot',
-    'dc_': 'DiscordBot',
-    'std': 'stdin'
+    'qg_': {
+        name: 'QQ频道Bot',
+        like: 'qg_'
+    },
+    'wx_': {
+        name: '微信Bot',
+        like: 'wx_'
+    },
+    'wxi': {
+        name: 'ComWeChat',
+        like: 'wxi'
+    },
+    'mv_': {
+        name: '米游社大别野Bot',
+        like: 'mv_'
+    },
+    'ko_': {
+        name: 'KOOKBot',
+        like: 'ko_'
+    },
+    'tg_': {
+        name: 'TelegramBot',
+        like: 'tg_'
+    },
+    'dc_': {
+        name: 'DiscordBot',
+        like: 'dc_'
+    },
+    'std': {
+        name: 'stdin',
+        like: 'std'
+    }
 }
 
 async function createWebSocket(data) {
@@ -40,7 +64,10 @@ async function createWebSocket(data) {
     } else {
         const self_id = String(client.self_id)
         if (/^(2854|3889)/.test(self_id) && self_id.length === 10) {
-            client.adapter = 'QQBot'
+            client.adapter = {
+                name: 'QQBot',
+                like: self_id
+            }
         }
     }
     setAllSocketList(client)

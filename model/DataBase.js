@@ -1,5 +1,15 @@
 import { Config } from "../components/index.js"
-import { saveMessage_id, findMessage_id, existSQL, findUser_id, saveUser_id, findGroup_id, saveGroup_id } from './db/index.js'
+import {
+    saveMessage_id,
+    findMessage_id,
+    existSQL,
+    findUser_id,
+    saveUser_id,
+    updateUser_id,
+    findGroup_id,
+    saveGroup_id,
+    updateGroup_id
+} from './db/index.js'
 
 let latestMsg = null
 
@@ -63,10 +73,22 @@ async function getUser_id(where) {
     let data = await findUser_id(where)
     if (!data) data = await saveUser_id(where.user_id)
     if (where.user_id) {
-        return data.id
+        return data.custom || data.id
     } else {
         return data.user_id
     }
+}
+
+async function setUser_id(where, custom) {
+    const user_id = Number(custom)
+    if (isNaN(user_id)) {
+        return '输入有误,ID应为纯数字'
+    }
+    const result = await updateUser_id(where, user_id)
+    if (result[0]) {
+        return `修改成功~\n${where.user_id} => ${custom}`
+    }
+    return '修改失败,未包含此ID'
 }
 
 async function getGroup_id(where) {
@@ -79,10 +101,22 @@ async function getGroup_id(where) {
     let data = await findGroup_id(where)
     if (!data) data = await saveGroup_id(where.group_id)
     if (where.group_id) {
-        return data.id
+        return data.custom || data.id
     } else {
         return data.group_id
     }
+}
+
+async function setGroup_id(where, custom) {
+    const group_id = Number(custom)
+    if (isNaN(group_id)) {
+        return '输入有误,ID应为纯数字'
+    }
+    const result = await updateGroup_id(where, group_id)
+    if (result[0]) {
+        return `修改成功~\n${where.group_id} => ${custom}`
+    }
+    return '修改失败,未包含此ID'
 }
 
 export {
@@ -94,5 +128,7 @@ export {
     getQQBotLateseReply,
     setQQBotLateseReply,
     getUser_id,
-    getGroup_id
+    setUser_id,
+    getGroup_id,
+    setGroup_id
 }
