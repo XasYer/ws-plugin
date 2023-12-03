@@ -35,6 +35,10 @@ export class getMemberList extends plugin {
             await sleep(1000)
         }
         const group_id = e.msg.replace(/^#ws获取群成员列表/, '') || e.group_id
+        if (!group_id) {
+            e.reply('获取失败,未携带群号')
+            return true
+        }
         const result = await e.bot.sendApi('POST', 'group/getMemberList', JSON.stringify({ group: group_id, size: 9999 }))
         const msg = []
         if (result.length > 0) {
