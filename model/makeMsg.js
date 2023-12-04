@@ -1,6 +1,6 @@
 import { Config, Version } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
-import { getMsg, setMsg, getGuildLatestMsgId } from './DataBase.js'
+import { getMsg, setMsg, getUser_id, getGuildLatestMsgId } from './DataBase.js'
 import { SendMusicShare, TMP_DIR, decodeHtml } from './tool.js'
 import common from '../../../lib/common/common.js'
 import { randomUUID } from 'crypto'
@@ -197,7 +197,7 @@ async function makeSendMsg(params, uin, adapter) {
     let msg = params.message
     if (typeof msg == 'string') msg = CQToMsg(msg)
     let target, uid, sendMsg = [], quote = null
-    switch (adapter) {
+    switch (adapter?.name) {
         case 'QQ频道Bot':
             sendMsg.push({ type: 'reply', id: getGuildLatestMsgId(params.group_id || params.user_id) })
             break;
@@ -205,6 +205,19 @@ async function makeSendMsg(params, uin, adapter) {
             break;
     }
     for (const i of msg) {
+        if (i.data.file) {
+            let file = decodeURIComponent(i.data.file)
+            if (file.startsWith('file:///')) {
+                if (fs.existsSync(file.replace('file:///', ''))) {
+                    file = fs.readFileSync(file.replace('file:///', ''))
+                } else
+                    // 有可能是linux
+                    if (fs.existsSync(file.replace('file://', ''))) {
+                        file = fs.readFileSync(file.replace('file://', ''))
+                    }
+            }
+            i.data.file = file
+        }
         switch (i.type) {
             case 'reply':
                 if (i.data.text) {
@@ -224,17 +237,22 @@ async function makeSendMsg(params, uin, adapter) {
                 }
                 break
             case 'image':
-                sendMsg.push(segment.image(decodeURIComponent(i.data.file)))
+                sendMsg.push(segment.image(i.data.file))
                 break
             case 'text':
                 let text = decodeHtml(i.data.text)
                 sendMsg.push(text)
                 break
             case 'at':
-                sendMsg.push(segment.at(Number(i.data.qq) || 'all'))
+                let qq = i.data.qq
+                if (adapter?.name) {
+                    if (qq != 'all') {
+                        qq = await getUser_id({ custom: qq, like: adapter.like })
+                    }
+                }
+                sendMsg.push(segment.at(qq))
                 break
             case 'video':
-                i.data.file = decodeURIComponent(i.data.file)
                 if (i.data.file.startsWith('http')) {
                     const path = TMP_DIR + '/' + randomUUID({ disableEntropyCache: true }) + '.mp4'
                     if (await common.downFile(i.data.file, path)) {
@@ -276,7 +294,7 @@ async function makeSendMsg(params, uin, adapter) {
                 await bot.pickGroup(params.group_id)?.pokeMember?.(Number(i.data.qq))
                 break
             case 'record':
-                sendMsg.push(segment.record(decodeURIComponent(i.data.file)))
+                sendMsg.push(segment.record(i.data.file))
                 break
             case 'face':
                 sendMsg.push(segment.face(i.data.id))
@@ -377,7 +395,6 @@ async function msgToOneBotMsg(msg, source = null) {
             return obj
         }, {});
         const replyMsg = await getMsg(getData)
-        logger.debug('[ws-plugin]', 'getSourceKey', getData, 'getSourceResult', replyMsg)
         if (replyMsg) {
             reportMsg.push({
                 "type": "reply",
@@ -390,10 +407,14 @@ async function msgToOneBotMsg(msg, source = null) {
     for (let i = 0; i < msg.length; i++) {
         switch (msg[i].type) {
             case 'at':
+                let qq = msg[i].qq
+                if (qq != 'all') {
+                    qq = await getUser_id({ user_id: qq })
+                }
                 reportMsg.push({
                     "type": "at",
                     "data": {
-                        "qq": msg[i].qq
+                        "qq": qq
                     }
                 })
                 break

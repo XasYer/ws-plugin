@@ -9,7 +9,7 @@ import { Version, Render } from '../components/index.js'
 import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
 import { getMsg, setMsg, getGuildLatestMsgId, getQQBotLateseReply, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
 
-async function getApiData(api, params = {}, name, uin, adapter, other) {
+async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
     const bot = Bot[uin] || Bot
     let sendRet = null
     let ResponseData = null
@@ -114,7 +114,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
 
         // 发送私聊消息
         'send_private_msg': async (params) => {
-            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter?.name)
+            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (adapter?.name == 'QQBot') {
                 const reply = getQQBotLateseReply(params.user_id)
                 if (reply) await reply(sendMsg)
@@ -125,7 +125,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         },
         // 发送群聊消息
         'send_group_msg': async (params) => {
-            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter?.name)
+            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (adapter?.name == 'QQBot') {
                 const reply = getQQBotLateseReply(params.group_id)
                 reply(sendMsg)
@@ -136,7 +136,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         },
         // 发送消息
         'send_msg': async (params) => {
-            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter?.name)
+            let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (params.message_type == 'group' || params.group_id) {
                 if (adapter?.name == 'QQBot') {
                     const reply = getQQBotLateseReply(params.group_id)
@@ -209,7 +209,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         },
         // 发送合并转发
         'send_forward_msg': async (params) => {
-            let forwardMsg = await makeForwardMsg(params, uin, adapter?.name)
+            let forwardMsg = await makeForwardMsg(params, uin, adapter)
             let forward_id
             if (typeof (forwardMsg.data) === 'object') {
                 let detail = forwardMsg.data?.meta?.detail
@@ -228,7 +228,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         },
         // 发送合并转发 ( 群聊 )
         'send_group_forward_msg': async (params) => {
-            let forwardMsg = await makeForwardMsg(params, uin, adapter?.name)
+            let forwardMsg = await makeForwardMsg(params, uin, adapter)
             let forward_id
             if (typeof (forwardMsg.data) === 'object') {
                 let detail = forwardMsg.data?.meta?.detail
@@ -243,7 +243,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
         },
         // 发送合并转发 ( 好友 )
         'send_private_forward_msg': async (params) => {
-            let forwardMsg = await makeForwardMsg(params, uin, adapter?.name)
+            let forwardMsg = await makeForwardMsg(params, uin, adapter)
             let forward_id
             if (typeof (forwardMsg.data) === 'object') {
                 let detail = forwardMsg.data?.meta?.detail
@@ -880,7 +880,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                                 if (!Array.isArray(operation.reply)) {
                                     operation.reply = [{ type: 'text', data: { text: operation.reply } }]
                                 }
-                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin, adapter?.name)
+                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin, adapter)
                                 if (operation.at_sender) {
                                     sendMsg.unshift(segment.at(context.user_id))
                                 }
@@ -907,7 +907,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
                                 if (!Array.isArray(operation.reply)) {
                                     operation.reply = [{ type: 'text', data: { text: operation.reply } }]
                                 }
-                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin, adapter?.name)
+                                let { sendMsg, quote } = await makeSendMsg({ message: operation.reply }, uin, adapter)
                                 await bot.pickFriend?.(context.user_id).sendMsg?.(sendMsg, quote)
                             }
                             break
@@ -941,7 +941,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other) {
 
 
         'send_guild_channel_msg': async params => {
-            let { sendMsg } = await makeSendMsg(params, uin, adapter?.name)
+            let { sendMsg } = await makeSendMsg(params, uin, adapter)
             sendMsg.unshift({
                 type: 'reply',
                 data: {
