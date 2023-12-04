@@ -374,7 +374,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
         'get_group_info': async params => {
             const group = await bot.pickGroup(params.group_id)
             ResponseData = await group.info || await group.info?.() || await group.getInfo?.()
-            ResponseData.group_id = await getGroup_id({ group_id: ResponseData.group_id })
+            ResponseData.group_id = await getGroup_id({ group_id: params.group_id })
             if (ResponseData.group_name) {
                 ResponseData.group_memo = ResponseData.group_name
             }
