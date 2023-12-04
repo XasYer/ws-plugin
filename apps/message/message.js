@@ -1,5 +1,5 @@
 import { sendSocketList, Config, Version } from '../../components/index.js'
-import { makeOneBotReportMsg, makeGSUidReportMsg, setGuildLatestMsgId, setQQBotLateseReply, setMsg, getGroup_id, getUser_id } from '../../model/index.js'
+import { makeOneBotReportMsg, makeGSUidReportMsg, setLatestMsg, setMsg, getGroup_id, getUser_id } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
 
@@ -50,7 +50,7 @@ Bot.on('message', async e => {
     const message_id = Math.floor(Math.random() * Math.pow(2, 32)) | 0
     const self_id = await getUser_id({ user_id: e.self_id })
     const user_id = await getUser_id({ user_id: e.user_id })
-    const time = (new Date(e.time)).getTime() || Date.now() / 1000
+    const time = (new Date(e.time)).getTime() || Math.floor(Date.now() / 1000)
     let msg = {
         time: e.time,
         message_id: e.message_id,
@@ -80,10 +80,8 @@ Bot.on('message', async e => {
             },
         }
     }
-    if (e.guild_id) {
-        setGuildLatestMsgId(e.message_id, e.group_id || e.user_id)
-    } else if (e.bot?.adapter?.id === 'QQBot') {
-        setQQBotLateseReply(e.reply, e.group_id || e.user_id)
+    if (e.guild_id || e.bot?.adapter?.id === 'QQBot' || e.bot?.adapter?.id === 'QQGuild' || e.adapter == 'QQBot' || e.adapter == 'QQGuild') {
+        setLatestMsg(e.group_id || e.user_id, { time, message_id: e.message_id, reply: e.reply })
     }
     let userInfo
     //增加isGroup e.isPrivate

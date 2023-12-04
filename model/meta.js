@@ -1,5 +1,4 @@
-import { Config, Version } from '../components/index.js'
-import { getLatestMsg } from './DataBase.js'
+import { Config } from '../components/index.js'
 /**
  * 生命周期
  * @param {*} socket 
@@ -19,34 +18,12 @@ function lifecycle(uin) {
  * @param {*} socket 
  */
 function heartbeat(uin) {
-    let latestMsg = getLatestMsg()
-    let time = 0
-    if (latestMsg) {
-        time = latestMsg.time
-    }
-    let status
-    if (Version.isTrss) {
-        status = {
-            online: true,
-            good: true,
-            stat: {}
-        }
-    } else {
-        status = {
-            online: Bot.isOnline(),
-            good: Bot.isOnline(),
-            stat: {
-                packet_receivend: Bot.stat.recv_pkt_cnt,
-                packet_send: Bot.stat.sent_pkt_cnt,
-                packet_lost: Bot.stat.lost_pkt_cnt,
-                message_received: Bot.stat.recv_msg_cnt,
-                message_send: Bot.stat.sent_msg_cnt,
-                disconnect_times: 0,
-                lost_times: Bot.stat.lost_times,
-                last_message_time: time
-            }
-
-        }
+    const status = {
+        app_good: true,
+        online: true,
+        good: true,
+        // 不想统计了,有问题再说
+        stat: {}
     }
     return JSON.stringify({
         time: Date.parse(new Date()) / 1000,

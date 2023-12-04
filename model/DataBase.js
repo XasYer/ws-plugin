@@ -11,7 +11,7 @@ import {
     updateGroup_id
 } from './db/index.js'
 
-let latestMsg = null
+let latestMsg = {}
 
 let guildLatestMsgId = {}
 let QQBotLatestReply = {}
@@ -40,27 +40,31 @@ async function setMsg(value) {
             await redis.set(`Yz:ws-plugin:msg:${value.message_id}`, JSON.stringify(value), { EX })
         }
     }
-    latestMsg = value
 }
 
-function getLatestMsg() {
-    return latestMsg
+/**
+ * 小于五分钟才会返回
+ * @param {*} id 
+ * @returns 
+ */
+function getLatestMsg(id) {
+    const data = latestMsg[id]
+    if (data && Math.floor(Date.now() / 1000) - data.time < 5 * 60) {
+        return data
+    }
+    return null
 }
 
-function getGuildLatestMsgId(guild_id) {
-    return guildLatestMsgId[guild_id]
-}
-
-function setGuildLatestMsgId(message_id, guild_id) {
-    guildLatestMsgId[guild_id] = message_id
-}
-
-function getQQBotLateseReply(group_id) {
-    return QQBotLatestReply[group_id]
-}
-
-function setQQBotLateseReply(reply, group_id) {
-    QQBotLatestReply[group_id] = reply
+/**
+ * 设置对应的id的最新数据
+ * @param {string|number} id 
+ * @param {Object} data 
+ * @param {number} data.time 一般用于QQBot
+ * @param {Function|null} data.reply 一般用于QQBot
+ * @param {string} data.message_id 一般用于QQGuild
+ */
+function setLatestMsg(id, data) {
+    latestMsg[id] = data
 }
 
 async function getUser_id(where) {
@@ -135,10 +139,7 @@ export {
     getMsg,
     setMsg,
     getLatestMsg,
-    getGuildLatestMsgId,
-    setGuildLatestMsgId,
-    getQQBotLateseReply,
-    setQQBotLateseReply,
+    setLatestMsg,
     getUser_id,
     setUser_id,
     getGroup_id,
