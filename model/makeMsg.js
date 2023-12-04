@@ -253,7 +253,7 @@ async function makeSendMsg(params, uin, adapter) {
                         qq = await getUser_id({ custom: qq, like: adapter.user_like })
                     }
                 }
-                sendMsg.push(segment.at(qq))
+                sendMsg.push(segment.at(Number(qq) || String(qq)))
                 break
             case 'video':
                 if (i.data.file.startsWith('http')) {
