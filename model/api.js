@@ -15,10 +15,10 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
     let ResponseData = null
     if (adapter) {
         if (params.user_id && params.user_id != uin) {
-            params.user_id = await getUser_id({ custom: params.user_id, like: adapter.like })
+            params.user_id = await getUser_id({ custom: params.user_id, like: adapter.user_like })
         }
         if (params.group_id) {
-            params.group_id = await getGroup_id({ custom: params.group_id, like: adapter.like })
+            params.group_id = await getGroup_id({ custom: params.group_id, like: adapter.group_like })
         }
     }
     let publicApi = {
@@ -876,9 +876,9 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
         '.handle_quick_operation': async ({ context, operation }) => {
             if (adapter) {
                 if (context.user_id != uin) {
-                    context.user_id = await getUser_id({ custom: context.user_id, like: adapter.like })
+                    context.user_id = await getUser_id({ custom: context.user_id, like: adapter.user_like })
                 }
-                context.group_id = await getGroup_id({ custom: context.group_id, like: adapter.like })
+                context.group_id = await getGroup_id({ custom: context.group_id, like: adapter.group_like })
             }
             switch (context.post_type) {
                 case 'message':

@@ -250,7 +250,7 @@ async function makeSendMsg(params, uin, adapter) {
                 let qq = i.data.qq
                 if (adapter?.name) {
                     if (qq != 'all') {
-                        qq = await getUser_id({ custom: qq, like: adapter.like })
+                        qq = await getUser_id({ custom: qq, like: adapter.user_like })
                     }
                 }
                 sendMsg.push(segment.at(qq))

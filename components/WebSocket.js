@@ -9,35 +9,43 @@ let allSocketList = []
 const adapterName = {
     'qg_': {
         name: 'QQ频道Bot',
-        like: 'qg_'
+        user_like: 'qg_%',
+        group_like: 'qg_%'
     },
     'wx_': {
         name: '微信Bot',
-        like: 'wx_'
+        user_like: 'wx_%',
+        group_like: 'wx_%'
     },
     'wxi': {
         name: 'ComWeChat',
-        like: 'wxi'
+        user_like: 'wxid_%',
+        group_like: '%@chatroom'
     },
     'mv_': {
         name: '米游社大别野Bot',
-        like: 'mv_'
+        user_like: 'mv_%',
+        group_like: 'mv_%'
     },
     'ko_': {
         name: 'KOOKBot',
-        like: 'ko_'
+        user_like: 'ko_%',
+        group_like: 'ko_%'
     },
     'tg_': {
         name: 'TelegramBot',
-        like: 'tg_'
+        user_like: 'tg_%',
+        group_like: 'tg_%'
     },
     'dc_': {
         name: 'DiscordBot',
-        like: 'dc_'
+        user_like: 'dc_%',
+        group_like: 'dc_%'
     },
     'std': {
         name: 'stdin',
-        like: 'std'
+        user_like: 'std%',
+        group_like: 'std%'
     }
 }
 
