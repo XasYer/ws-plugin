@@ -71,7 +71,13 @@ async function getUser_id(where) {
         where.user_id = String(where.user_id)
     }
     let data = await findUser_id(where)
-    if (!data) data = await saveUser_id(where.user_id)
+    if (!data) {
+        if (where.user_id) {
+            data = await saveUser_id(where.user_id)
+        } else {
+            return where.custom || where.id
+        }
+    }
     if (where.user_id) {
         return Number(data.custom) || data.id
     } else {
@@ -99,7 +105,13 @@ async function getGroup_id(where) {
         where.group_id = String(where.group_id)
     }
     let data = await findGroup_id(where)
-    if (!data) data = await saveGroup_id(where.group_id)
+    if (!data) {
+        if (where.group_id) {
+            data = await saveGroup_id(where.group_id)
+        } else {
+            return where.custom || where.id
+        }
+    }
     if (where.group_id) {
         return Number(data.custom) || data.id
     } else {
