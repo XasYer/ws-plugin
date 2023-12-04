@@ -7,7 +7,7 @@ import common from '../../../lib/common/common.js'
 import Runtime from '../../../lib/plugins/runtime.js'
 import { Version, Render } from '../components/index.js'
 import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
-import { getMsg, setMsg, getGuildLatestMsgId, getQQBotLateseReply, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
+import { getMsg, setMsg, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
 
 async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
     const bot = Bot[uin] || Bot
@@ -115,42 +115,53 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
         // 发送私聊消息
         'send_private_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
+            if (sendMsg.length == 0) return
             if (adapter?.name == 'QQBot') {
-                const reply = getQQBotLateseReply(params.user_id)
-                if (reply) await reply(sendMsg)
-            } else {
-                if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
+                const msg = getLatestMsg(params.user_id)
+                if (msg) {
+                    await msg.reply(sendMsg)
+                    return
+                }
             }
+            sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
             logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送群聊消息
         'send_group_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
+            if (sendMsg.length == 0) return
             if (adapter?.name == 'QQBot') {
-                const reply = getQQBotLateseReply(params.group_id)
-                reply(sendMsg)
-            } else {
-                if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
+                const msg = getLatestMsg(params.group_id)
+                if (msg) {
+                    await msg.reply(sendMsg)
+                    return
+                }
             }
+            sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
             logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送消息
         'send_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
+            if (sendMsg.length == 0) return
             if (params.message_type == 'group' || params.group_id) {
                 if (adapter?.name == 'QQBot') {
-                    const reply = getQQBotLateseReply(params.group_id)
-                    if (reply) await reply(sendMsg)
-                } else {
-                    if (sendMsg.length > 0) sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
+                    const msg = getLatestMsg(params.group_id)
+                    if (msg) {
+                        await msg.reply(sendMsg)
+                        return
+                    }
                 }
+                sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
             } else if (params.message_type == 'private' || params.user_id) {
                 if (adapter?.name == 'QQBot') {
-                    const reply = getQQBotLateseReply(params.user_id)
-                    if (reply) await reply(sendMsg)
-                } else {
-                    if (sendMsg.length > 0) sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
+                    const msg = getLatestMsg(params.user_id)
+                    if (msg) {
+                        await msg.reply(sendMsg)
+                        return
+                    }
                 }
+                sendRet = await bot.pickFriend?.(params.user_id).sendMsg?.(sendMsg, quote)
             }
             logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
@@ -942,12 +953,15 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
 
         'send_guild_channel_msg': async params => {
             let { sendMsg } = await makeSendMsg(params, uin, adapter)
-            sendMsg.unshift({
-                type: 'reply',
-                data: {
-                    id: getGuildLatestMsgId(params.group_id)
-                }
-            })
+            const msg = getLatestMsg(params.group_id)
+            if (msg) {
+                sendMsg.unshift({
+                    type: 'reply',
+                    data: {
+                        id: msg.message_id
+                    }
+                })
+            }
             await bot.pickGroup?.(`qg_${params.guild_id}-${params.channel_id}`)?.sendMsg?.(sendMsg)
             logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },

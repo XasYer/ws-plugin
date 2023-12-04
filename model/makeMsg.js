@@ -1,6 +1,6 @@
 import { Config, Version } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
-import { getMsg, setMsg, getUser_id, getGuildLatestMsgId } from './DataBase.js'
+import { getMsg, setMsg, getUser_id, getLatestMsg } from './DataBase.js'
 import { SendMusicShare, TMP_DIR, decodeHtml } from './tool.js'
 import common from '../../../lib/common/common.js'
 import { randomUUID } from 'crypto'
@@ -199,7 +199,10 @@ async function makeSendMsg(params, uin, adapter) {
     let target, uid, sendMsg = [], quote = null
     switch (adapter?.name) {
         case 'QQ频道Bot':
-            sendMsg.push({ type: 'reply', id: getGuildLatestMsgId(params.group_id || params.user_id) })
+            const msg = getLatestMsg(params.group_id || params.user_id)
+            if (msg) {
+                sendMsg.push({ type: 'reply', id: msg.message_id })
+            }
             break;
         default:
             break;
