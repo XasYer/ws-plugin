@@ -999,15 +999,17 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                 ...sendRet,
                 message_id: onebot_id,
             }
-            setMsg({
-                message_id: sendRet.message_id,
-                time: sendRet.time,
-                seq: sendRet.seq,
-                rand: sendRet.rand,
-                user_id: params.user_id,
-                group_id: params.group_id,
-                onebot_id,
-            })
+            if (sendRet.message_id) {
+                setMsg({
+                    message_id: sendRet.message_id,
+                    time: sendRet.time,
+                    seq: sendRet.seq,
+                    rand: sendRet.rand,
+                    user_id: params.user_id,
+                    group_id: params.group_id,
+                    onebot_id,
+                })
+            }
         }
         const del = ['bot', 'group', 'friend', 'member', 'guild', 'channel']
         if (ResponseData) {
