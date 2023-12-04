@@ -43,7 +43,7 @@ export class getMemberList extends plugin {
         const msg = []
         if (result.length > 0) {
             // 先看看有没有已存在
-            const cache = await findAll(e.group_id)
+            const cache = await findAll(group_id)
             if (cache.length > 0) {
                 msg.push(`已删除旧数据: ${cache.length}\n`)
                 // 如果已存在就删除已有的列表
