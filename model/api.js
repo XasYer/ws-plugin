@@ -18,9 +18,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
             params.user_id = await getUser_id({ custom: params.user_id, like: adapter.user_like })
         }
         if (params.group_id) {
-            console.log('group_id', params.group_id);
             params.group_id = await getGroup_id({ custom: params.group_id, like: adapter.group_like })
-            console.log('group_id', params.group_id);
         }
     }
     let publicApi = {
