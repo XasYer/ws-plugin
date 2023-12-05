@@ -222,6 +222,7 @@ async function makeMessage(self_id, payload) {
     if (!payload) return null
     const e = {}
     e.bot = Bot[self_id]
+    e.adapter = e.bot.version
     e.post_type = 'message'
     e.user_id = Number(payload.senderUin)
     if (!e.user_id) return null
