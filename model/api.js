@@ -18,7 +18,9 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
             params.user_id = await getUser_id({ custom: params.user_id, like: adapter.user_like })
         }
         if (params.group_id) {
+            console.log('group_id', params.group_id);
             params.group_id = await getGroup_id({ custom: params.group_id, like: adapter.group_like })
+            console.log('group_id', params.group_id);
         }
     }
     let publicApi = {
@@ -374,6 +376,12 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
         'get_group_info': async params => {
             const group = await bot.pickGroup(params.group_id)
             ResponseData = await group.info || await group.info?.() || await group.getInfo?.()
+            if (!ResponseData) {
+                ResponseData = {
+                    group_id: params.group_id,
+                    group_name: 'QQ群'
+                }
+            }
             ResponseData.group_id = await getGroup_id({ group_id: params.group_id })
             if (ResponseData.group_name) {
                 ResponseData.group_memo = ResponseData.group_name
