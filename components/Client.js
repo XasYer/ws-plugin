@@ -239,35 +239,23 @@ export default class Client {
                     case 'group':
                     case 'channel':
                         group_id = data.target_id
-                        if (group_id.startsWith(data.bot_self_id)) {
+                        if (group_id.startsWith(data.bot_self_id) || group_id.startsWith('qg_')) {
                             const msg = getLatestMsg(group_id)
                             if (msg) {
                                 msg.reply(sendMsg)
                             }
                         } else {
-                            if (group_id.startsWith('qg_')) {
-                                const msg = getLatestMsg(group_id)
-                                if (msg) {
-                                    sendMsg.unshift({ type: 'reply', id: msg.message_id })
-                                }
-                            }
                             sendRet = await bot.pickGroup(group_id).sendMsg(sendMsg, quote)
                         }
                         break;
                     case 'direct':
                         user_id = data.target_id
-                        if (user_id.startsWith(data.bot_self_id)) {
+                        if (user_id.startsWith(data.bot_self_id) || user_id.startsWith('qg_')) {
                             const msg = getLatestMsg(user_id)
                             if (msg) {
                                 msg.reply(sendMsg)
                             }
                         } else {
-                            if (user_id.startsWith('qg_')) {
-                                const msg = getLatestMsg(user_id)
-                                if (msg) {
-                                    sendMsg.unshift({ type: 'reply', id: msg.message_id })
-                                }
-                            }
                             sendRet = await bot.pickFriend(user_id).sendMsg(sendMsg, quote)
                         }
                         break;

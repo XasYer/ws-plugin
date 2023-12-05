@@ -197,16 +197,6 @@ async function makeSendMsg(params, uin, adapter) {
     let msg = params.message
     if (typeof msg == 'string') msg = CQToMsg(msg)
     let target, uid, sendMsg = [], quote = null
-    switch (adapter?.name) {
-        case 'QQ频道Bot':
-            const msg = getLatestMsg(params.group_id || params.user_id)
-            if (msg) {
-                sendMsg.push({ type: 'reply', id: msg.message_id })
-            }
-            break;
-        default:
-            break;
-    }
     for (const i of msg) {
         if (i.data.file) {
             let file = decodeURIComponent(i.data.file)

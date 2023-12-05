@@ -9,37 +9,37 @@ let allSocketList = []
 
 const adapterName = {
     'qg_': {
-        name: 'QQ频道Bot',
+        name: 'QQGuild',
         user_like: 'qg_%',
         group_like: 'qg_%'
     },
     'wx_': {
-        name: '微信Bot',
+        name: 'WeChat',
         user_like: 'wx_%',
         group_like: 'wx_%'
     },
     'wxi': {
-        name: 'ComWeChat',
+        name: 'WeChat',
         user_like: 'wxid_%',
         group_like: '%@chatroom'
     },
     'mv_': {
-        name: '米游社大别野Bot',
+        name: 'mysVilla',
         user_like: 'mv_%',
         group_like: 'mv_%'
     },
     'ko_': {
-        name: 'KOOKBot',
+        name: 'KOOK',
         user_like: 'ko_%',
         group_like: 'ko_%'
     },
     'tg_': {
-        name: 'TelegramBot',
+        name: 'Telegram',
         user_like: 'tg_%',
         group_like: 'tg_%'
     },
     'dc_': {
-        name: 'DiscordBot',
+        name: 'Discord',
         user_like: 'dc_%',
         group_like: 'dc_%'
     },
@@ -72,6 +72,12 @@ async function createWebSocket(data) {
     } else {
         const self_id = String(client.self_id)
         if (/^(2854|3889)/.test(self_id) && self_id.length === 10) {
+            client.adapter = {
+                name: 'QQBot',
+                user_like: self_id + '%',
+                group_like: self_id + '%'
+            }
+        } else if (!Version.isTrss && self_id.startsWith('1020') && self_id.length === 9) {
             client.adapter = {
                 name: 'QQBot',
                 user_like: self_id + '%',
