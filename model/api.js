@@ -14,8 +14,12 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
     let sendRet = null
     let ResponseData = null
     if (adapter) {
-        if (params.user_id && params.user_id != uin) {
-            params.user_id = await getUser_id({ custom: params.user_id, like: adapter.user_like })
+        if (params.user_id) {
+            if (params.user_id == uin && adapter.name == 'QQBot') {
+                params.user_id = String(params.user_id)
+            } else {
+                params.user_id = await getUser_id({ custom: params.user_id, like: adapter.user_like })
+            }
         }
         if (params.group_id) {
             params.group_id = await getGroup_id({ custom: params.group_id, like: adapter.group_like })
