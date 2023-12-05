@@ -90,9 +90,9 @@ Bot.on('message', async e => {
         const group_id = await getGroup_id({ group_id: e.group_id })
         msg.group_id = e.group_id
         msg.param.group_id = group_id
-        userInfo = await e.bot.pickMember(e.group_id, e.user_id)
+        userInfo = await e.bot.pickMember?.(e.group_id, e.user_id)
     } else if (e.message_type == 'private') {
-        userInfo = await e.bot.pickFriend(e.user_id)
+        userInfo = await e.bot.pickFriend?.(e.user_id)
         msg.isPrivate = true
     } else {
         return false

@@ -121,7 +121,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
         'send_private_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (sendMsg.length == 0) return
-            if (adapter?.name == 'QQBot') {
+            if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
                 const msg = getLatestMsg(params.user_id)
                 if (msg) {
                     await msg.reply(sendMsg)
@@ -135,7 +135,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
         'send_group_msg': async (params) => {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (sendMsg.length == 0) return
-            if (adapter?.name == 'QQBot') {
+            if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
                 const msg = getLatestMsg(params.group_id)
                 if (msg) {
                     await msg.reply(sendMsg)
@@ -150,7 +150,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
             let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
             if (sendMsg.length == 0) return
             if (params.message_type == 'group' || params.group_id) {
-                if (adapter?.name == 'QQBot') {
+                if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
                     const msg = getLatestMsg(params.group_id)
                     if (msg) {
                         await msg.reply(sendMsg)
@@ -159,7 +159,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                 }
                 sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
             } else if (params.message_type == 'private' || params.user_id) {
-                if (adapter?.name == 'QQBot') {
+                if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
                     const msg = getLatestMsg(params.user_id)
                     if (msg) {
                         await msg.reply(sendMsg)
@@ -235,11 +235,27 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                 if (match) forward_id = match[1];
             }
             if (params.group_id) {
+                if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+                    const msg = getLatestMsg(params.group_id)
+                    if (msg) {
+                        await msg.reply(forwardMsg)
+                        return
+                    }
+                }
                 sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
             } else if (params.user_id) {
+                if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+                    const msg = getLatestMsg(params.user_id)
+                    if (msg) {
+                        await msg.reply(forwardMsg)
+                        return
+                    }
+                }
                 sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
             }
-            sendRet.forward_id = forward_id
+            if (sendRet && forward_id) {
+                sendRet.forward_id = forward_id
+            }
             logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送合并转发 ( 群聊 )
@@ -253,8 +269,17 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                 let match = forwardMsg.data.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
+            if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+                const msg = getLatestMsg(params.group_id)
+                if (msg) {
+                    await msg.reply(forwardMsg)
+                    return
+                }
+            }
             sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
-            sendRet.forward_id = forward_id
+            if (sendRet && forward_id) {
+                sendRet.forward_id = forward_id
+            }
             logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 发送合并转发 ( 好友 )
@@ -268,8 +293,17 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                 let match = forwardMsg.data.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
+            if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+                const msg = getLatestMsg(params.user_id)
+                if (msg) {
+                    await msg.reply(forwardMsg)
+                    return
+                }
+            }
             sendRet = await bot.pickFriend(params.user_id).sendMsg(forwardMsg)
-            sendRet.forward_id = forward_id
+            if (sendRet && forward_id) {
+                sendRet.forward_id = forward_id
+            }
             logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
         },
         // 获取群消息历史记录

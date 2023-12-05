@@ -21,7 +21,7 @@ OneBot 是一个聊天机器人应用接口标准，旨在统一不同聊天平�
 #### [Miao-Yunzai](https://gitee.com/yoimiya-kokomi/Miao-Yunzai) && [Yunzai-Bot](https://gitee.com/yoimiya-kokomi/Yunzai-Bot) (即将停止对原版云崽的支持)
 
 作为客户端:
-  - onebot v11 (暂未适配 [铃音Lain-plugin](https://gitee.com/Zyy955/Lain-plugin))
+  - onebot v11
     -  反向 WebSocket
     -  正向 WebSocket
     -  正向http
