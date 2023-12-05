@@ -50,7 +50,7 @@ async function findGroup_id(where, order = [['createdAt', 'DESC']]) {
                 { custom: where.custom }
             ],
             group_id: {
-                [Op.like]: where.like || ''
+                [Op.like]: where.like || '%'
             }
         }
     }

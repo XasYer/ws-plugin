@@ -50,7 +50,7 @@ async function findUser_id(where, order = [['createdAt', 'DESC']]) {
                 { custom: where.custom }
             ],
             user_id: {
-                [Op.like]: where.like || ''
+                [Op.like]: where.like || '%'
             }
         }
     }
