@@ -39,6 +39,7 @@ body {
 }
 
 .text {
+    position: relative;
     align-self: flex-start;
     max-width: 100%;
     margin-top: 6px;
@@ -49,9 +50,37 @@ body {
     line-height: 1.5;
 }
 
+.id {
+    position: absolute;
+    right: 10px;
+    bottom: 12px;
+    height: 0px;
+    font-size: 16px;
+    z-index: 1;
+    padding: 0 3px;
+}
+
+
+.id::before {
+    content: "";
+    position: absolute;
+    top: 12px;
+    left: 0;
+    right: 0;
+    border-top: 1px solid white;
+    z-index: -1;
+}
+
 .img {
+    border: 0;
+    position: relative;
     margin-top: 6px;
     width: 460px;
+}
+
+.img .id::before {
+    content: '';
+    border-top: 0;
 }
 
 .text img,
