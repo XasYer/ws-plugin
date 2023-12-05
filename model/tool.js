@@ -169,24 +169,29 @@ function decodeHtml(html) {
     return html;
 }
 
+const htmlCache = {}
+let id = 1
+
 /**
  * 
  * @param {Array} data 
  * @param {*} e 
  * @param {boolean} 是否发送
  */
-async function toHtml(data, e, send = false) {
+async function toHtml(data, e, send = false, isNode = false) {
     let html = []
     if (!Array.isArray(data)) data = [data]
     for (const i of data) {
         let message = '<div class="text">'
+        message += `<span class="id">ID: ${id}</span>`
         let node
         if (typeof i.message === 'string') i.message = { type: 'text', text: i.message }
         if (!Array.isArray(i.message)) i.message = [i.message]
-        let img = 0, text = 0
+        let img = 0, text = 0, OriginalMessage = []
         for (let m of i.message) {
             if (typeof m === 'string') m = { type: 'text', text: m }
             message += '<div>'
+            OriginalMessage.push(m)
             switch (m.type) {
                 case 'text':
                     message += m.text.replace(/\n/g, '<br />')
@@ -197,7 +202,7 @@ async function toHtml(data, e, send = false) {
                     img++
                     break;
                 case 'node':
-                    node = await toHtml(m.data, e)
+                    node = await toHtml(m.data, e, false, true)
                     break
                 default:
                     message += JSON.stringify(m, null, '<br />')
@@ -207,6 +212,8 @@ async function toHtml(data, e, send = false) {
             message += '</div>'
         }
         message += '</div>'
+        htmlCache[id] = OriginalMessage
+        id++
         if (node) {
             html.push(...node)
         } else {
@@ -223,6 +230,13 @@ async function toHtml(data, e, send = false) {
             // 只有一张图片
             if (img === 1 && text === 0) {
                 message = message.replace('<div class="text">', '<div class="img">')
+            }
+            if (!isNode && html.length == 0) {
+                html.push({
+                    avatar: `<img src="${path}" />`,
+                    nickname: i.nickname || e.bot.nickname,
+                    message: `<div class="text"><div>可输入#ws查看+ID 查看对应消息</div></div>`
+                })
             }
             html.push({
                 avatar: `<img src="${path}" />`,
@@ -326,5 +340,6 @@ export {
     mimeTypes,
     decodeHtml,
     toHtml,
+    htmlCache,
     deleteFolder
 }
