@@ -24,6 +24,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
         if (params.group_id) {
             params.group_id = await getGroup_id({ custom: params.group_id, like: adapter.group_like })
         }
+        logger.debug('[ws-plugin]', `api: ${api} user_id: ${params.user_id} group_id: ${params.group_id}`)
     }
     let publicApi = {
         // --------------------------------------------------------

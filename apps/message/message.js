@@ -103,8 +103,6 @@ Bot.on('message', async e => {
     msg = onlyReplyAt(msg)
     if (!msg) return false
     for (const i of sendSocketList) {
-        logger.debug('[ws-plugin]', i.name, 'status', i.status, 'type', i.type, 'uin', i.uin, 'self_id', i.self_id)
-        logger.debug('[ws-plugin]', 'source', JSON.stringify(msg.source))
         if (i.status == 1) {
             let reportMsg = null
             switch (Number(i.type)) {

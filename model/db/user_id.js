@@ -15,7 +15,12 @@ async function checkColumn() {
     const attributes = await sequelize.queryInterface.describeTable('user_ids')
     if (!attributes.custom) {
         await sequelize.queryInterface.addColumn('user_ids', 'custom', {
-            type: DataTypes.STRING,
+            type: DataTypes.BIGINT,
+        })
+    } else {
+        // 我操 为什么要用String类型定义QQ
+        await sequelize.queryInterface.changeColumn('user_ids', 'custom', {
+            type: DataTypes.BIGINT,
         })
     }
     user_id_table = sequelize.define('user_id', {
@@ -25,7 +30,7 @@ async function checkColumn() {
             autoIncrement: true,
         },
         user_id: DataTypes.STRING,
-        custom: DataTypes.STRING
+        custom: DataTypes.BIGINT
     })
     await sequelize.sync()
 }
