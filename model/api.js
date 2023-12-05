@@ -417,23 +417,17 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
             try {
                 ResponseData = await group?.info || await group.info?.() || await group.getInfo?.() || await bot.getGroupMemberInfo?.(group_id, user_id);
             } catch (error) {
-                ResponseData = {
-                    group_id,
-                    user_id,
-                    nickname: 'QQ用户',
-                    card: 'QQ用户',
-                    sex: 'unknown',
-                    age: 0,
-                    area: '',
-                    join_time: 0,
-                    last_sent_time: 0,
-                    level: 1,
-                    role: 'member',
-                    unfriendly: false,
-                    title: '',
-                    title_expire_time: 0,
-                    card_changeable: true,
-                    shut_up_timestamp: 0
+            } finally {
+                if (!ResponseData) {
+                    ResponseData = {
+                        group_id,
+                        user_id,
+                        nickname: 'QQ用户',
+                        card: 'QQ用户',
+                        sex: 'unknown',
+                        last_sent_time: 0,
+                        role: 'member',
+                    }
                 }
             }
             ResponseData.group_id = await getGroup_id({ group_id })
