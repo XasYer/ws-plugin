@@ -1,7 +1,7 @@
 import { join } from 'path'
 import fetch from 'node-fetch'
 import { randomUUID } from 'crypto'
-import { toHtml, TMP_DIR } from './tool.js'
+import { toImg, TMP_DIR } from './tool.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import common from '../../../lib/common/common.js'
 import Runtime from '../../../lib/plugins/runtime.js'

@@ -173,13 +173,16 @@ const htmlCache = {}
 let id = 1
 
 /**
- * 
- * @param {Array} data 
- * @param {*} e 
- * @param {boolean} 是否发送
+ * 将转发消息渲染成图片,data为makeForwordMsg.data
+ * @param {Object} data makeForwordMsg.data 
+ * @param {{user_id:number,nickname:string,reply:function}} e 直接丢e即可
+ * @param {boolean} send 是否发送,默认true
+ * @param {boolean} isNode 默认为false即可
  */
-async function toHtml(data, e, send = false, isNode = false) {
+async function toImg(data, e, send = true, isNode = false) {
     let html = []
+    const user_id = e.bot.uin || e.bot.user_id || e.user_id
+    const nickname = e.bot.nickname || e.nickname
     if (!Array.isArray(data)) data = [data]
     for (const i of data) {
         let message = '<div class="text">'
@@ -202,7 +205,7 @@ async function toHtml(data, e, send = false, isNode = false) {
                     img++
                     break;
                 case 'node':
-                    node = await toHtml(m.data, e, false, true)
+                    node = await toImg(m.data, e, false, true)
                     break
                 default:
                     message += JSON.stringify(m, null, '<br />')
@@ -217,8 +220,8 @@ async function toHtml(data, e, send = false, isNode = false) {
         if (node) {
             html.push(...node)
         } else {
-            let uin = i.uin || (!i.user_id || i.user_id == 88888) ? e.bot.uin : i.user_id
-            if (Array.isArray(uin)) uin = e.bot.uin
+            let uin = i.uin || (!i.user_id || i.user_id == 88888) ? user_id : i.user_id
+            if (Array.isArray(uin)) uin = user_id
             const avatar = i.avatar || `https://q1.qlogo.cn/g?b=qq&s=0&nk=${uin}`
             const path = join(TMP_DIR, `${uin}.png`)
             if (!fs.existsSync(path)) {
@@ -234,13 +237,13 @@ async function toHtml(data, e, send = false, isNode = false) {
             if (!isNode && html.length == 0) {
                 html.push({
                     avatar: `<img src="${path}" />`,
-                    nickname: i.nickname || e.bot.nickname,
+                    nickname: i.nickname || nickname,
                     message: `<div class="text"><div>可输入#ws查看+ID 查看对应消息</div></div>`
                 })
             }
             html.push({
                 avatar: `<img src="${path}" />`,
-                nickname: i.nickname || e.bot.nickname,
+                nickname: i.nickname || nickname,
                 message
             })
         }
@@ -339,7 +342,7 @@ export {
     TMP_DIR,
     mimeTypes,
     decodeHtml,
-    toHtml,
+    toImg,
     htmlCache,
     deleteFolder
 }

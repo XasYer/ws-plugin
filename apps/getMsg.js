@@ -5,8 +5,8 @@ const reg = new RegExp('^#ws查看\s*([0-9]+)$')
 export class getMsg extends plugin {
     constructor() {
         super({
-            name: '[ws-plugin] 用户信息',
-            dsc: '[ws-plugin] 用户信息',
+            name: '[ws-plugin] 查看消息',
+            dsc: '[ws-plugin] 查看消息',
             event: 'message',
             priority: 1,
             rule: [
