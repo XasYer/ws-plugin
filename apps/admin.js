@@ -1,6 +1,6 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { Config, clearWebSocket, initWebSocket, Render, Version, allSocketList, sendSocketList, createWebSocket } from '../components/index.js'
-import { toHtml, resetLock, TMP_DIR } from '../model/index.js'
+import { toImg, resetLock, TMP_DIR } from '../model/index.js'
 import lodash from 'lodash'
 import fs from 'fs'
 import { join } from 'path'
@@ -701,7 +701,7 @@ export class setting extends plugin {
             if (!this.e.isGroup) {
                 await this.reply(msg)
             } else {
-                await toHtml(msg, this.e, true)
+                await toImg(msg, this.e, true)
             }
         } else {
             await this.reply('暂无连接')
