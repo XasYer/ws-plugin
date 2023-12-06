@@ -1,5 +1,5 @@
 import { uploadImg, uploadAudio, uploadVideo, uploadFile, getNtPath, roleMap, redPath } from './tool.js'
-import { TMP_DIR, sleep, toHtml, deleteFolder } from '../tool.js'
+import { TMP_DIR, sleep, toImg, deleteFolder } from '../tool.js'
 import { setMsg, getMsg } from '../DataBase.js'
 import { Config, Version, Render } from '../../components/index.js'
 import { randomBytes } from 'crypto'
@@ -206,7 +206,7 @@ async function makeSendMsg(data, message) {
                         }
                     }
                     data.runtime = new Runtime(data)
-                    return await toHtml(i.data, data, true)
+                    return await toImg(i.data, data, true)
                 }
                 break
             default:
