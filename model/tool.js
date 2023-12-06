@@ -173,13 +173,16 @@ const htmlCache = {}
 let id = 1
 
 /**
- * 将转发消息渲染成图片,data为makeForwordMsg.data
+ * 将转发消息渲染成图片并发送,data为makeForwordMsg.data
  * @param {Object} data makeForwordMsg.data 
  * @param {{user_id:number,nickname:string,reply:function}} e 直接丢e即可
- * @param {boolean} send 是否发送,默认true
- * @param {boolean} isNode 默认为false即可
  */
-async function toImg(data, e, send = true, isNode = false) {
+async function toImg(data, e) {
+    let isNode = false
+    if (e.wsCacheIsNode) {
+        isNode = e.wsCacheIsNode
+        delete e.wsCacheIsNode
+    }
     let html = []
     const user_id = e.bot.uin || e.bot.user_id || e.user_id
     const nickname = e.bot.nickname || e.nickname
@@ -205,7 +208,8 @@ async function toImg(data, e, send = true, isNode = false) {
                     img++
                     break;
                 case 'node':
-                    node = await toImg(m.data, e, false, true)
+                    e.wsCacheIsNode = true
+                    node = await toImg(m.data, e)
                     break
                 default:
                     message += JSON.stringify(m, null, '<br />')
@@ -248,7 +252,7 @@ async function toImg(data, e, send = true, isNode = false) {
             })
         }
     }
-    if (send) {
+    if (!isNode) {
         const configPath = process.cwd() + '/plugins/ws-plugin/resources/chatHistory'
         let config
         if (fs.existsSync(`${configPath}/config.js`)) {
