@@ -121,8 +121,15 @@ async function makeGSUidReportMsg(e) {
         msg_id: String(e.message_id),
         user_id: String(e.user_id),
         user_pm: user_pm,
-        content: message
-    };
+        content: message,
+        sender: {
+            ...e.sender,
+            user_id: String(e.user_id)
+        }
+    }
+    if (e.avatar) {
+        MessageReceive.sender.avatar = avatar
+    }
     if (e.isGroup) {
         MessageReceive.user_type = 'group'
         MessageReceive.group_id = String(e.group_id)
