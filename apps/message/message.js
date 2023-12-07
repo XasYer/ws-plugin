@@ -98,7 +98,10 @@ Bot.on('message', async e => {
         return false
     }
     const avatar = await userInfo?.getAvatarUrl?.()
-    if (avatar) msg.param.avatar = avatar
+    if (avatar) {
+        msg.param.avatar = avatar
+        msg.avatar = avatar
+    }
     // 判断云崽前缀
     msg = onlyReplyAt(msg)
     if (!msg) return false
