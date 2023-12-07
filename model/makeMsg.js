@@ -128,7 +128,7 @@ async function makeGSUidReportMsg(e) {
         }
     }
     if (e.avatar) {
-        MessageReceive.sender.avatar = avatar
+        MessageReceive.sender.avatar = e.avatar
     }
     if (e.isGroup) {
         MessageReceive.user_type = 'group'
