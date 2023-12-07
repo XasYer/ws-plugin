@@ -155,21 +155,28 @@ function reply(e) {
         }
     } else {
         if (e.bot?.version?.name == 'ICQQ') {
-            return async function (massage, quote = false) {
-                let ret
-                if (e.isGroup) {
-                    if (e.group?.sendMsg) {
-                        ret = await e.group.sendMsg(massage, quote)
+            let replyNew
+            if (e.reply) {
+                replyNew = e.reply
+            } else {
+                replyNew = msg => {
+                    if (e.isGroup) {
+                        if (e.group?.sendMsg) {
+                            return e.group.sendMsg(msg)
+                        } else {
+                            return e.bot.pickGroup(e.group_id).sendMsg(msg)
+                        }
                     } else {
-                        ret = await e.bot.pickGroup(e.group_id).sendMsg(massage, quote)
-                    }
-                } else {
-                    if (e.friend?.sendMsg) {
-                        ret = await e.friend.sendMsg(massage, quote)
-                    } else {
-                        ret = await e.bot.pickFriend(e.user_id).sendMsg(massage, quote)
+                        if (e.friend?.sendMsg) {
+                            return e.friend.sendMsg(msg)
+                        } else {
+                            return e.bot.pickFriend(e.user_id).sendMsg(msg)
+                        }
                     }
                 }
+            }
+            return async function () {
+                const ret = await replyNew.apply(this, arguments)
                 if (ret) {
                     setMsg({
                         message_id: ret.message_id,
