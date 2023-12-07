@@ -188,7 +188,7 @@ let id = 1
 
 /**
  * 将转发消息渲染成图片并发送,data为makeForwordMsg.data
- * @param {Object} data makeForwordMsg.data 
+ * @param {Object} data makeForwordMsg.data
  * @param {{user_id:number,nickname:string,reply:function}} e 直接丢e即可
  */
 async function toImg(data, e) {
@@ -201,11 +201,14 @@ async function toImg(data, e) {
     const user_id = e.bot.uin || e.bot.user_id || e.user_id
     const nickname = e.bot.nickname || e.nickname
     if (!Array.isArray(data)) data = [data]
-    for (const i of data) {
+    for (let i of data) {
+        if (!i) continue
+        if (typeof i === 'string') i = { type: 'text', text: i }
         let message = '<div class="text">'
         message += `<span class="id">ID: ${id}</span>`
         let node
-        if (typeof i.message === 'string') i.message = { type: 'text', text: i.message }
+        if (typeof i.message === 'string') i.message = { type: 'text', text: i.message || i.text }
+        if (!i.message) i.message = { ...i }
         if (!Array.isArray(i.message)) i.message = [i.message]
         let img = 0, text = 0, OriginalMessage = []
         for (let m of i.message) {
