@@ -169,6 +169,20 @@ function decodeHtml(html) {
     return html;
 }
 
+const QRCode = await (async function () {
+    try {
+        return await import('qrcode')
+    } catch (error) {
+        return false
+    }
+})()
+
+const toQRCodeRegExp = /https?:\/\/[\w\-_]+(\.[\w\-_]+)+([\w\-\.,@?^=%&:/~\+#]*[\w\-\@?^=%&/~\+#])?/g
+
+async function makeQRCode(data) {
+    return (await QRCode.toDataURL(data)).replace("data:image/png;base64,", "base64://")
+}
+
 const htmlCache = {}
 let id = 1
 
@@ -200,6 +214,15 @@ async function toImg(data, e) {
             OriginalMessage.push(m)
             switch (m.type) {
                 case 'text':
+                    if (QRCode) {
+                        const match = m.text.match(toQRCodeRegExp)
+                        if (match) {
+                            for (const url of match) {
+                                const qrcode = await makeQRCode(url)
+                                m.text = m.text.replace(url, `${url}<br/><img src="${await saveImg(qrcode)}" /><br/>`)
+                            }
+                        }
+                    }
                     message += m.text.replace(/\n/g, '<br />')
                     text++
                     break;
