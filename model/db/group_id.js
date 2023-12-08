@@ -1,4 +1,5 @@
 import { sequelize, DataTypes, executeSync, Op } from './base.js'
+import moment from 'moment'
 
 let group_id_table = sequelize.define('group_id', {
     id: {
@@ -63,6 +64,10 @@ async function findGroup_id(where, order = [['createdAt', 'DESC']]) {
             where,
             order,
         })
+        if (result?.dataValues) {
+            result.dataValues.createdAt = moment(result.dataValues.createdAt).utcOffset(8).format('YYYY-MM-DD HH:mm:ss')
+            result.dataValues.updatedAt = moment(result.dataValues.updatedAt).utcOffset(8).format('YYYY-MM-DD HH:mm:ss')
+        }
         return result?.dataValues
     });
 }
