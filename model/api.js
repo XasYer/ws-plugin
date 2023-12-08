@@ -411,12 +411,16 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
 
         // 获取群信息
         'get_group_info': async params => {
-            const group = await bot.pickGroup(params.group_id)
-            ResponseData = await group.info || await group.info?.() || await group.getInfo?.()
-            if (!ResponseData) {
-                ResponseData = {
-                    group_id: params.group_id,
-                    group_name: 'QQ群'
+            try {
+                const group = await bot.pickGroup(params.group_id)
+                ResponseData = await group.info || await group.info?.() || await group.getInfo?.()
+            } catch (error) {
+            } finally {
+                if (!ResponseData) {
+                    ResponseData = {
+                        group_id: params.group_id,
+                        group_name: 'QQ群'
+                    }
                 }
             }
             ResponseData.group_id = await getGroup_id({ group_id: params.group_id })
@@ -452,8 +456,8 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
         },
         // 获取群成员信息
         'get_group_member_info': async ({ group_id, user_id }) => {
-            const group = await bot.pickGroup(group_id).pickMember(user_id)
             try {
+                const group = await bot.pickGroup(group_id).pickMember(user_id)
                 ResponseData = await group?.info || await group.info?.() || await group.getInfo?.() || await bot.getGroupMemberInfo?.(group_id, user_id);
             } catch (error) {
             } finally {
