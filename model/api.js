@@ -415,6 +415,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                 const group = await bot.pickGroup(params.group_id)
                 ResponseData = await group.info || await group.info?.() || await group.getInfo?.()
             } catch (error) {
+                logger.warn(`[ws-plugin] get_group_info error group_id: ${params.group_id}`)
             } finally {
                 if (!ResponseData) {
                     ResponseData = {
@@ -460,6 +461,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                 const group = await bot.pickGroup(group_id).pickMember(user_id)
                 ResponseData = await group?.info || await group.info?.() || await group.getInfo?.() || await bot.getGroupMemberInfo?.(group_id, user_id);
             } catch (error) {
+                logger.warn(`[ws-plugin] get_group_member_info error group_id: ${group_id} user_id: ${user_id}`)
             } finally {
                 if (!ResponseData) {
                     ResponseData = {
