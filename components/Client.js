@@ -99,9 +99,9 @@ export default class Client {
     }
 
     createServer() {
-        const parts = this.address.split(':');
-        this.host = parts[0];
-        this.port = parts[1];
+        let index = this.address.lastIndexOf(':');
+        this.host = this.address.substring(0, index);
+        this.port = this.address.substring(index + 1);
         this.arr = []
         this.express = express()
         this.server = http.createServer(this.express)
@@ -309,9 +309,9 @@ export default class Client {
     }
 
     createHttp() {
-        const parts = this.address.split(':');
-        this.host = parts[0];
-        this.port = parts[1];
+        let index = this.address.lastIndexOf(':');
+        this.host = this.address.substring(0, index);
+        this.port = this.address.substring(index + 1);
         this.express = express();
         this.server = http.createServer({ maxHeaderSize: Number(this.other.maxHeaderSize) || 8192 }, this.express);
         this.express.use(express.json({ limit: '50mb' }));
