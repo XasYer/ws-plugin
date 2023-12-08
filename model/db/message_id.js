@@ -1,6 +1,5 @@
 import { sequelize, DataTypes, Op, existSQL, executeSync } from './base.js'
 import schedule from "node-schedule"
-import moment from 'moment'
 
 const message_id_table = sequelize.define('message_id', {
     id: {
@@ -45,10 +44,6 @@ async function findMessage_id(where, order = [['createdAt', 'DESC']]) {
             where,
             order,
         })
-        if (result?.dataValues) {
-            result.dataValues.createdAt = moment(result.dataValues.createdAt).utcOffset(8).format('YYYY-MM-DD HH:mm:ss')
-            result.dataValues.updatedAt = moment(result.dataValues.updatedAt).utcOffset(8).format('YYYY-MM-DD HH:mm:ss')
-        }
         return result?.dataValues
     });
 }
