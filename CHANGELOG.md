@@ -1,3 +1,12 @@
+# 0.6.11
+
+* 新增指令`#ws查询`,查询数据库中的某一条数据
+    * 可以查询user_id,group_id,message_id,参数用空格分开
+    * `#ws查询u id=1`为查询user_id表中id为1的数据
+    * `#ws查询g`为查询group_id表中最新的数据
+    * `#ws查询m id=1 user_id=2`为查询message_id表中id为1并且user_id为2的数据
+* 修改收到api调用的日志等级为info
+
 # 0.6.10
 
 * toImg增加将链接转成二维码,需要安装依赖
