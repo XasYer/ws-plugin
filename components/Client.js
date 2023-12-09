@@ -402,12 +402,12 @@ export default class Client {
     }
 
     async getData(action, params, echo) {
-        const log = _.truncate(JSON.stringify(params, (key, value) => {
+        const log = JSON.stringify(params, (key, value) => {
             if (/messages?/.test(key)) {
                 return '[...]'
             }
             return value
-        }), { length: 1000 })
+        })
         logger.info(`[ws-plugin] name:${this.name} 接收到api调用:${action} 参数:${log}`)
         let result
         try {
