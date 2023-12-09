@@ -403,7 +403,7 @@ export default class Client {
 
     async getData(action, params, echo) {
         const log = JSON.stringify(params, (key, value) => {
-            if (/messages?/.test(key)) {
+            if (/^messages?$/.test(key)) {
                 return '[...]'
             }
             return value
