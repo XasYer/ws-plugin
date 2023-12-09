@@ -123,9 +123,7 @@ Bot.on('notice', async e => {
                 case 1:
                 case 2:
                 case 6:
-                    if (Version.isTrss || e.adapter) {
-                        if (i.uin != e.self_id) continue
-                    }
+                    if (i.uin != e.self_id) continue
                     i.ws.send(msg)
                     break;
                 default:

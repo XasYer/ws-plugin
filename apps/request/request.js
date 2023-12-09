@@ -52,9 +52,7 @@ Bot.on('request', async e => {
                 case 1:
                 case 2:
                 case 6:
-                    if (Version.isTrss || e.adapter) {
-                        if (i.uin != e.self_id) return
-                    }
+                    if (i.uin != e.self_id) return
                     i.ws.send(msg)
                     break;
                 default:
