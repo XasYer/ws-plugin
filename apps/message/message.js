@@ -112,9 +112,7 @@ Bot.on('message', async e => {
                 case 1:
                 case 2:
                 case 6:
-                    if (Version.isTrss || e.adapter) {
-                        if (i.uin != e.self_id) continue
-                    }
+                    if (i.uin != e.self_id) continue
                     e.reply = reply(e)
                     msg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
                     reportMsg = await makeOneBotReportMsg(msg)
