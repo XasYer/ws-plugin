@@ -3,6 +3,7 @@ import { getApiData, makeGSUidSendMsg, setLatestMsg, getLatestMsg, lifecycle, he
 import { Version, Config } from './index.js'
 import express from "express"
 import http from "http"
+import _ from 'lodash'
 import fetch from 'node-fetch'
 
 export default class Client {
@@ -401,7 +402,7 @@ export default class Client {
     }
 
     async getData(action, params, echo) {
-        logger.debug(`[ws-plugin] name:${this.name} action:${action} params:${JSON.stringify(params)}`)
+        logger.info(`[ws-plugin] name:${this.name} 接收到api调用:${action} 参数:${_.truncate(JSON.stringify(params), { length: 1000 })}`)
         let result
         try {
             const data = await getApiData(action, params, this.name, this.uin, this.adapter, this.other);
