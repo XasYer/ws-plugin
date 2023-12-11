@@ -8,6 +8,7 @@ import fetch from "node-fetch"
 import { extname, join } from 'path'
 import express from "express"
 import http from "http"
+import fs from 'fs'
 
 logger.info(logger.yellow("- 正在加载 Chronocat(red) 适配器插件"))
 
