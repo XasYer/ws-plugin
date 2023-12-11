@@ -2,7 +2,7 @@ import { QQRedBot } from "./bot.js"
 import { getToken } from './tool.js'
 import { toQQRedMsg } from './message.js'
 import { Version, Config, allSocketList, setAllSocketList } from '../../components/index.js'
-import { mimeTypes } from '../tool.js'
+import { mimeTypes, TMP_DIR } from '../tool.js'
 import WebSocket from 'ws'
 import fetch from "node-fetch"
 import { extname, join } from 'path'
