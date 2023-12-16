@@ -31,6 +31,9 @@ async function getMsg(where, other) {
 }
 
 async function setMsg(value) {
+    if (Array.isArray(value.message_id) || !value.seq || !value.rand) {
+        return 
+    }
     if (existSQL) {
         await saveMessage_id(value)
     } else {
