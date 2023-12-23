@@ -209,6 +209,8 @@ async function makeSendMsg(data, message) {
                     return await toImg(i.data, data, true)
                 }
                 break
+            case "button":
+                continue
             default:
                 logger.warn('[ws-plugin] 未知消息类型:', i)
                 i = null
