@@ -237,6 +237,8 @@ async function toImg(data, e) {
                     e.wsCacheIsNode = true
                     node = await toImg(m.data, e)
                     break
+                case "button":
+                    continue
                 default:
                     message += JSON.stringify(m, null, '<br />')
                     text++
