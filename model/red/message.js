@@ -557,6 +557,8 @@ async function makeNodeMsg(data, msg) {
                 case 'node':
                     elems.push(...(await makeNodeMsg(data, i.data)))
                     break
+                case "button":
+                    continue
                 default:
                     for (const key in i) {
                         if (typeof i[key] === 'string' && i[key].length > 50) {
