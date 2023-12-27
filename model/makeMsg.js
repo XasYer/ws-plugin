@@ -203,6 +203,7 @@ async function makeSendMsg(params, uin, adapter) {
     const bot = Bot[uin] || Bot
     let msg = params.message
     if (typeof msg == 'string') msg = CQToMsg(msg)
+    if (!Array.isArray(msg)) msg = [msg]
     let target, uid, sendMsg = [], quote = null
     for (const i of msg) {
         if (i.data.file) {
