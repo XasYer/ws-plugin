@@ -24,11 +24,6 @@ export class setting extends plugin {
                     permission: 'master'
                 },
                 {
-                    reg: '^#ws连接说明$',
-                    fnc: 'help',
-                    permission: 'master'
-                },
-                {
                     reg: sysCfgReg,
                     fnc: 'setting',
                     permission: 'master'
@@ -617,19 +612,6 @@ export class setting extends plugin {
             }
         }
         this.reply(`没有连接名字为${msg}的连接`)
-        return true
-    }
-
-    async help() {
-        await this.reply([
-            'ws连接说明:\n',
-            '1.连接名字:一般代表需要连接的bot名字\n',
-            '2.连接地址:需要连接的ws地址或者本地开启的地址:端口\n',
-            '3.连接类型:1.反向ws连接 2.正向ws连接 3.gsuid_core专用连接\n',
-            '4.重连间隔:连接被断开之后每隔一段时间进行重新连接,单位秒,0代表不重连\n',
-            '5.最大重连次数:每次连接失败时+1,达到最大重连次数时停止重新连接,0代表一直重连\n',
-            '6.access-token:访问密钥'
-        ])
         return true
     }
 
