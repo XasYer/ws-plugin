@@ -238,6 +238,8 @@ async function toImg(data, e) {
                     node = await toImg(m.data, e)
                     break
                 case "button":
+                    message = message.replace(/<div>$/, '')
+                    OriginalMessage.pop()
                     continue
                 default:
                     message += JSON.stringify(m, null, '<br />')
