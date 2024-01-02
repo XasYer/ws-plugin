@@ -206,7 +206,7 @@ async function makeSendMsg(data, message) {
                         }
                     }
                     data.runtime = new Runtime(data)
-                    return await toImg(i.data, data, true)
+                    return await toImg(i.data, data)
                 }
                 break
             case "button":
