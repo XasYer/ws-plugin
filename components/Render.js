@@ -1,13 +1,13 @@
 import { Version, Config } from '../components/index.js'
 
-function scale(pct = 1) {
+function scale (pct = 1) {
   let scale = Math.min(2, Math.max(0.5, Config.renderScale / 100))
   pct = pct * scale
   return `style=transform:scale(${pct})`
 }
 
 const Render = {
-  async render(path, params, cfg) {
+  async render (path, params, cfg = { retType: 'default' }) {
     let { e } = cfg
     if (!e.runtime) {
       console.log('未找到e.runtime，请升级至最新版Yunzai')
@@ -15,8 +15,8 @@ const Render = {
 
     let BotName = Version.isTrss ? 'Trss-Yunzai' : Version.isMiao ? 'Miao-Yunzai' : 'Yunzai-Bot'
     return e.runtime.render('ws-plugin', path, params, {
-      retType: cfg.retMsgId ? 'msgId' : 'default',
-      beforeRender({ data }) {
+      retType: cfg.retType,
+      beforeRender ({ data }) {
         let pluginName = ''
         if (data.pluginName !== false) {
           pluginName = ` & ${data.pluginName || 'ws-plugin'}`
