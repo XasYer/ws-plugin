@@ -695,7 +695,7 @@ export class setting extends plugin {
             if (!this.e.isGroup) {
                 await this.reply(msg)
             } else {
-                await toImg(msg, this.e, true)
+                await toImg(msg, this.e)
             }
         } else {
             await this.reply('暂无连接')
