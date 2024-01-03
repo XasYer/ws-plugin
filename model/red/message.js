@@ -220,14 +220,19 @@ async function makeSendMsg(data, message) {
     return { msg: msgs, log }
 }
 
+// 缓存一下uid和uin 'u_xxx': qq
+const uidCache = {}
+
 async function makeMessage(self_id, payload) {
     if (!payload) return null
+    if (payload.senderUid && payload.senderUin) {
+        uidCache[payload.senderUid] = payload.senderUin
+    }
     const e = {}
     e.bot = Bot[self_id]
     e.adapter = e.bot.version
     e.post_type = 'message'
     e.user_id = Number(payload.senderUin)
-    if (!e.user_id) return null
     // e.message_id = `${payload.peerUin}:${payload.msgSeq}`
     e.message_id = payload.msgId
     e.time = Number(payload.msgTime)
@@ -242,7 +247,7 @@ async function makeMessage(self_id, payload) {
     e.self_id = Number(self_id)
     e.message = []
     e.raw_message = ''
-    for (const i of payload.elements) {
+    for (const i of payload.elements || []) {
         switch (i.elementType) {
             case 1:
                 if (i.textElement.atType == 2) {
@@ -423,8 +428,44 @@ async function makeMessage(self_id, payload) {
             nickname: e.nickname,
             isGroupMsg: true
         })
+    } else if (payload.group && payload.user1 && payload.user2) {
+        e.flag = payload.seq
+        e.seq = payload.seq
+        e.group_id = payload.group.groupCode
+        e.group_name = payload.group.groupName
+        e.post_type = 'request'
+        e.request_type = 'group'
+        e.sub_type = 'invite'
+        e.time = Date.now()
+        e.user_id = Number(uidCache[payload.user2.uid])
+        e.nickname = payload.user2.nickName
+        e.role = 'member' // 没有role
+        // 仅通知
+        e.approve = (yes) => { }
+        delete e.sender
+        delete e.message
+        for (const key in e) {
+            if (!e[key]) delete e[key]
+        }
+    } else if (payload.extWords && payload.friendNick && payload.senderUin) {
+        e.comment = payload.extWords
+        e.nickname = payload.friendNick
+        e.post_type = 'request'
+        e.request_type = 'friend'
+        e.sub_type = 'add'
+        e.time = Number(payload.reqTime)
+        e.flag = payload.reqTime
+        e.seq = payload.reqTime
+        e.user_id = Number(payload.senderUin)
+        // 仅通知
+        e.approve = (yes) => { }
+        delete e.sender
+        delete e.message
+        for (const key in e) {
+            if (!e[key]) delete e[key]
+        }
     }
-
+    if (!e.user_id) return null
     if (e.group_id) e.group = e.bot.pickGroup(e.group_id)
     if (e.user_id) e.friend = e.bot.pickFriend(e.user_id)
     if (e.group && e.user_id) e.member = e.group.pickMember(e.user_id)
@@ -452,9 +493,7 @@ async function makeMessage(self_id, payload) {
                 }
             }
         }
-        e.toString = () => {
-            return e.raw_message
-        }
+        e.toString = () => e.raw_message
     }
     return e
 }
@@ -686,6 +725,19 @@ async function toQQRedMsg(bot, data) {
                     break;
                 case 'notice':
                     event = `${e.post_type}.${e.notice_type}.${e.sub_type}`
+                    break
+                case 'request':
+                    switch (e.request_type) {
+                        case 'group':
+                            logger.info(`${logger.blue(`[${e.self_id}]`)} 群邀请：[${e.group_name}(${e.group_id})] 邀请人：[${e.nickname}(${e.user_id})]`)
+                            break;
+                        case 'friend':
+                            logger.info(`${logger.blue(`[${e.self_id}]`)} 好友申请：[${e.nickname}(${e.user_id})]`)
+                            break;
+                        default:
+                            return
+                    }
+                    event = `${e.post_type}.${e.request_type}.${e.sub_type}`
                     break
                 default:
                     return
