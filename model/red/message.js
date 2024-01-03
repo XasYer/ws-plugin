@@ -379,6 +379,9 @@ async function makeMessage(self_id, payload) {
                                 e.notice_type = 'group'
                                 e.sub_type = 'increase'
                                 e.user_id = Number(regRet[3])
+                                if (e.user_id == e.self_id) {
+                                    e.bot.getGroupList()
+                                }
                             }
                         }
                         break
@@ -429,19 +432,52 @@ async function makeMessage(self_id, payload) {
             isGroupMsg: true
         })
     } else if (payload.group && payload.user1 && payload.user2) {
+        e.post_type = 'request'
+        e.request_type = 'group'
         e.flag = payload.seq
         e.seq = payload.seq
         e.group_id = payload.group.groupCode
         e.group_name = payload.group.groupName
-        e.post_type = 'request'
-        e.request_type = 'group'
-        e.sub_type = 'invite'
         e.time = Date.now()
-        e.user_id = Number(uidCache[payload.user2.uid])
+        e.user_id = Number(payload.user2.uin) || Number(uidCache[payload.user2.uid])
         e.nickname = payload.user2.nickName
-        e.role = 'member' // 没有role
-        // 仅通知
-        e.approve = (yes) => { }
+        switch (payload.type) {
+            // 邀请Bot入群
+            case 1:
+                e.sub_type = 'invite'
+                e.approve = (yes = true) => e.bot.setGroupInvite(e.group_id, e.seq, yes)
+                break;
+            // // 邀请好友入群
+            // case 5:
+            //     break;
+            // // 申请入群
+            // case 7:
+
+            //     break;
+            // // 有人被设置管理
+            // case 8:
+
+            //     break;
+            // // 有人被踢群
+            // case 9:
+
+            //     break;
+            // // 有人退群
+            // case 11:
+
+            //     break;
+            // // Bot被取消管理
+            // case 12:
+
+            //     break;
+            // // 其他人被取消管理
+            // case 13:
+
+            //     break;
+
+            default:
+                retrun;
+        }
         delete e.sender
         delete e.message
         for (const key in e) {
@@ -457,8 +493,7 @@ async function makeMessage(self_id, payload) {
         e.flag = payload.reqTime
         e.seq = payload.reqTime
         e.user_id = Number(payload.senderUin)
-        // 仅通知
-        e.approve = (yes) => { }
+        e.approve = (yes) => e.bot.setFriendReq('', yes, '', false, e.user_id)
         delete e.sender
         delete e.message
         for (const key in e) {

@@ -68,7 +68,8 @@ export class QQRedBot {
     }
 
     pickFriend(user_id) {
-        const user = this.fl.get(Number(user_id))
+        user_id = Number(user_id)
+        const user = this.fl.get(user_id)
         const i = {
             ...user,
             self_id: this.uin,
@@ -83,7 +84,8 @@ export class QQRedBot {
             sendFile: async file => await this.sendPrivateMsg(user_id, [{ type: 'file', file }], chatType),
             getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id),
             getFileUrl: async (fid) => `http://127.0.0.1:${Version.isTrss ? Config.bot.port : Config.wsPort}/ws-plugin?file=${fid}`,
-            makeForwardMsg: (msg) => { return { type: "node", data: msg } }
+            makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+            setFriendReq: async (seq, yes, remark, block) => await this.setFriendReq(seq, yes, remark, block, user_id)
         }
     }
 
@@ -115,7 +117,10 @@ export class QQRedBot {
     }
 
     pickUser(user_id) {
-        return this.pickFriend(user_id)
+        return {
+            ...this.pickFriend(user_id),
+            setGroupInvite: async (group_id, seq, yes, block) => await this.setGroupInvite(group_id, seq, yes, block)
+        }
     }
 
     async sendGroupMsg(group_id, message) {
@@ -233,7 +238,18 @@ export class QQRedBot {
                 message_id,
             }
         }
-        const msg = await getMsg(data)
+        let msg = await getMsg(data)
+        // time有可能有误差
+        if (!msg && target == 'friend') {
+            for (let i = -3; i < 4; i++) {
+                data = {
+                    time: message_id + i,
+                    user_id: target_id,
+                }
+                msg = await getMsg(data)
+                if (msg) break
+            }
+        }
         if (msg) {
             const result = await this.bot.sendApi('POST', 'message/getHistory', JSON.stringify({
                 peer: {
@@ -343,6 +359,21 @@ export class QQRedBot {
         return this.gl.get(Number(group_id))
     }
 
+    async setGroupInvite(group_id, seq, yes = true, block = false) {
+        const result = this.bot.sendApi('POST', 'group/invite', JSON.stringify({
+            operateType: yes ? 1 : 2,
+            group: Number(group_id),
+            seq
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        if (yes) {
+            this.getGroupList()
+        }
+        return true
+    }
+
     async setGroupBan(group_id, user_id, duration) {
         const result = this.bot.sendApi('POST', 'group/muteMember', JSON.stringify({
             group: String(group_id),
@@ -375,6 +406,20 @@ export class QQRedBot {
         }))
         if (result.error) {
             throw result.error
+        }
+        return true
+    }
+
+    async setFriendReq(seq, yes = true, remark = "", block = false, user_id) {
+        const result = this.bot.sendApi('post', 'friend/approval', JSON.stringify({
+            uin: String(user_id),
+            accept: yes
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        if (yes) {
+            this.getFriendList()
         }
         return true
     }
