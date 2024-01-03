@@ -53,21 +53,21 @@ export class QQRedBot {
         }
         return {
             ...i,
-            sendMsg: async (msg) => await this.sendGroupMsg(group_id, msg),
+            sendMsg: msg => this.sendGroupMsg(group_id, msg),
             pickMember: user_id => this.pickMember(group_id, user_id),
-            getMemberMap: async () => await this.getGroupMemberList(group_id),
-            recallMsg: async message_id => await this.deleteMsg(message_id),
-            sendFile: async file => await this.sendGroupMsg(group_id, [{ type: 'file', file }]),
-            getChatHistory: async (seq, count) => await this.getChatHistory(seq, count, 'group', group_id),
-            getInfo: async () => await this.getGroupInfo(group_id),
-            muteMember: async (user_id, duration) => await this.setGroupBan(group_id, user_id, duration),
-            muteAll: async (enable) => await this.setGroupWholeBan(group_id, enable),
-            kickMember: async (user_id, message, block) => await this.setGroupKick(group_id, user_id, false, message),
-            makeForwardMsg: (msg) => { return { type: "node", data: msg } },
-            setName: async (name) => await this.setGroupName(group_id, name),
-            setRemark: async (remark) => await this.setGroupRemark(group_id, remark),
-            setCard: async (user_id, card) => await this.setGroupCard(group_id, user_id, card),
-            setAdmin: async (user_id, enable) => await this.setGroupAdmin(group_id, user_id, enable)
+            getMemberMap: () => this.getGroupMemberList(group_id),
+            recallMsg: message_id => this.deleteMsg(message_id),
+            sendFile: file => this.sendGroupMsg(group_id, [{ type: 'file', file }]),
+            getChatHistory: (seq, count) => this.getChatHistory(seq, count, 'group', group_id),
+            getInfo: () => this.getGroupInfo(group_id),
+            muteMember: (user_id, duration) => this.setGroupBan(group_id, user_id, duration),
+            muteAll: enable => this.setGroupWholeBan(group_id, enable),
+            kickMember: (user_id, message, block) => this.setGroupKick(group_id, user_id, false, message),
+            makeForwardMsg: msg => { return { type: "node", data: msg } },
+            setName: name => this.setGroupName(group_id, name),
+            setRemark: remark => this.setGroupRemark(group_id, remark),
+            setCard: (user_id, card) => this.setGroupCard(group_id, user_id, card),
+            setAdmin: (user_id, enable) => this.setGroupAdmin(group_id, user_id, enable)
         }
     }
 
@@ -83,14 +83,14 @@ export class QQRedBot {
         const chatType = user?.isGroupMsg ? 100 : 1
         return {
             ...i,
-            sendMsg: async msg => await this.sendPrivateMsg(user_id, msg, chatType),
-            recallMsg: async message_id => await this.deleteMsg(message_id),
-            sendFile: async file => await this.sendPrivateMsg(user_id, [{ type: 'file', file }], chatType),
-            getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id),
-            getFileUrl: async (fid) => `http://127.0.0.1:${Version.isTrss ? Config.bot.port : Config.wsPort}/ws-plugin?file=${fid}`,
-            makeForwardMsg: (msg) => { return { type: "node", data: msg } },
-            setFriendReq: async (seq, yes, remark, block) => await this.setFriendReq(seq, yes, remark, block, user_id),
-            thumbUp: async (times) => await this.sendLike(user_id, times)
+            sendMsg: msg => this.sendPrivateMsg(user_id, msg, chatType),
+            recallMsg: message_id => this.deleteMsg(message_id),
+            sendFile: file => this.sendPrivateMsg(user_id, [{ type: 'file', file }], chatType),
+            getChatHistory: (time, count) => this.getChatHistory(time, count, 'friend', user_id),
+            getFileUrl: fid => `http://127.0.0.1:${Version.isTrss ? Config.bot.port : Config.wsPort}/ws-plugin?file=${fid}`,
+            makeForwardMsg: msg => { return { type: "node", data: msg } },
+            setFriendReq: (seq, yes, remark, block) => this.setFriendReq(seq, yes, remark, block, user_id),
+            thumbUp: times => this.sendLike(user_id, times)
         }
     }
 
@@ -114,9 +114,9 @@ export class QQRedBot {
                 ...i
             },
             ...this.pickFriend(user_id),
-            kick: async (message, block) => await this.setGroupKick(group_id, user_id, false, message),
-            mute: async (duration) => await this.setGroupBan(group_id, user_id, duration),
-            getInfo: async () => await this.getGroupMemberInfo(group_id, user_id),
+            kick: (message, block) => this.setGroupKick(group_id, user_id, false, message),
+            mute: duration => this.setGroupBan(group_id, user_id, duration),
+            getInfo: () => this.getGroupMemberInfo(group_id, user_id),
             getAvatarUrl: () => `https://q1.qlogo.cn/g?b=qq&s=0&nk=${user_id}`
         }
     }
@@ -124,7 +124,7 @@ export class QQRedBot {
     pickUser(user_id) {
         return {
             ...this.pickFriend(user_id),
-            setGroupInvite: async (group_id, seq, yes, block) => await this.setGroupInvite(group_id, seq, yes, block)
+            setGroupInvite: (group_id, seq, yes, block) => this.setGroupInvite(group_id, seq, yes, block)
         }
     }
 
