@@ -225,9 +225,6 @@ const uidCache = {}
 
 async function makeMessage(self_id, payload) {
     if (!payload) return null
-    if (payload.senderUid && payload.senderUin) {
-        uidCache[payload.senderUid] = payload.senderUin
-    }
     const e = {}
     e.bot = Bot[self_id]
     e.adapter = e.bot.version
@@ -404,6 +401,9 @@ async function makeMessage(self_id, payload) {
             default:
                 break;
         }
+    }
+    if (e.message.length === 0 && payload.senderUid && payload.senderUin) {
+        uidCache[payload.senderUid] = payload.senderUin
     }
     if (payload.chatType == 2) {
         if (!e.sub_type) {
