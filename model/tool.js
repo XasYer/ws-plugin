@@ -1,6 +1,6 @@
 import _ from 'lodash'
 import fs from 'fs'
-import { Version, Render } from '../components/index.js'
+import { Version, Render, Config } from '../components/index.js'
 import Runtime from '../../../lib/plugins/runtime.js'
 import { join } from 'path'
 import { randomUUID } from 'crypto'
@@ -209,7 +209,9 @@ async function toImg(data, e, cfg = { retType: 'msgId' }) {
         if (!i) continue
         if (typeof i === 'string') i = { type: 'text', text: i }
         let message = '<div class="text">'
-        message += `<span class="id">ID: ${id}</span>`
+        if (Config.toImgID != 0) {
+            message += `<span class="id">ID: ${id}</span>`
+        }
         let node
         if (typeof i.message === 'string') i.message = { type: 'text', text: i.message || i.text }
         if (!i.message) i.message = { ...i }
@@ -253,7 +255,9 @@ async function toImg(data, e, cfg = { retType: 'msgId' }) {
             message += '</div>'
         }
         message += '</div>'
-        htmlCache[id] = OriginalMessage
+        if (Config.toImgID != 0) {
+            htmlCache[id] = OriginalMessage
+        }
         id++
         if (node) {
             html.push(...node)
@@ -272,7 +276,7 @@ async function toImg(data, e, cfg = { retType: 'msgId' }) {
             if (img === 1 && text === 0) {
                 message = message.replace('<div class="text">', '<div class="img">')
             }
-            if (!isNode && html.length == 0) {
+            if (!isNode && html.length == 0 && Config.toImgID == 2) {
                 html.push({
                     avatar: `<img src="${path}" />`,
                     nickname: i.nickname || nickname,
@@ -314,7 +318,7 @@ async function toImg(data, e, cfg = { retType: 'msgId' }) {
         return await Render.render(`chatHistory/${target}/index`, {
             data: html,
             target
-        }, { e, scale: 1.2, retType: cfg.retType})
+        }, { e, scale: 1.2, retType: cfg.retType })
     }
     return html
 }

@@ -36,7 +36,7 @@ class Config {
   }
 
   /** 获得yunzai Bot.yaml配置 */
-  get bot(){
+  get bot() {
     return cfg.bot
   }
 
@@ -76,7 +76,7 @@ class Config {
   }
 
   /** 端口 */
-  get wsPort(){
+  get wsPort() {
     return this.getDefOrConfig('ws-config').wsPort
   }
 
@@ -137,13 +137,18 @@ class Config {
     return this.getDefOrConfig('msg-config').redSendForwardMsgType
   }
 
+  /** 文字转图片是否展示ID */
+  get toImgID() {
+    return this.getDefOrConfig('msg-config').toImgID
+  }
+
   /** 渲染精度 */
   get renderScale() {
     return this.getDefOrConfig('msg-config').renderScale
   }
-  
+
   /** 数据库同步锁 */
-  get taskQueue(){
+  get taskQueue() {
     return this.getDefOrConfig('msg-config').taskQueue
   }
 
