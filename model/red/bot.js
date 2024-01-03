@@ -63,7 +63,11 @@ export class QQRedBot {
             muteMember: async (user_id, duration) => await this.setGroupBan(group_id, user_id, duration),
             muteAll: async (enable) => await this.setGroupWholeBan(group_id, enable),
             kickMember: async (user_id, message, block) => await this.setGroupKick(group_id, user_id, false, message),
-            makeForwardMsg: (msg) => { return { type: "node", data: msg } }
+            makeForwardMsg: (msg) => { return { type: "node", data: msg } },
+            setName: async (name) => await this.setGroupName(group_id, name),
+            setRemark: async (remark) => await this.setGroupRemark(group_id, remark),
+            setCard: async (user_id, card) => await this.setGroupCard(group_id, user_id, card),
+            setAdmin: async (user_id, enable) => await this.setGroupAdmin(group_id, user_id, enable)
         }
     }
 
@@ -85,7 +89,8 @@ export class QQRedBot {
             getChatHistory: async (time, count) => await this.getChatHistory(time, count, 'friend', user_id),
             getFileUrl: async (fid) => `http://127.0.0.1:${Version.isTrss ? Config.bot.port : Config.wsPort}/ws-plugin?file=${fid}`,
             makeForwardMsg: (msg) => { return { type: "node", data: msg } },
-            setFriendReq: async (seq, yes, remark, block) => await this.setFriendReq(seq, yes, remark, block, user_id)
+            setFriendReq: async (seq, yes, remark, block) => await this.setFriendReq(seq, yes, remark, block, user_id),
+            thumbUp: async (times) => await this.sendLike(user_id, times)
         }
     }
 
@@ -208,7 +213,7 @@ export class QQRedBot {
     async deleteMsg(message_id) {
         const msg = await getMsg({ message_id })
         if (msg) {
-            this.bot.sendApi('POST', 'message/recall', JSON.stringify({
+            await this.bot.sendApi('POST', 'message/recall', JSON.stringify({
                 peer: {
                     chatType: msg.group_id ? 2 : 1,
                     peerUin: String(msg.group_id || msg.user_id),
@@ -360,7 +365,7 @@ export class QQRedBot {
     }
 
     async setGroupInvite(group_id, seq, yes = true, block = false) {
-        const result = this.bot.sendApi('POST', 'group/invite', JSON.stringify({
+        const result = await this.bot.sendApi('POST', 'group/invite', JSON.stringify({
             operateType: yes ? 1 : 2,
             group: Number(group_id),
             seq
@@ -388,7 +393,7 @@ export class QQRedBot {
     }
 
     async setGroupWholeBan(group_id, enable = true) {
-        const result = this.bot.sendApi('POST', 'group/muteEveryone', JSON.stringify({
+        const result = await this.bot.sendApi('POST', 'group/muteEveryone', JSON.stringify({
             group: String(group_id),
             enable
         }))
@@ -398,7 +403,7 @@ export class QQRedBot {
     }
 
     async setGroupKick(group_id, user_id, reject_add_request = false, message = '') {
-        const result = this.bot.sendApi('POST', 'group/kick', JSON.stringify({
+        const result = await this.bot.sendApi('POST', 'group/kick', JSON.stringify({
             uidList: [String(user_id)],
             group: String(group_id),
             refuseForever: reject_add_request,
@@ -410,8 +415,54 @@ export class QQRedBot {
         return true
     }
 
+    async setGroupName(group_id, name) {
+        const result = await this.bot.sendApi('POST', 'group/setName', JSON.stringify({
+            group: Number(group_id),
+            Name: name
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setGroupRemark(group_id, remark) {
+        const result = await this.bot.sendApi('POST', 'group/setRemark', JSON.stringify({
+            group: Number(group_id),
+            Remark: remark
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setGroupCard(group_id, user_id, card) {
+        const result = await this.bot.sendApi('POST', 'group/setCard', JSON.stringify({
+            group: Number(group_id),
+            uin: Number(user_id),
+            Name: card
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setGroupAdmin(group_id, user_id, enable = true) {
+        const result = await this.bot.sendApi('POST', 'group/setAdmin', JSON.stringify({
+            group: Number(group_id),
+            uin: Number(user_id),
+            role: enable ? 3 : 2
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
     async setFriendReq(seq, yes = true, remark = "", block = false, user_id) {
-        const result = this.bot.sendApi('post', 'friend/approval', JSON.stringify({
+        const result = await this.bot.sendApi('post', 'friend/approval', JSON.stringify({
             uin: String(user_id),
             accept: yes
         }))
@@ -422,5 +473,16 @@ export class QQRedBot {
             this.getFriendList()
         }
         return true
+    }
+
+    async sendLike(user_id, times = 1) {
+        const result = await this.bot.sendApi('post', 'friend/doLike', JSON.stringify({
+            uin: String(user_id),
+            times
+        }))
+        if (result.error) {
+            throw Error('非icqq无法进行点赞')
+        }
+        return { code: result.result, msg: result.errMsg }
     }
 }

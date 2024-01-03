@@ -476,7 +476,7 @@ async function makeMessage(self_id, payload) {
             //     break;
 
             default:
-                retrun;
+                return
         }
         delete e.sender
         delete e.message
