@@ -39,3 +39,6 @@ renderScale: 100
 
 # 数据库同步锁最多可同时执行多少次
 taskQueue: 1
+
+# 文字转图片是否展示ID 0:不展示 1:仅ID 2:提示+ID
+toImgID: 0

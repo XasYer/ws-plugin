@@ -122,9 +122,9 @@ class Config {
     return this.getDefOrConfig('msg-config').muteStop
   }
 
-  /** red 发送伪造转发消息方式 */
-  get redSendForwardMsgType() {
-    return this.getDefOrConfig('msg-config').redSendForwardMsgType
+  /** 文字转图片是否展示ID */
+  get toImgID() {
+    return this.getDefOrConfig('msg-config').toImgID
   }
 
   /** 渲染精度 */

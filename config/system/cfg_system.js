@@ -74,13 +74,13 @@ export const cfgSchema = {
         desc: '被禁言或者全体禁言时是否拦截消息不上报',
         fileName: 'msg-config'
       },
-      redSendForwardMsgType: {
-        title: 'red转发方式',
-        key: 'red转发',
+      toImgID: {
+        title: '转图片ID',
+        key: '图片id',
         type: 'num',
-        def: 1,
-        desc: 'red 发送伪造转发消息方式 1:伪造转发 2:陆续发送 3:合并发送',
-        input: (n) => Math.min(3, Math.max(n * 1 || 0, 1)),
+        def: 0,
+        desc: '文字转图片是否展示ID 0:不展示 1:仅ID 2:提示+ID',
+        input: (n) => Math.min(2, Math.max(n * 1 || 0, 1)),
         fileName: 'msg-config'
       },
       msgStoreTime: {
