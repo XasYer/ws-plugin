@@ -41,12 +41,13 @@ export class QQRedBot {
     }
 
     pickGroup(group_id) {
+        group_id = Number(group_id)
         if (!this.getConfig[group_id]) {
             this.getGroupMemberList(group_id)
             this.getConfig[group_id] = true
         }
         const i = {
-            ...this.gl.get(Number(group_id)),
+            ...this.gl.get(group_id),
             self_id: this.uin,
             bot: this.bot,
             group_id
@@ -67,7 +68,8 @@ export class QQRedBot {
             setName: name => this.setGroupName(group_id, name),
             setRemark: remark => this.setGroupRemark(group_id, remark),
             setCard: (user_id, card) => this.setGroupCard(group_id, user_id, card),
-            setAdmin: (user_id, enable) => this.setGroupAdmin(group_id, user_id, enable)
+            setAdmin: (user_id, enable) => this.setGroupAdmin(group_id, user_id, enable),
+            invite: user_id => this.inviteFriend(group_id, user_id)
         }
     }
 
@@ -90,7 +92,8 @@ export class QQRedBot {
             getFileUrl: fid => `http://127.0.0.1:${Version.isTrss ? Config.bot.port : Config.wsPort}/ws-plugin?file=${fid}`,
             makeForwardMsg: msg => { return { type: "node", data: msg } },
             setFriendReq: (seq, yes, remark, block) => this.setFriendReq(seq, yes, remark, block, user_id),
-            thumbUp: times => this.sendLike(user_id, times)
+            thumbUp: times => this.sendLike(user_id, times),
+            delete: block => this.deleteFriend(user_id, block)
         }
     }
 
@@ -201,13 +204,15 @@ export class QQRedBot {
         return sendRet
     }
 
-    async getMsg(message_id) {
-        const retult = await this.getChatHistory(message_id, 1)
-        if (retult.length > 0) {
-            return retult[0]
-        } else {
-            return null
+    async inviteFriend(group_id, user_id) {
+        const result = await this.bot.sendApi('POST', 'group/invite', JSON.stringify({
+            group: Number(group_id),
+            uins: [String(user_id)]
+        }))
+        if (result.error) {
+            throw result.error
         }
+        return true
     }
 
     async deleteMsg(message_id) {
@@ -221,6 +226,27 @@ export class QQRedBot {
                 },
                 msgIds: [msg.message_id]
             }))
+        }
+    }
+
+    async deleteFriend(user_id, block = true) {
+        const result = await this.bot.sendApi('POST', 'friend/delete', JSON.stringify({
+            uin: Number(user_id),
+            Block: block
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        this.getFriendList()
+        return true
+    }
+
+    async getMsg(message_id) {
+        const retult = await this.getChatHistory(message_id, 1)
+        if (retult.length > 0) {
+            return retult[0]
+        } else {
+            return null
         }
     }
 
@@ -282,6 +308,7 @@ export class QQRedBot {
     }
 
     async getFriendList() {
+        this.fl.clear()
         for (const i of (await this.bot.sendApi('get', 'bot/friends')) || []) {
             this.fl.set(Number(i.uin), {
                 ...i,
@@ -364,8 +391,46 @@ export class QQRedBot {
         return this.gl.get(Number(group_id))
     }
 
+    async setNickname(nickname) {
+        const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
+            nick: nickname
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setDescription(description) {
+        const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
+            longNick: description
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setOnlineStatus(status) {
+        const code = {
+            31: 30, // '离开'
+            50: 50, // '忙碌'
+            70: 70, // '请勿打扰'
+            41: 40, // '隐身'
+            11: 10, // '我在线上'
+            60: 60, // 'Q我吧'
+        }
+        const result = await this.bot.sendApi('POST', 'bot/setOnlineStatus', JSON.stringify({
+            status: code[status] || status
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
     async setGroupInvite(group_id, seq, yes = true, block = false) {
-        const result = await this.bot.sendApi('POST', 'group/invite', JSON.stringify({
+        const result = await this.bot.sendApi('POST', 'group/approval', JSON.stringify({
             operateType: yes ? 1 : 2,
             group: Number(group_id),
             seq
