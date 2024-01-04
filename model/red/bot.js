@@ -401,9 +401,45 @@ export class QQRedBot {
         return true
     }
 
-    async setDescription(description) {
+    async setSignature(signature) {
         const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
-            longNick: description
+            longNick: signature
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setBirthday(birthday) {
+        if (typeof birthday === 'number') {
+            birthday = String(birthday)
+        }
+        const numbers = birthday.match(/\d+/g);
+        if (numbers) {
+            birthday = numbers.join('')
+        } else {
+            return false
+        }
+        const year = Number(birthday.substring(0, 4) || 1999)
+        const month = Number(birthday.substring(4, 6) || 1)
+        const day = Number(birthday.substring(6, 8) || 1)
+        const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
+            birthday: {
+                year,
+                month,
+                day
+            }
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setGender(gender) {
+        const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
+            sex: Number(gender) || 1
         }))
         if (result.error) {
             throw result.error
