@@ -636,7 +636,7 @@ export class QQRedBot {
     async setFriendBlock(user_id, enable = true) {
         const result = await this.bot.sendApi('POST', 'group/setBlock', JSON.stringify({
             uin: Number(user_id),
-            noDisturb: enable
+            block: enable
         }))
         if (result.error) {
             throw result.error
