@@ -70,7 +70,8 @@ export class QQRedBot {
             setCard: (user_id, card) => this.setGroupCard(group_id, user_id, card),
             setAdmin: (user_id, enable) => this.setGroupAdmin(group_id, user_id, enable),
             invite: user_id => this.inviteFriend(group_id, user_id),
-            quit: () => this.setGroupLeave(group_id)
+            quit: () => this.setGroupLeave(group_id),
+            transfer: user_id => this.setGroupTransfer(group_id, user_id)
         }
     }
 
@@ -94,7 +95,9 @@ export class QQRedBot {
             makeForwardMsg: msg => { return { type: "node", data: msg } },
             setFriendReq: (seq, yes, remark, block) => this.setFriendReq(seq, yes, remark, block, user_id),
             thumbUp: times => this.sendLike(user_id, times),
-            delete: block => this.deleteFriend(user_id, block)
+            delete: block => this.deleteFriend(user_id, block),
+            notify: enable => this.setFriendNotify(user_id, enable),
+            block: enable => this.setFriendBlock(user_id, enable)
         }
     }
 
@@ -548,6 +551,17 @@ export class QQRedBot {
         return true
     }
 
+    async setGroupTransfer(group_id, user_id){
+        const result = await this.bot.sendApi('POST', 'group/transfer', JSON.stringify({
+            group: Number(group_id),
+            uin: Number(user_id)
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
     async setGroupName(group_id, name) {
         const result = await this.bot.sendApi('POST', 'group/setName', JSON.stringify({
             group: Number(group_id),
@@ -604,6 +618,28 @@ export class QQRedBot {
         }
         if (yes) {
             this.getFriendList()
+        }
+        return true
+    }
+
+    async setFriendNotify(user_id, enable = true) {
+        const result = await this.bot.sendApi('POST', 'group/setMsgNotify', JSON.stringify({
+            uin: Number(user_id),
+            noDisturb: enable
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setFriendBlock(user_id, enable = true) {
+        const result = await this.bot.sendApi('POST', 'group/setBlock', JSON.stringify({
+            uin: Number(user_id),
+            noDisturb: enable
+        }))
+        if (result.error) {
+            throw result.error
         }
         return true
     }
