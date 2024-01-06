@@ -1,6 +1,6 @@
 import { makeSendMsg, makeMessage } from './message.js'
 import { setMsg, getMsg } from '../DataBase.js'
-import { roleMap } from './tool.js'
+import { roleMap, upload } from './tool.js'
 import { Config, Version } from '../../components/index.js'
 import { findAll } from './memberList.js'
 
@@ -69,7 +69,8 @@ export class QQRedBot {
             setRemark: remark => this.setGroupRemark(group_id, remark),
             setCard: (user_id, card) => this.setGroupCard(group_id, user_id, card),
             setAdmin: (user_id, enable) => this.setGroupAdmin(group_id, user_id, enable),
-            invite: user_id => this.inviteFriend(group_id, user_id)
+            invite: user_id => this.inviteFriend(group_id, user_id),
+            quit: () => this.setGroupLeave(group_id)
         }
     }
 
@@ -391,6 +392,20 @@ export class QQRedBot {
         return this.gl.get(Number(group_id))
     }
 
+    async setAvatar(file) {
+        const data = await upload(this.bot, file, 'image/png')
+        if (data?.ntFilePath) {
+            const result = await this.bot.sendApi('POST', 'bot/setAvatar', JSON.stringify({
+                paath: data.ntFilePath
+            }))
+            if (result.error) {
+                throw result.error
+            }
+            return true
+        }
+        return false
+    }
+
     async setNickname(nickname) {
         const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
             nick: nickname
@@ -509,6 +524,23 @@ export class QQRedBot {
             group: String(group_id),
             refuseForever: reject_add_request,
             reason: message
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
+    async setGroupLeave(group_id) {
+        group_id = Number(group_id)
+        // 缓存没有这个群的话就先获取一遍
+        if (!this.gl.has(group_id)) await this.getGroupList()
+        // 还是没有的话就是没有这个群了
+        if (!this.gl.has(group_id)) return false
+        // 是群主就是解散,不是就退群
+        const api = this.gl.get(group_id).is_owner ? 'destroy' : 'quit'
+        const result = await this.bot.sendApi('POST', `group/${api}`, JSON.stringify({
+            group: group_id,
         }))
         if (result.error) {
             throw result.error

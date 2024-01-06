@@ -390,5 +390,6 @@ export {
     getToken,
     getNtPath,
     roleMap,
-    redPath
+    redPath,
+    upload
 }
