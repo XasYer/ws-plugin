@@ -194,14 +194,16 @@ let id = 1
  * * default/空：自动发送图片，返回true
  * * msgId：自动发送图片，返回msg id
  * * base64: 不自动发送图像，返回图像base64数据
+ * @param {boolean} returnID 返回ws查看对应id, 默认不返回
  */
-async function toImg(data, e, cfg = { retType: 'msgId' }) {
+async function toImg(data, e, cfg = { retType: 'msgId' }, returnID = false) {
     let isNode = false
     if (e.wsCacheIsNode) {
         isNode = e.wsCacheIsNode
         delete e.wsCacheIsNode
     }
     let html = []
+    let wsids = []
     const user_id = e.bot.uin || e.bot.user_id || e.user_id
     const nickname = e.bot.nickname || e.nickname
     if (!Array.isArray(data)) data = [data]
@@ -258,6 +260,7 @@ async function toImg(data, e, cfg = { retType: 'msgId' }) {
         if (Config.toImgID != 0) {
             htmlCache[id] = OriginalMessage
         }
+        wsids.push(id)
         id++
         if (node) {
             html.push(...node)
@@ -315,10 +318,12 @@ async function toImg(data, e, cfg = { retType: 'msgId' }) {
         } else if (Array.isArray(config.theme)) {
             target = config.theme[_.random(0, config.theme.length - 1)]
         }
-        return await Render.render(`chatHistory/${target}/index`, {
-            data: html,
-            target
-        }, { e, scale: 1.2, retType: cfg.retType })
+        let render = await Render.render(
+            `chatHistory/${target}/index`,
+            { data: html, target },
+            { e, scale: 1.2, retType: cfg.retType }
+        )
+        return returnID ? { render, wsids } : render
     }
     return html
 }
