@@ -190,13 +190,13 @@ let id = 1
  * 将转发消息渲染成图片并发送,data为makeForwordMsg.data
  * @param {Object} data makeForwordMsg.data
  * @param {{user_id:number,nickname:string,reply:function}} e 直接丢e即可
- * @param cfg
+ * @param cfg.retype
  * * default/空：自动发送图片，返回true
  * * msgId：自动发送图片，返回msg id
  * * base64: 不自动发送图像，返回图像base64数据
- * @param {boolean} returnID 返回ws查看对应id, 默认不返回
+ * @param {boolean} cfg.returnID 返回ws查看对应id, 默认不返回
  */
-async function toImg(data, e, cfg = { retType: 'msgId' }, returnID = false) {
+async function toImg(data, e, cfg = { retType: 'msgId' }) {
     let isNode = false
     if (e.wsCacheIsNode) {
         isNode = e.wsCacheIsNode
@@ -323,7 +323,7 @@ async function toImg(data, e, cfg = { retType: 'msgId' }, returnID = false) {
             { data: html, target },
             { e, scale: 1.2, retType: cfg.retType }
         )
-        return returnID ? { render, wsids } : render
+        return cfg.returnID ? { render, wsids } : render
     }
     return html
 }
