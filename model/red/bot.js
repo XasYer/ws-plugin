@@ -54,6 +54,9 @@ export class QQRedBot {
         }
         return {
             ...i,
+            fs: {
+                ...this.Gfs(group_id)
+            },
             sendMsg: msg => this.sendGroupMsg(group_id, msg),
             pickMember: user_id => this.pickMember(group_id, user_id),
             getMemberMap: () => this.getGroupMemberList(group_id),
@@ -137,6 +140,76 @@ export class QQRedBot {
         }
     }
 
+    Gfs(group_id) {
+        const group = Number(group_id)
+        return {
+            gid: group,
+            group_id: group,
+            df: async () => {
+                const result = await this.getApiData('POST', 'groupGfs/df', { group })
+                return {
+                    free: result.totalSpace - result.usedSpace,
+                    total: Number(result.totalSpace),
+                    used: Number(result.usedSpace)
+                }
+            },
+            dir: async (folderId = '/', start = 0, limit = 100) => {
+                const result = await this.getApiData('POST', 'groupGfs/dir', { group, folderId, start, limit })
+                const files = []
+                for (const i of result) {
+                    const f = i.type == 1 ? i.fileInfo : i.folderInfo
+                    const is_dir = i.type == 1 ? false : true
+                    const info = {
+                        create_time: f.createTime || f.modifyTime,
+                        fid: f.fileId || f.folderId,
+                        is_dir,
+                        name: f.fileName || f.folderName,
+                        pid: f.parentFolderId,
+                        user_id: Number(f.uploaderUin || f.createUin)
+                    }
+                    if (is_dir) {
+                        info.file_count = f.totalFileCount
+                    } else {
+                        info.busid = f.busId
+                        info.download_times = f.downloadTimes
+                        info.duration = 0
+                        info.md5 = f.md5
+                        info.sha1 = f.sha
+                        info.size = f.dileSize
+                    }
+                    files.push(info)
+                }
+                return result
+            },
+            mkdir: async Name => {
+                const result = await this.getApiData('POST', 'groupGfs/mkdir', { group, Name })
+                const f = result.resultWithGroupItem.groupItem.folderInfo
+                return {
+                    create_time: f.createTime,
+                    fid: f.folderId,
+                    is_dir: true,
+                    name: f.folderName,
+                    pid: f.parentFolderId,
+                    user_id: Number(f.createUin),
+                    file_count: f.totalFileCount
+                }
+            },
+            mv: (fileId, FolderId) => this.getApiData('POST', 'groupGfs/mv', { group, fileId, FolderId }),
+            rename: async (fid, Name) => {
+                const result = await this.getApiData('POST', 'groupGfs/rename', { group, fileId: fid, Name })
+                if (result.error) {
+                    await this.getApiData('POST', 'groupGfs/rename', { group, folderId: fid, Name })
+                }
+            },
+            rm: async fid => {
+                const result = await this.getApiData('POST', 'groupGfs/rm', { group, fileId: fid })
+                if (result.error) {
+                    await this.getApiData('POST', 'groupGfs/rm', { group, FolderId: fid })
+                }
+            }
+        }
+    }
+
     async sendGroupMsg(group_id, message) {
         const data = {
             bot: this.bot,
@@ -148,18 +221,14 @@ export class QQRedBot {
         if (elements.length == 0) {
             throw '[ws-plugin] 发送消息错误: message is empty'
         }
-        const result = await this.bot.sendApi('POST', 'message/send', JSON.stringify({
+        const result = await this.getApiData('POST', 'message/send', {
             peer: {
                 chatType: 2,
                 peerUin: String(group_id)
             },
             elements
-        }))
-        if (result.error) {
-            throw result.error
-        } else {
-            logger.info(`${logger.blue(`[${this.uin} => ${group_id}]`)} 发送群消息：${log}`)
-        }
+        })
+        logger.info(`${logger.blue(`[${this.uin} => ${group_id}]`)} 发送群消息：${log}`)
         const sendRet = {
             message_id: result.msgId,
             seq: Number(result.msgSeq),
@@ -185,18 +254,14 @@ export class QQRedBot {
         if (elements.length == 0) {
             throw '[ws-plugin] 发送消息错误: message is empty'
         }
-        const result = await this.bot.sendApi('POST', 'message/send', JSON.stringify({
+        const result = await this.getApiData('POST', 'message/send', {
             peer: {
                 chatType,
                 peerUin: String(user_id)
             },
             elements
-        }))
-        if (result.error) {
-            throw result.error
-        } else {
-            logger.info(`${logger.blue(`[${this.uin} => ${user_id}]`)} 发送好友消息：${log}`)
-        }
+        })
+        logger.info(`${logger.blue(`[${this.uin} => ${user_id}]`)} 发送好友消息：${log}`)
         const sendRet = {
             message_id: result.msgId,
             seq: Number(result.msgSeq),
@@ -211,39 +276,33 @@ export class QQRedBot {
     }
 
     async inviteFriend(group_id, user_id) {
-        const result = await this.bot.sendApi('POST', 'group/invite', JSON.stringify({
+        await this.getApiData('POST', 'group/invite', {
             group: Number(group_id),
             uins: [String(user_id)]
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async deleteMsg(message_id) {
         const msg = await getMsg({ message_id })
         if (msg) {
-            await this.bot.sendApi('POST', 'message/recall', JSON.stringify({
+            await this.getApiData('POST', 'message/recall', {
                 peer: {
                     chatType: msg.group_id ? 2 : 1,
                     peerUin: String(msg.group_id || msg.user_id),
                     guildId: null
                 },
                 msgIds: [msg.message_id]
-            }))
+            })
         }
     }
 
     async deleteFriend(user_id, block = true) {
-        const result = await this.bot.sendApi('POST', 'friend/delete', JSON.stringify({
+        await this.getApiData('POST', 'friend/delete', {
             uin: Number(user_id),
             Block: block
-        }))
-        if (result.error) {
-            throw result.error
-        }
-        this.getFriendList()
+        })
+        await this.getFriendList()
         return true
     }
 
@@ -258,10 +317,7 @@ export class QQRedBot {
 
     async getSystemMsg() {
         // 只获取未处理的
-        const result = await this.bot.sendApi('POST', 'group/inviteList')
-        if (result.error) {
-            throw result.error
-        }
+        const result = await this.getApiData('POST', 'group/inviteList')
         const systemMsg = []
         // 邀请Bot入群
         for (const i of result?.[1] || []) {
@@ -337,7 +393,7 @@ export class QQRedBot {
             }
         }
         if (msg) {
-            const result = await this.bot.sendApi('POST', 'message/getHistory', JSON.stringify({
+            const result = await this.getApiData('POST', 'message/getHistory', {
                 peer: {
                     chatType: msg.group_id ? 2 : 1,
                     peerUin: String(msg.group_id || msg.user_id),
@@ -345,10 +401,7 @@ export class QQRedBot {
                 },
                 offsetMsgId: msg.message_id,
                 count: count || 20
-            }))
-            if (result.error) {
-                throw result.error
-            }
+            })
             if (result.msgList) {
                 const msgList = []
                 for (const i of result.msgList) {
@@ -364,7 +417,7 @@ export class QQRedBot {
 
     async getFriendList() {
         this.fl.clear()
-        for (const i of (await this.bot.sendApi('get', 'bot/friends')) || []) {
+        for (const i of (await this.getApiData('get', 'bot/friends')) || []) {
             this.fl.set(Number(i.uin), {
                 ...i,
                 bot_id: this.uin,
@@ -376,7 +429,7 @@ export class QQRedBot {
     }
 
     async getGroupList() {
-        for (const i of (await this.bot.sendApi('get', 'bot/groups')) || []) {
+        for (const i of (await this.getApiData('get', 'bot/groups')) || []) {
             const data = {
                 ...i,
                 bot_id: this.uin,
@@ -412,7 +465,7 @@ export class QQRedBot {
         if (!this.gml.has(group_id)) {
             this.gml.set(group_id, new Map())
         }
-        let memberList = await this.bot.sendApi('POST', 'group/getMemberList', JSON.stringify(body))
+        let memberList = await this.getApiData('POST', 'group/getMemberList', body)
         if (memberList.error) throw memberList.error
         // 如果是0就去数据库中找一下
         if (memberList.length === 0) {
@@ -430,7 +483,6 @@ export class QQRedBot {
                 sex: 'unknown'
             })
         }
-
         return this.gml.get(group_id)
     }
 
@@ -449,34 +501,25 @@ export class QQRedBot {
     async setAvatar(file) {
         const data = await upload(this.bot, file, 'image/png')
         if (data?.ntFilePath) {
-            const result = await this.bot.sendApi('POST', 'bot/setAvatar', JSON.stringify({
+            await this.getApiData('POST', 'bot/setAvatar', {
                 path: data.ntFilePath
-            }))
-            if (result.error) {
-                throw result.error
-            }
+            })
             return true
         }
         return false
     }
 
     async setNickname(nickname) {
-        const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
+        await this.getApiData('POST', 'bot/setMiniProfile', {
             nick: nickname
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setSignature(signature) {
-        const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
+        await this.getApiData('POST', 'bot/setMiniProfile', {
             longNick: signature
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
@@ -493,26 +536,20 @@ export class QQRedBot {
         const year = Number(birthday.substring(0, 4) || 1999)
         const month = Number(birthday.substring(4, 6) || 1)
         const day = Number(birthday.substring(6, 8) || 1)
-        const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
+        await this.getApiData('POST', 'bot/setMiniProfile', {
             birthday: {
                 year,
                 month,
                 day
             }
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setGender(gender) {
-        const result = await this.bot.sendApi('POST', 'bot/setMiniProfile', JSON.stringify({
+        await this.getApiData('POST', 'bot/setMiniProfile', {
             sex: Number(gender) || 1
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
@@ -525,24 +562,18 @@ export class QQRedBot {
             11: 10, // '我在线上'
             60: 60, // 'Q我吧'
         }
-        const result = await this.bot.sendApi('POST', 'bot/setOnlineStatus', JSON.stringify({
+        await this.getApiData('POST', 'bot/setOnlineStatus', {
             status: code[status] || status
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setGroupInvite(group_id, seq, yes = true, block = false) {
-        const result = await this.bot.sendApi('POST', 'group/approval', JSON.stringify({
+        await this.getApiData('POST', 'group/approval', {
             operateType: yes ? 1 : 2,
             group: Number(group_id),
             seq
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         if (yes) {
             await this.getGroupList()
         }
@@ -550,38 +581,29 @@ export class QQRedBot {
     }
 
     async setGroupBan(group_id, user_id, duration) {
-        const result = this.bot.sendApi('POST', 'group/muteMember', JSON.stringify({
+        this.getApiData('POST', 'group/muteMember', {
             group: String(group_id),
             memList: [{
                 uin: String(user_id),
                 timeStamp: duration
             }]
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
     }
 
     async setGroupWholeBan(group_id, enable = true) {
-        const result = await this.bot.sendApi('POST', 'group/muteEveryone', JSON.stringify({
+        await this.getApiData('POST', 'group/muteEveryone', {
             group: String(group_id),
             enable
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
     }
 
     async setGroupKick(group_id, user_id, reject_add_request = false, message = '') {
-        const result = await this.bot.sendApi('POST', 'group/kick', JSON.stringify({
+        await this.getApiData('POST', 'group/kick', {
             uidList: [String(user_id)],
             group: String(group_id),
             refuseForever: reject_add_request,
             reason: message
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
@@ -593,23 +615,17 @@ export class QQRedBot {
         if (!this.gl.has(group_id)) return false
         // 是群主就是解散,不是就退群
         const api = this.gl.get(group_id).is_owner ? 'destroy' : 'quit'
-        const result = await this.bot.sendApi('POST', `group/${api}`, JSON.stringify({
+        await this.getApiData('POST', `group/${api}`, {
             group: group_id,
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setGroupTransfer(group_id, user_id) {
-        const result = await this.bot.sendApi('POST', 'group/transfer', JSON.stringify({
+        await this.getApiData('POST', 'group/transfer', {
             group: Number(group_id),
             uin: Number(user_id)
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
@@ -627,93 +643,69 @@ export class QQRedBot {
             }
         }
         group_id = Number(group_id)
-        const result = await this.bot.sendApi('POST', 'group/approval', JSON.stringify({
+        await this.getApiData('POST', 'group/approval', {
             operateType: approve ? 1 : 2,
             group: group_id,
             seq: seq
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setGroupName(group_id, name) {
-        const result = await this.bot.sendApi('POST', 'group/setName', JSON.stringify({
+        await this.getApiData('POST', 'group/setName', {
             group: Number(group_id),
             Name: name
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setGroupRemark(group_id, remark) {
-        const result = await this.bot.sendApi('POST', 'group/setRemark', JSON.stringify({
+        await this.getApiData('POST', 'group/setRemark', {
             group: Number(group_id),
             Remark: remark
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setGroupCard(group_id, user_id, card) {
-        const result = await this.bot.sendApi('POST', 'group/setCard', JSON.stringify({
+        await this.getApiData('POST', 'group/setCard', {
             group: Number(group_id),
             uin: Number(user_id),
             Name: card
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setGroupAdmin(group_id, user_id, enable = true) {
-        const result = await this.bot.sendApi('POST', 'group/setAdmin', JSON.stringify({
+        await this.getApiData('POST', 'group/setAdmin', {
             group: Number(group_id),
             uin: Number(user_id),
             role: enable ? 3 : 2
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setFriendReq(seq, yes = true, remark = "", block = false, user_id) {
-        const result = await this.bot.sendApi('post', 'friend/approval', JSON.stringify({
+        await this.getApiData('post', 'friend/approval', {
             uin: String(user_id),
             accept: yes
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setFriendNotify(user_id, enable = true) {
-        const result = await this.bot.sendApi('POST', 'group/setMsgNotify', JSON.stringify({
+        await this.getApiData('POST', 'group/setMsgNotify', {
             uin: Number(user_id),
             noDisturb: enable
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
     async setFriendBlock(user_id, enable = true) {
-        const result = await this.bot.sendApi('POST', 'group/setBlock', JSON.stringify({
+        await this.getApiData('POST', 'group/setBlock',{
             uin: Number(user_id),
             block: enable
-        }))
-        if (result.error) {
-            throw result.error
-        }
+        })
         return true
     }
 
@@ -736,5 +728,13 @@ export class QQRedBot {
             return false
         }
         return Number(result)
+    }
+
+    async getApiData(method, api, body) {
+        const result = await this.bot.sendApi(method, api, JSON.stringify(body))
+        if (result.error) {
+            throw result.error
+        }
+        return result
     }
 }
