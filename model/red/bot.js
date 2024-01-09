@@ -131,7 +131,9 @@ export class QQRedBot {
     pickUser(user_id) {
         return {
             ...this.pickFriend(user_id),
-            setGroupInvite: (group_id, seq, yes, block) => this.setGroupInvite(group_id, seq, yes, block)
+            setGroupInvite: (group_id, seq, yes, block) => this.setGroupInvite(group_id, seq, yes, block),
+            setGroupReq: (group_id, seq, approve, reason, block) => this.setGroupAddRequest(seq, approve, reason, block, group_id),
+            setFriendReq: (seq, yes, remark, block) => this.setFriendReq(seq, yes, remark, block, user_id)
         }
     }
 
@@ -252,6 +254,55 @@ export class QQRedBot {
         } else {
             return null
         }
+    }
+
+    async getSystemMsg() {
+        // 只获取未处理的
+        const result = await this.bot.sendApi('POST', 'group/inviteList')
+        if (result.error) {
+            throw result.error
+        }
+        const systemMsg = []
+        // 邀请Bot入群
+        for (const i of result?.[1] || []) {
+            const group_id = Number(i.group.groupCode)
+            systemMsg.push({
+                post_type: "request",
+                request_type: "group",
+                sub_type: "invite",
+                flag: i.seq,
+                seq: i.seq,
+                group_id,
+                group_name: i.group.groupName,
+                user_id: i.user2.uin || await this.getuin(i.user2.uid) || i.user2.uid,
+                nickname: i.user2.nickName,
+                approve: (yes = true) => this.setGroupInvite(group_id, i.seq, yes)
+            })
+        }
+        // 群申请
+        const groupRequestEvent = [...result?.[5] || [], ...result?.[7] || []]
+        for (const i of groupRequestEvent) {
+            const group_id = Number(i.group.groupCode)
+            const event = {
+                post_type: "request",
+                request_type: "group",
+                sub_type: "add",
+                comment: i.postscript,
+                tips: i.warningTips,
+                flag: i.seq,
+                seq: i.seq,
+                group_id,
+                group_name: i.group.groupName,
+                user_id: i.user1.uin || await this.getuin(i.user1.uid) || i.user1.uid,
+                nickname: i.user1.nickName,
+                approve: (yes = true) => this.setGroupAddRequest(i.seq, yes, '', false, group_id)
+            }
+            if (i.type == 5) {
+                event.inviter_id = i.user2.uin || await this.getuin(i.user2.uid) || i.user2.uid
+            }
+            systemMsg.push(event)
+        }
+        return systemMsg
     }
 
     async getChatHistory(message_id, count, target, target_id) {
@@ -562,6 +613,31 @@ export class QQRedBot {
         return true
     }
 
+    async setGroupAddRequest(seq, approve = true, reason = '', block = false, group_id) {
+        if (!group_id) {
+            const result = await this.getSystemMsg()
+            for (const i of result) {
+                if (i.seq == seq) {
+                    group_id = i.group.groupCode
+                    break
+                }
+            }
+            if (!group_id) {
+                return false
+            }
+        }
+        group_id = Number(group_id)
+        const result = await this.bot.sendApi('POST', 'group/approval', JSON.stringify({
+            operateType: approve ? 1 : 2,
+            group: group_id,
+            seq: seq
+        }))
+        if (result.error) {
+            throw result.error
+        }
+        return true
+    }
+
     async setGroupName(group_id, name) {
         const result = await this.bot.sendApi('POST', 'group/setName', JSON.stringify({
             group: Number(group_id),
@@ -616,16 +692,6 @@ export class QQRedBot {
         if (result.error) {
             throw result.error
         }
-        if (yes) {
-            user_id = Number(user_id)
-            await this.getFriendList()
-            if (!this.fl.has(user_id)) {
-                this.fl.set(user_id, {
-                    bot_id: this.uin,
-                    user_id
-                })
-            }
-        }
         return true
     }
 
@@ -660,5 +726,15 @@ export class QQRedBot {
             throw Error('非icqq无法进行点赞')
         }
         return { code: result.result, msg: result.errMsg }
+    }
+
+    async getuin(uid) {
+        const result = await this.bot.sendApi('post', 'getuin', JSON.stringify({
+            uid,
+        }))
+        if (result.error || result.errMsg) {
+            return false
+        }
+        return Number(result)
     }
 }

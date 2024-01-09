@@ -220,8 +220,6 @@ async function makeSendMsg(data, message) {
     return { msg: msgs, log }
 }
 
-// 缓存一下uid和uin 'u_xxx': qq
-const uidCache = {}
 
 async function makeMessage(self_id, payload) {
     if (!payload) return null
@@ -371,19 +369,43 @@ async function makeMessage(self_id, payload) {
                         }
                         break;
                     case 12:
-                        const reg = new RegExp('^<gtip align=".*"><qq uin=".+" col=".*" jp="([0-9]+)" /><nor txt="(.+)"/><qq uin=".*" col=".*" jp="([0-9]+)" /> <nor txt="(.+)"/> </gtip>$')
-                        const regRet = reg.exec(i.grayTipElement.xmlElement.content)
-                        if (regRet) {
-                            if (regRet[2] == '邀请' && regRet[4] == '加入了群聊。') {
-                                e.post_type = 'notice'
-                                e.notice_type = 'group'
-                                e.sub_type = 'increase'
-                                e.user_id = Number(regRet[3])
-                                if (e.user_id == e.self_id) {
-                                    e.bot.getGroupList()
+                        const reg = /<nor txt="(.+?)"\/>/
+                        const match = i.grayTipElement.xmlElement.content.match(new RegExp(reg, 'g')).map(i => i.match(reg)[1]).join('')
+                        if (match.includes('邀请加入了群聊')) {
+                            const QQReg = /<qq uin="(.*?)" col=".*?" jp="(.*?)" \/>/
+                            const QQ = i.grayTipElement.xmlElement.content.match(new RegExp(QQReg, 'g')).map(i => i.match(QQReg)[1])
+                            e.post_type = 'notice'
+                            e.notice_type = 'group'
+                            e.sub_type = 'increase'
+                            e.user_id = Number(QQ[1])
+                            if (e.user_id == e.self_id) {
+                                await e.bot.getGroupList()
+                                if (e.bot.fl.has(e.group_id)) {
+                                    e.bot.fl.set(e.group_id, {
+                                        bot_id: e.self_id,
+                                        group_id: e.group_id
+                                    })
                                 }
                             }
+                        } else if (match.includes('你们已成功添加为好友')) {
+                            if (e.user_id == 0) {
+                                e.user_id = Number(payload.peerUin)
+                            }
+                            e.post_type = 'notice'
+                            e.notice_type = 'friend'
+                            e.sub_type = 'increase'
+                            await e.bot.getFriendList()
+                            await this.getFriendList()
+                            if (e.bot.fl.has(e.user_id)) {
+                                e.bot.fl.set(e.user_id, {
+                                    bot_id: e.self_id,
+                                    user_id: e.user_id
+                                })
+                            }
                         }
+                        break
+                    // jsonGrayTipElement
+                    case 17:
                         break
                     default:
                         break;
@@ -404,9 +426,6 @@ async function makeMessage(self_id, payload) {
             default:
                 break;
         }
-    }
-    if (e.message.length === 0 && payload.senderUid && payload.senderUin) {
-        uidCache[payload.senderUid] = payload.senderUin
     }
     if (payload.chatType == 2) {
         if (!e.sub_type) {
@@ -432,49 +451,101 @@ async function makeMessage(self_id, payload) {
             isGroupMsg: true
         })
     } else if (payload.group && payload.user1 && payload.user2) {
-        e.post_type = 'request'
-        e.request_type = 'group'
+        // 群系统通知
         e.flag = payload.seq
         e.seq = payload.seq
         e.group_id = payload.group.groupCode
         e.group_name = payload.group.groupName
         e.time = Date.now()
-        e.user_id = Number(payload.user2.uin) || Number(uidCache[payload.user2.uid])
-        e.nickname = payload.user2.nickName
+        e.nickname = payload.user1.nickName
+        let uin1 = payload.user1.uin, uin2 = payload.user2.uin
+        if (payload.user1.uid && !uin1) {
+            const uin = await e.bot.getuin(payload.user1.uid)
+            if (uin) {
+                uin1 = uin
+            } else {
+                // 不是qq要通知吗
+                uin1 = payload.user1.uid
+            }
+        }
+        if (payload.user2.uid && !uin2) {
+            const uin = await e.bot.getuin(payload.user1.uid)
+            if (uin) {
+                uin2 = uin
+            } else {
+                // 不是qq要通知吗
+                uin2 = payload.user2.uid
+            }
+        }
         switch (payload.type) {
             // 邀请Bot入群
             case 1:
+                e.post_type = 'request'
+                e.request_type = 'group'
                 e.sub_type = 'invite'
+                e.user_id = uin2
+                e.nickname = payload.user2.nickName
                 e.approve = (yes = true) => e.bot.setGroupInvite(e.group_id, e.seq, yes)
                 break;
-            // // 邀请好友入群
-            // case 5:
-            //     break;
-            // // 申请入群
-            // case 7:
-
-            //     break;
-            // // 有人被设置管理
-            // case 8:
-
-            //     break;
-            // // 有人被踢群
-            // case 9:
-
-            //     break;
-            // // 有人退群
-            // case 11:
-
-            //     break;
-            // // Bot被取消管理
-            // case 12:
-
-            //     break;
-            // // 其他人被取消管理
-            // case 13:
-
-            //     break;
-
+            // 邀请好友入群
+            case 5:
+            // 申请入群
+            case 7:
+                e.post_type = 'request'
+                e.request_type = 'group'
+                e.sub_type = 'add'
+                e.comment = payload.postscript
+                if (payload.warningTips) {
+                    e.tips = payload.warningTips
+                }
+                if (payload.type == 5) {
+                    e.inviter_id = uin2
+                }
+                e.user_id = uin1
+                e.approve = (yes = true) => e.bot.setGroupAddRequest(e.seq, yes, '', false, e.group_id)
+                break;
+            // 有人被设置管理
+            case 8:
+                e.post_type = 'notice'
+                e.notice_type = 'group'
+                e.sub_type = 'admin'
+                e.set = true
+                e.user_id = uin1
+                break;
+            // 有人被踢群
+            case 9:
+                e.post_type = 'notice'
+                e.notice_type = 'group'
+                e.sub_type = 'decrease'
+                e.user_id = uin1
+                e.operator_id = uin2
+                break;
+            // 有人退群
+            case 11:
+                e.post_type = 'notice'
+                e.notice_type = 'group'
+                e.sub_type = 'decrease'
+                e.user_id = uin1
+                e.operator_id = e.user_id
+                break
+            // Bot被取消管理
+            case 12:
+            // 其他人被取消管理
+            case 13:
+                e.post_type = 'notice'
+                e.notice_type = 'group'
+                e.sub_type = 'admin'
+                e.set = false
+                e.user_id = uin1
+                break;
+            // 群聊被转让
+            case 14:
+                e.post_type = 'notice'
+                e.notice_type = 'group'
+                e.sub_type = 'transfer'
+                e.operator_id = uin1
+                e.user_id = uin2
+                break;
             default:
                 return
         }
