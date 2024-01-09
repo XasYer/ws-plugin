@@ -488,6 +488,7 @@ async function makeMessage(self_id, payload) {
                 break;
             // 邀请好友入群
             case 5:
+                e.inviter_id = uin2
             // 申请入群
             case 7:
                 e.post_type = 'request'
@@ -496,9 +497,6 @@ async function makeMessage(self_id, payload) {
                 e.comment = payload.postscript
                 if (payload.warningTips) {
                     e.tips = payload.warningTips
-                }
-                if (payload.type == 5) {
-                    e.inviter_id = uin2
                 }
                 e.user_id = uin1
                 e.approve = (yes = true) => e.bot.setGroupAddRequest(e.seq, yes, '', false, e.group_id)
@@ -513,12 +511,7 @@ async function makeMessage(self_id, payload) {
                 break;
             // 有人被踢群
             case 9:
-                e.post_type = 'notice'
-                e.notice_type = 'group'
-                e.sub_type = 'decrease'
-                e.user_id = uin1
                 e.operator_id = uin2
-                break;
             // 有人退群
             case 11:
                 e.post_type = 'notice'
