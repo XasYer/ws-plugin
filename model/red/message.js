@@ -395,7 +395,6 @@ async function makeMessage(self_id, payload) {
                             e.notice_type = 'friend'
                             e.sub_type = 'increase'
                             await e.bot.getFriendList()
-                            await this.getFriendList()
                             if (e.bot.fl.has(e.user_id)) {
                                 e.bot.fl.set(e.user_id, {
                                     bot_id: e.self_id,
