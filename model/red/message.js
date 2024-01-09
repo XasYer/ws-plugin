@@ -469,7 +469,7 @@ async function makeMessage(self_id, payload) {
             }
         }
         if (payload.user2.uid && !uin2) {
-            const uin = await e.bot.getuin(payload.user1.uid)
+            const uin = await e.bot.getuin(payload.user2.uid)
             if (uin) {
                 uin2 = uin
             } else {
