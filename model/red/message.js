@@ -380,7 +380,7 @@ async function makeMessage(self_id, payload) {
                             e.user_id = Number(QQ[1])
                             if (e.user_id == e.self_id) {
                                 await e.bot.getGroupList()
-                                if (e.bot.fl.has(e.group_id)) {
+                                if (!e.bot.fl.has(e.group_id)) {
                                     e.bot.fl.set(e.group_id, {
                                         bot_id: e.self_id,
                                         group_id: e.group_id
@@ -395,7 +395,7 @@ async function makeMessage(self_id, payload) {
                             e.notice_type = 'friend'
                             e.sub_type = 'increase'
                             await e.bot.getFriendList()
-                            if (e.bot.fl.has(e.user_id)) {
+                            if (!e.bot.fl.has(e.user_id)) {
                                 e.bot.fl.set(e.user_id, {
                                     bot_id: e.self_id,
                                     user_id: e.user_id
