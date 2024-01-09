@@ -399,7 +399,7 @@ export class QQRedBot {
         const data = await upload(this.bot, file, 'image/png')
         if (data?.ntFilePath) {
             const result = await this.bot.sendApi('POST', 'bot/setAvatar', JSON.stringify({
-                paath: data.ntFilePath
+                path: data.ntFilePath
             }))
             if (result.error) {
                 throw result.error
