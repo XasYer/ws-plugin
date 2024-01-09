@@ -493,7 +493,7 @@ export class QQRedBot {
             throw result.error
         }
         if (yes) {
-            this.getGroupList()
+            await this.getGroupList()
         }
         return true
     }
@@ -551,7 +551,7 @@ export class QQRedBot {
         return true
     }
 
-    async setGroupTransfer(group_id, user_id){
+    async setGroupTransfer(group_id, user_id) {
         const result = await this.bot.sendApi('POST', 'group/transfer', JSON.stringify({
             group: Number(group_id),
             uin: Number(user_id)
@@ -617,7 +617,14 @@ export class QQRedBot {
             throw result.error
         }
         if (yes) {
-            this.getFriendList()
+            user_id = Number(user_id)
+            await this.getFriendList()
+            if (!this.fl.has(user_id)) {
+                this.fl.set(user_id, {
+                    bot_id: this.uin,
+                    user_id
+                })
+            }
         }
         return true
     }
