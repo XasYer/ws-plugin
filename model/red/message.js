@@ -370,7 +370,7 @@ async function makeMessage(self_id, payload) {
                         break;
                     case 12:
                         const reg = /<nor txt="(.+?)"\/>/
-                        const match = i.grayTipElement.xmlElement.content.match(new RegExp(reg, 'g')).map(i => i.match(reg)[1]).join('')
+                        const match = i.grayTipElement.xmlElement.content.match(new RegExp(reg, 'g'))?.map(i => i.match(reg)[1]).join('')
                         if (match.includes('邀请加入了群聊')) {
                             const QQReg = /<qq uin="(.*?)" col=".*?" jp="(.*?)" \/>/
                             const QQ = i.grayTipElement.xmlElement.content.match(new RegExp(QQReg, 'g')).map(i => i.match(QQReg)[1])
