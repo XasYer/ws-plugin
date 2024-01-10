@@ -369,9 +369,9 @@ async function makeMessage(self_id, payload) {
                         }
                         break;
                     case 12:
-                        const reg = /<nor txt="(.+?)"\/>/
-                        const match = i.grayTipElement.xmlElement.content.match(new RegExp(reg, 'g'))?.map(i => i.match(reg)[1]).join('')
-                        if (match.includes('邀请加入了群聊')) {
+                        const reg = /<nor txt="(.+?)"\s*\/>/
+                        const text = i.grayTipElement.xmlElement.content.match(new RegExp(reg, 'g'))?.map(i => i.match(reg)[1]).join('')
+                        if (text.includes('邀请加入了群聊')) {
                             const QQReg = /<qq uin="(.*?)" col=".*?" jp="(.*?)" \/>/
                             const QQ = i.grayTipElement.xmlElement.content.match(new RegExp(QQReg, 'g')).map(i => i.match(QQReg)[1])
                             e.post_type = 'notice'
@@ -387,7 +387,7 @@ async function makeMessage(self_id, payload) {
                                     })
                                 }
                             }
-                        } else if (match.includes('你们已成功添加为好友')) {
+                        } else if (text.includes('你们已成功添加为好友')) {
                             if (e.user_id == 0) {
                                 e.user_id = Number(payload.peerUin)
                             }
@@ -400,6 +400,27 @@ async function makeMessage(self_id, payload) {
                                     bot_id: e.self_id,
                                     user_id: e.user_id
                                 })
+                            }
+                        } else if (text.includes('你的账号因系统检测或多人举报涉及业务违规操作')) {
+                            // 一小时提醒一次
+                            if (await redis.get(`ws-plugin:warningTips:${e.self_id}`)) {
+                                break
+                            }
+                            await redis.set(`ws-plugin:warningTips:${e.self_id}`, 1, { EX: 60 * 60 })
+                            const urlReg = /<url jp="(.+?)" col=".*" txt="(.+?)"\s*\/>/
+                            const match = i.grayTipElement.xmlElement.content.match(urlReg)
+                            const url = match[1]
+                            const tip = match[2]
+                            const content = `[${e.self_id}]${text}${tip}${url}`
+                            const masterQQ = []
+                            const master = Version.isTrss ? Config.master[e.self_id] : Config.masterQQ
+                            if (Config.howToMaster > 0) {
+                                masterQQ.push(master?.[Config.howToMaster - 1])
+                            } else if (Config.howToMaster == 0) {
+                                masterQQ.push(...master)
+                            }
+                            for (const i of masterQQ) {
+                                await e.bot.pickFriend(i).sendMsg(content)
                             }
                         }
                         break
@@ -518,7 +539,7 @@ async function makeMessage(self_id, payload) {
                 e.notice_type = 'group'
                 e.sub_type = 'decrease'
                 e.user_id = uin1
-                e.operator_id = e.user_id
+                if (!e.operator_id) e.operator_id = e.user_id
                 break
             // Bot被取消管理
             case 12:
