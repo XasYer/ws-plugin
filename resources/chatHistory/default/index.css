@@ -12,6 +12,12 @@ body {
     padding-top: 24px;
 }
 
+.container {
+    background: url("./bg.jpg") top left no-repeat;
+    background-size: 100% auto;
+    width: 600px;
+}
+
 #cBody {
     font-size: 24px;
 }
