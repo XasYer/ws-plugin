@@ -39,6 +39,12 @@ export const cfgSchema = {
           }
         },
         desc: 'ws-plugin用到的端口,1-65535,仅限喵崽',
+      },
+      ignoreOnlyReplyAt: {
+        title: '忽略仅艾特',
+        key: '忽略艾特',
+        def: false,
+        desc: '是否忽略云崽配置文件的仅艾特和前缀,即不需要艾特或前缀即可上报消息',
         fileName: 'ws-config'
       }
     }

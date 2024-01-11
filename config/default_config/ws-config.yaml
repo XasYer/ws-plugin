@@ -9,6 +9,9 @@ messagePostFormat: 2
 # 设置ws-plugin需要用到的端口
 wsPort: 54545
 
+# 是否忽略云崽配置文件的仅艾特
+ignoreOnlyReplyAt: false
+
 # 连接服务列表
 servers: 
   # 添加连接方式, 可添加多个

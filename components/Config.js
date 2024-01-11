@@ -80,6 +80,11 @@ class Config {
     return this.getDefOrConfig('ws-config').wsPort
   }
 
+  /** 是否忽略云崽配置文件的仅艾特和前缀,即不需要艾特或前缀即可上报消息 */
+  get messagePostFormat() {
+    return this.getDefOrConfig('ws-config').ignoreOnlyReplyAt
+  }
+
   /** 连接列表 */
   get servers() {
     return this.getDefOrConfig('ws-config').servers

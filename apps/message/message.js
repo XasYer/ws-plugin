@@ -196,6 +196,9 @@ function onlyReplyAt(e) {
     let groupCfg = Version.isTrss ? cfg.getGroup(e.self_id, e.group_id) : cfg.getGroup(e.group_id)
     if (groupCfg.onlyReplyAt != 1 || !groupCfg.botAlias || e.isPrivate) return e
 
+    if (Config.ignoreOnlyReplyAt) {
+        return rmAlias(e, groupCfg)
+    }
     let at = atBot(e)
     if (at) return e
     e = hasAlias(e, groupCfg)
@@ -215,16 +218,21 @@ function atBot(e) {
 
 function hasAlias(e, groupCfg) {
     if (e.message[0].type === 'text') {
-        let alias = groupCfg.botAlias
-        if (!Array.isArray(alias)) {
-            alias = [alias]
-        }
-        for (let name of alias) {
-            if (e.message[0].text.startsWith(name)) {
-                e.message[0].text = _.trimStart(e.message[0].text, name).trim()
-                return e
-            }
-        }
+        return rmAlias(e, groupCfg)
     }
     return false
+}
+
+function rmAlias(e, groupCfg) {
+    let alias = groupCfg.botAlias
+    if (!Array.isArray(alias)) {
+        alias = [alias]
+    }
+    for (let name of alias) {
+        if (e.message[0].text.startsWith(name)) {
+            e.message[0].text = _.trimStart(e.message[0].text, name).trim()
+            break
+        }
+    }
+    return e
 }
