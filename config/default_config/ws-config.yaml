@@ -6,6 +6,9 @@ heartbeatInterval: 5
 # 可选: 1:string, 2:array
 messagePostFormat: 2
 
+# 是否忽略云崽配置文件的仅艾特
+ignoreOnlyReplyAt: false
+
 # 连接服务列表
 servers: 
   # 添加连接方式, 可添加多个
