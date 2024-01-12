@@ -81,7 +81,7 @@ class Config {
   }
 
   /** 是否忽略云崽配置文件的仅艾特和前缀,即不需要艾特或前缀即可上报消息 */
-  get messagePostFormat() {
+  get ignoreOnlyReplyAt() {
     return this.getDefOrConfig('ws-config').ignoreOnlyReplyAt
   }
 
