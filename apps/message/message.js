@@ -218,7 +218,16 @@ function atBot(e) {
 
 function hasAlias(e, groupCfg) {
     if (e.message[0].type === 'text') {
-        return rmAlias(e, groupCfg)
+        let alias = groupCfg.botAlias
+        if (!Array.isArray(alias)) {
+            alias = [alias]
+        }
+        for (let name of alias) {
+            if (e.message[0].text.startsWith(name)) {
+                e.message[0].text = _.trimStart(e.message[0].text, name).trim()
+                return e
+            }
+        }
     }
     return false
 }
