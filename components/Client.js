@@ -125,6 +125,7 @@ export default class Client {
                 }
             }
             this.wss.handleUpgrade(req, socket, head, conn => {
+                req.url = req.url.replace(/\?access_token=.*/, '')
                 if (req.url === '/') {
                     conn.id = req.headers["sec-websocket-key"]
                     let time = null
