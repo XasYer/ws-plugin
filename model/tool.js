@@ -204,8 +204,8 @@ async function toImg(data, e, cfg = { retType: 'msgId' }) {
     }
     let html = []
     let wsids = []
-    const user_id = e.bot.uin || e.bot.user_id || e.user_id
-    const nickname = e.bot.nickname || e.nickname
+    const user_id = e.user_id || e.bot?.uin || e.bot?.user_id || 10000
+    const nickname = e.nickname || e.bot?.nickname || '^_^'
     if (!Array.isArray(data)) data = [data]
     for (let i of data) {
         if (!i) continue
