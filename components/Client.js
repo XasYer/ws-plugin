@@ -108,12 +108,17 @@ export default class Client {
         this.server = http.createServer(this.express)
         this.server.on("upgrade", (req, socket, head) => {
             if (this.accessToken) {
-                const token = req.headers['authorization']?.replace('Token ', '')
+                let token = req.headers['authorization']?.replace('Token ', '')
                 if (!token) {
-                    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-                    socket.destroy();
-                    return
-                } else if (this.accessToken != token) {
+                    if (/access_token=/.test(req.url)) {
+                        token = /access_token=(.*)/.exec(req.url)[1]
+                    } else {
+                        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+                        socket.destroy();
+                        return
+                    }
+                }
+                if (this.accessToken != token) {
                     socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
                     socket.destroy();
                     return;
