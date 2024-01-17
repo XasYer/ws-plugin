@@ -21,7 +21,7 @@ export class HandlerTools extends plugin {
    * @returns {Promise<*|*[]>}
    */
   async wsToolToImg (e, data) {
-    if (!e.user_id || !data) {
+    if (!data) {
       return false
     }
     const cfg = { retType: e?.retType || 'default' }
