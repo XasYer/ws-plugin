@@ -5,6 +5,7 @@ import express from "express"
 import http from "http"
 import _ from 'lodash'
 import fetch from 'node-fetch'
+import url from 'url'
 
 export default class Client {
     constructor({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, uin = Bot.uin, closed = false, ...other }) {
@@ -108,15 +109,12 @@ export default class Client {
         this.server = http.createServer(this.express)
         this.server.on("upgrade", (req, socket, head) => {
             if (this.accessToken) {
-                let token = req.headers['authorization']?.replace('Token ', '')
+                const Url = url.parse(req.url, true)
+                const token = req.headers['authorization']?.replace('Token ', '') || Url.query?.access_token
                 if (!token) {
-                    if (/access_token=/.test(req.url)) {
-                        token = /access_token=(.*)/.exec(req.url)[1]
-                    } else {
-                        socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
-                        socket.destroy();
-                        return
-                    }
+                    socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+                    socket.destroy();
+                    return
                 }
                 if (this.accessToken != token) {
                     socket.write('HTTP/1.1 403 Forbidden\r\n\r\n');
@@ -125,8 +123,8 @@ export default class Client {
                 }
             }
             this.wss.handleUpgrade(req, socket, head, conn => {
-                req.url = req.url.replace(/\?access_token=.*/, '')
-                if (req.url === '/') {
+                const Url = url.parse(req.url, true)
+                if (Url.pathname === '/') {
                     conn.id = req.headers["sec-websocket-key"]
                     let time = null
                     conn.send(lifecycle(this.self_id))
@@ -152,7 +150,7 @@ export default class Client {
                         conn.send(JSON.stringify(result));
                     })
                     this.arr.push(conn)
-                } else if (req.url === '/api' || req.url === '/api/') {
+                } else if (Url.pathname === '/api' || Url.pathname === '/api/') {
                     logger.mark(`[ws-plugin] ${this.name} 接受 WebSocket api 连接: ${req.connection.remoteAddress}`);
                     conn.on("error", (event) => {
                         logger.error(`[ws-plugin] ${this.name} 接受 WebSocket api 连接时出现错误: ${event}`)
@@ -167,7 +165,7 @@ export default class Client {
                         const result = await this.getData(data.action, data.params, data.echo)
                         conn.send(JSON.stringify(result));
                     })
-                } else if (req.url === '/event' || req.url === '/event/') {
+                } else if (Url.pathname === '/event' || Url.pathname === '/event/') {
                     conn.id = req.headers["sec-websocket-key"]
                     let time = null
                     conn.send(lifecycle(this.self_id))
@@ -188,6 +186,10 @@ export default class Client {
                         clearInterval(time)
                     })
                     this.arr.push(conn)
+                } else {
+                    socket.write('HTTP/1.1 404 NotFound\r\n\r\n');
+                    socket.destroy();
+                    return;
                 }
             })
 
