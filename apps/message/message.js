@@ -238,7 +238,7 @@ function rmAlias(e, groupCfg) {
         alias = [alias]
     }
     for (let name of alias) {
-        if (e.message[0].text.startsWith(name)) {
+        if (e.message[0].type == 'text' && e.message[0].text.startsWith(name)) {
             e.message[0].text = _.trimStart(e.message[0].text, name).trim()
             break
         }
