@@ -36,6 +36,14 @@ for (const item of path) {
     }
 }
 
-initWebSocket()
+if (Version.isTrss) {
+    Bot.once('online', () => {
+        initWebSocket()
+    })
+} else {
+    setTimeout(() => {
+        initWebSocket()
+    }, 1000 * 10)
+}
 
 export { apps }
