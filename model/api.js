@@ -441,19 +441,21 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
             if (list instanceof Map) {
                 list = Array.from(list.values())
             }
-            for (const i in list) {
-                list[i].group_id = await getGroup_id({ group_id: list[i].group_id })
-                if (list[i].group_name) {
-                    list[i].group_memo = list[i].group_name
+            ResponseData = []
+            for (const i of list) {
+                if (!i.group_id) continue
+                i.group_id = await getGroup_id({ group_id: i.group_id })
+                if (i.group_name) {
+                    i.group_memo = i.group_name
                 }
-                if (list[i].create_time) {
-                    list[i].group_create_time = list[i].create_time
+                if (i.create_time) {
+                    i.group_create_time = i.create_time
                 }
-                if (list[i].grade) {
-                    list[i].group_level = list[i].grade
+                if (i.grade) {
+                    i.group_level = i.grade
                 }
+                ResponseData.push(i)
             }
-            ResponseData = list
         },
         // 获取群成员信息
         'get_group_member_info': async ({ group_id, user_id }) => {
