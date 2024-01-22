@@ -105,7 +105,7 @@ async function createWebSocket(data) {
             sendSocketList.push(client)
             break
         case 4:
-            if (Version.isTrss) return
+            // if (Version.isTrss) return
             // client.createQQNT()
             redAdapter.connect(client)
             break
