@@ -7,33 +7,10 @@ let group_id_table = sequelize.define('group_id', {
         autoIncrement: true,
     },
     group_id: DataTypes.STRING,
+    custom: DataTypes.BIGINT
 })
 
-await sequelize.sync()
-
-async function checkColumn() {
-    const attributes = await sequelize.queryInterface.describeTable('group_ids')
-    if (!attributes.custom) {
-        await sequelize.queryInterface.addColumn('group_ids', 'custom', {
-            type: DataTypes.BIGINT,
-        })
-    } else {
-        await sequelize.queryInterface.changeColumn('group_ids', 'custom', {
-            type: DataTypes.BIGINT,
-        })
-    }
-    group_id_table = sequelize.define('group_id', {
-        id: {
-            type: DataTypes.BIGINT,
-            primaryKey: true,
-            autoIncrement: true,
-        },
-        group_id: DataTypes.STRING,
-        custom: DataTypes.BIGINT
-    })
-    await sequelize.sync()
-}
-await checkColumn()
+await sequelize.sync({ alert: true })
 
 async function saveGroup_id(group_id) {
     return executeSync(async () => {
