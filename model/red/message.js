@@ -247,12 +247,12 @@ async function makeMessage(self_id, payload) {
             case 1:
                 if (i.textElement.atType == 2) {
                     const qq = i.textElement.atUid == '0' ? i.textElement.atNtUin : i.textElement.atUid
-                    e.message.push({ type: 'at', qq: Number(qq) })
+                    e.message.push({ type: 'at', qq: Number(qq), text: i.textElement.content })
                     if (qq == e.self_id) {
                         e.atBot = true
                     }
                 } else if (i.textElement.atType == 1) {
-                    e.message.push({ type: 'at', qq: 'all' })
+                    e.message.push({ type: 'at', qq: 'all', text: i.textElement.content })
                 } else if (i.textElement.atType == 0) {
                     e.message.push({ type: 'text', text: i.textElement.content })
                 }
