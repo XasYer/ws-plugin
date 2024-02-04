@@ -147,7 +147,7 @@ async function makeGSUidReportMsg(e) {
  * @param {*} data 
  */
 async function makeGSUidSendMsg(data) {
-    let content = data.content, sendMsg = [], quote = null, bot = Version.isTrss ? Bot[data.bot_self_id] : Bot
+    let content = data.content, sendMsg = [], quote = null, bot = Bot[data.bot_self_id] || Bot
     if (content[0].type.startsWith('log')) {
         logger.info(content[0].data);
     } else {
