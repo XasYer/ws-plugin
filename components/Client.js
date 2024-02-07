@@ -336,13 +336,20 @@ export default class Client {
 
         this.express.post('/:action', async (req, res) => {
             const { action } = req.params;
-            const { body: params } = req;
+            const params = {
+                ...req.query,
+                ...req.body,
+            }
             const data = await this.getData(action, params)
             res.status(200).json(data || {})
         });
 
         this.express.post('/', async (req, res) => {
-            const { action, params } = req.body;
+            const { action } = req.body;
+            const params = {
+                ...req.query,
+                ...req.body,
+            }
             const data = await this.getData(action, params)
             res.status(200).json(data || {})
         });
@@ -411,7 +418,7 @@ export default class Client {
 
     async getData(action, params, echo) {
         const log = JSON.stringify(params, (key, value) => {
-            if (/^messages?$/.test(key)) {
+            if (/(^messages?$|token)/.test(key)) {
                 return '[...]'
             }
             return value
