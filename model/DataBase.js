@@ -13,13 +13,12 @@ import {
 
 let latestMsg = {}
 
-let guildLatestMsgId = {}
-let QQBotLatestReply = {}
-
 async function getMsg(where, other) {
+    if (Object.hasOwnProperty.call(where,'message_id') && where.message_id == undefined) {
+        return null
+    }
     if (existSQL) {
-        const msg = await findMessage_id(where, other)
-        return msg
+        return await findMessage_id(where, other)
     } else {
         let key = where.onebot_id || where.message_id
         let msg = await redis.get(`Yz:ws-plugin:msg:${key}`)
