@@ -1,6 +1,6 @@
 import { sequelize, DataTypes, executeSync, Op } from './base.js'
 
-let user_id_table = sequelize.define('user_id', {
+const user_id_table = sequelize.define('user_id', {
     id: {
         type: DataTypes.BIGINT,
         primaryKey: true,
@@ -56,6 +56,7 @@ async function updateUser_id(where, custom) {
 }
 
 export {
+    user_id_table,
     saveUser_id,
     findUser_id,
     updateUser_id

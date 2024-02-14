@@ -69,6 +69,7 @@ if (existSQL) {
 
 
 export {
+    message_id_table,
     saveMessage_id,
     findMessage_id
 }

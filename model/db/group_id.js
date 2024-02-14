@@ -1,6 +1,6 @@
 import { sequelize, DataTypes, executeSync, Op } from './base.js'
 
-let group_id_table = sequelize.define('group_id', {
+const group_id_table = sequelize.define('group_id', {
     id: {
         type: DataTypes.BIGINT,
         primaryKey: true,
@@ -57,6 +57,7 @@ async function updateGroup_id(where, custom) {
 
 
 export {
+    group_id_table,
     saveGroup_id,
     findGroup_id,
     updateGroup_id
