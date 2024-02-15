@@ -14,7 +14,7 @@ import fetch from 'node-fetch'
  * @returns 
  */
 async function makeOneBotReportMsg(e) {
-    let reportMsg = await msgToOneBotMsg(e.message, e.source)
+    let reportMsg = await msgToOneBotMsg(e.message, e)
     if (reportMsg.length === 0) {
         return false
     }
@@ -50,7 +50,7 @@ async function makeGSUidReportMsg(e) {
     let msg = e.message
     if (e.source) {
         message.push({
-            type: "reply",
+            type: 'reply',
             data: String(e.source.message_id)
         })
     }
@@ -94,7 +94,7 @@ async function makeGSUidReportMsg(e) {
                 break;
             case 'reply':
                 message.push({
-                    type: "reply",
+                    type: 'reply',
                     data: String(i.id)
                 })
                 break
@@ -292,7 +292,7 @@ async function makeSendMsg(params, uin, adapter) {
                 }
                 break
             case 'poke':
-                await bot.pickGroup(params.group_id).pokeMember(Number(i.data.qq))
+                await bot.pickGroup(params.group_id)?.pokeMember?.(Number(i.data.qq))
                 break
             case 'record':
                 sendMsg.push(segment.record(i.data.file))
@@ -374,9 +374,9 @@ async function makeForwardMsg(params, uin, adapter) {
     }
     const bot = Bot[uin] || Bot
     if (params.group_id) {
-        forwardMsg = await bot.pickGroup(params.group_id).makeForwardMsg?.(forwardMsg) || { type: "node", data: forwardMsg }
+        forwardMsg = await bot.pickGroup(params.group_id).makeForwardMsg?.(forwardMsg) || { type: 'node', data: forwardMsg }
     } else if (params.user_id) {
-        forwardMsg = await bot.pickFriend(params.user_id).makeForwardMsg?.(forwardMsg) || { type: "node", data: forwardMsg }
+        forwardMsg = await bot.pickFriend(params.user_id).makeForwardMsg?.(forwardMsg) || { type: 'node', data: forwardMsg }
     }
     return forwardMsg
 }
@@ -385,84 +385,98 @@ async function makeForwardMsg(params, uin, adapter) {
  * 转换成onebot消息
  * @returns 
  */
-async function msgToOneBotMsg(msg, source = null) {
+async function msgToOneBotMsg(msg, e) {
     let reportMsg = []
-    if (source) {
+    if (e.source) {
         const keys = ['message_id', 'rand', 'seq']
         const getData = keys.reduce((obj, key) => {
-            if (source[key] !== undefined) {
-                obj[key] = source[key]
+            if (e.source[key] !== undefined) {
+                obj[key] = e.source[key]
             }
             return obj
         }, {});
         const replyMsg = await getMsg(getData)
         if (replyMsg) {
             reportMsg.push({
-                "type": "reply",
-                "data": {
-                    "id": replyMsg.onebot_id
+                type: 'reply',
+                data: {
+                    id: replyMsg.onebot_id
                 }
             })
         }
     }
-    for (let i = 0; i < msg.length; i++) {
-        switch (msg[i].type) {
+    for (const i of msg) {
+        switch (i.type) {
             case 'at':
-                let qq = msg[i].qq
+                let qq = i.qq
                 if (qq != 'all') {
                     qq = await getUser_id({ user_id: qq })
                 }
                 reportMsg.push({
-                    "type": "at",
-                    "data": {
-                        "qq": qq
+                    type: 'at',
+                    data: {
+                        qq
                     }
                 })
                 break
             case 'text':
                 if (Array.isArray(Config.noMsgInclude) && Config.noMsgInclude.length > 0) {
-                    if (Config.noMsgInclude.some(item => msg[i].text.includes(item))) {
+                    if (Config.noMsgInclude.some(item => i.text.includes(item))) {
                         return false
                     }
                 }
                 reportMsg.push({
-                    "type": "text",
-                    "data": {
-                        "text": msg[i].text
+                    type: 'text',
+                    data: {
+                        text: i.text
                     }
                 })
                 break
             case 'image':
                 reportMsg.push({
-                    "type": "image",
-                    "data": {
-                        file: msg[i].file,
-                        subType: msg[i].asface ? 1 : 0,
-                        url: msg[i].url
+                    type: 'image',
+                    data: {
+                        file: i.file,
+                        subType: i.asface ? 1 : 0,
+                        url: i.url
+                    }
+                })
+                break
+            case 'video':
+                let url = i.file
+                if (!url?.startsWith?.('http')) {
+                    if (!e.group.getVideoUrl) break
+                    url = await e.group.getVideoUrl(i.fid, i.md5)
+                }
+                reportMsg.push({
+                    type: 'video',
+                    data: {
+                        file: i.name || url,
+                        url
                     }
                 })
                 break
             case 'json':
                 reportMsg.push({
-                    "type": 'json',
-                    "data": {
-                        "data": msg[i].data
+                    type: 'json',
+                    data: {
+                        data: i.data
                     }
                 })
                 break
             case 'face':
                 reportMsg.push({
-                    'type': 'face',
-                    'data': {
-                        'id': msg[i].id
+                    type: 'face',
+                    data: {
+                        id: i.id
                     }
                 })
                 break
             case 'record':
                 reportMsg.push({
-                    'type': 'record',
-                    'data': {
-                        'file': msg[i].file
+                    type: 'record',
+                    data: {
+                        file: i.file
                     }
                 })
                 break
