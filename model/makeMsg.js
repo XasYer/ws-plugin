@@ -387,7 +387,7 @@ async function makeForwardMsg(params, uin, adapter) {
  */
 async function msgToOneBotMsg(msg, e) {
     let reportMsg = []
-    if (e.source) {
+    if (e?.source) {
         const keys = ['message_id', 'rand', 'seq']
         const getData = keys.reduce((obj, key) => {
             if (e.source[key] !== undefined) {
@@ -445,7 +445,7 @@ async function msgToOneBotMsg(msg, e) {
             case 'video':
                 let url = i.file
                 if (!url?.startsWith?.('http')) {
-                    if (!e.group.getVideoUrl) break
+                    if (!e?.group?.getVideoUrl) break
                     url = await e.group.getVideoUrl(i.fid, i.md5)
                 }
                 reportMsg.push({
