@@ -53,7 +53,7 @@ pnpm install --filter=ws-plugin
 ```
 ```
 #github
-git clone --depth=1 https://github.com/xiaoye12123/ws-plugin.git ./plugins/ws-plugin/
+git clone --depth=1 https://github.com/XasYer/ws-plugin.git ./plugins/ws-plugin/
 pnpm install --filter=ws-plugin
 ```
 
