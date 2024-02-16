@@ -6,7 +6,7 @@ import { findAll } from './memberList.js'
 
 export class QQRedBot {
     constructor(bot) {
-        this.bot = bot
+        this.bot = this
         this.self_id = bot.self_id
         this.nickname = bot.nickname
         this.adapter = {
