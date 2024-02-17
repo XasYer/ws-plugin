@@ -106,6 +106,7 @@ export const redAdapter = new class RedAdapter {
         bot.nickname = info.nick
         bot.self_id = Number(info.uin)
         bot.uin = bot.self_id
+        Bot[bot.self_id] = new QQRedBot(bot)
         bot.ws = new WebSocket(`ws://${bot.host}:${bot.port}`)
         bot.send = (type, payload) => bot.ws.send(JSON.stringify({ type, payload }))
         bot.ws.on('open', () => bot.send('meta::connect', { token: bot.token }))
@@ -124,7 +125,6 @@ export const redAdapter = new class RedAdapter {
                     return
             }
         })
-        Bot[bot.self_id] = new QQRedBot(bot)
         if (!Version.isTrss) {
             /** 米游社主动推送、椰奶状态pro */
             if (!Bot?.adapter) {
