@@ -10,7 +10,7 @@ import schedule from 'node-schedule'
 import _ from 'lodash'
 import Runtime from '../../../../lib/plugins/runtime.js'
 
-async function makeSendMsg (data, message) {
+async function makeSendMsg(data, message) {
   if (!Array.isArray(message)) message = [message]
   const msgs = []
   let log = ''
@@ -223,7 +223,7 @@ async function makeSendMsg (data, message) {
   return { msg: msgs, log }
 }
 
-async function makeMessage (self_id, payload) {
+async function makeMessage(self_id, payload) {
   if (!payload) return null
   const e = {}
   e.bot = Bot[self_id]
@@ -426,7 +426,7 @@ async function makeMessage (self_id, payload) {
               }
             }
             break
-            // jsonGrayTipElement
+          // jsonGrayTipElement
           case 17:
             break
           default:
@@ -509,10 +509,10 @@ async function makeMessage (self_id, payload) {
         e.nickname = payload.user2.nickName
         e.approve = (yes = true) => e.bot.setGroupInvite(e.group_id, e.seq, yes)
         break
-        // 邀请好友入群
+      // 邀请好友入群
       case 5:
         e.inviter_id = uin2
-        // 申请入群
+      // 申请入群
       case 7:
         e.post_type = 'request'
         e.request_type = 'group'
@@ -524,7 +524,7 @@ async function makeMessage (self_id, payload) {
         e.user_id = uin1
         e.approve = (yes = true) => e.bot.setGroupAddRequest(e.seq, yes, '', false, e.group_id)
         break
-        // 有人被设置管理
+      // 有人被设置管理
       case 8:
         e.post_type = 'notice'
         e.notice_type = 'group'
@@ -532,10 +532,10 @@ async function makeMessage (self_id, payload) {
         e.set = true
         e.user_id = uin1
         break
-        // 有人被踢群
+      // 有人被踢群
       case 9:
         e.operator_id = uin2
-        // 有人退群
+      // 有人退群
       case 11:
         e.post_type = 'notice'
         e.notice_type = 'group'
@@ -543,9 +543,9 @@ async function makeMessage (self_id, payload) {
         e.user_id = uin1
         if (!e.operator_id) e.operator_id = e.user_id
         break
-        // Bot被取消管理
+      // Bot被取消管理
       case 12:
-        // 其他人被取消管理
+      // 其他人被取消管理
       case 13:
         e.post_type = 'notice'
         e.notice_type = 'group'
@@ -553,7 +553,7 @@ async function makeMessage (self_id, payload) {
         e.set = false
         e.user_id = uin1
         break
-        // 群聊被转让
+      // 群聊被转让
       case 14:
         e.post_type = 'notice'
         e.notice_type = 'group'
@@ -619,7 +619,7 @@ async function makeMessage (self_id, payload) {
   return e
 }
 
-async function sendNodeMsg (data, msg) {
+async function sendNodeMsg(data, msg) {
   const msgElements = await makeNodeMsg(data, msg)
   let target
   if (data.group_id) {
@@ -655,7 +655,7 @@ async function sendNodeMsg (data, msg) {
   return sendRet
 }
 
-async function makeNodeMsg (data, msg) {
+async function makeNodeMsg(data, msg) {
   const msgElements = []
   let seq = randomBytes(2).readUint16BE()
   for (const item of msg) {
@@ -770,7 +770,7 @@ async function makeNodeMsg (data, msg) {
   return msgElements
 }
 
-function convertFileName (filePath) {
+function convertFileName(filePath) {
   // 获取文件名（不包括扩展名）
   let fileName = basename(filePath, extname(filePath))
 
@@ -783,7 +783,7 @@ function convertFileName (filePath) {
   return newFileName
 }
 
-async function toQQRedMsg (bot, data) {
+async function toQQRedMsg(bot, data) {
   data = JSON.parse(data)
   switch (data.type) {
     case 'meta::connect':
@@ -791,7 +791,8 @@ async function toQQRedMsg (bot, data) {
         if (Bot[bot.self_id]?.version) {
           Bot[bot.self_id].version = {
             ...data.payload,
-            id: 'QQ'
+            id: 'QQ',
+            red: true
           }
         }
       }, 5000)
@@ -881,7 +882,7 @@ async function toQQRedMsg (bot, data) {
 }
 
 // 不想用Config读,免得和主分支冲突
-function getConfig (key) {
+function getConfig(key) {
   let defConfig, config
   try {
     defConfig = YAML.parse(
