@@ -783,39 +783,39 @@ function convertFileName(filePath) {
   return newFileName
 }
 
-async function toQQRedMsg(bot, data) {
+async function toQQRedMsg(self_id, data) {
   data = JSON.parse(data)
   switch (data.type) {
     case 'meta::connect':
-      setTimeout(() => {
-        if (Bot[bot.self_id]?.version) {
-          Bot[bot.self_id].version = {
-            ...data.payload,
-            id: 'QQ',
-            red: true
-          }
-        }
-      }, 5000)
+      // setTimeout(() => {
+      // if (Bot[bot.self_id]?.version) {
+      Bot[self_id].version = {
+        ...data.payload,
+        id: 'QQ',
+        red: true
+      }
+      // }
+      // }, 5000)
       break
     case 'message::recv':
-      if (Bot[bot.self_id]?.stat?.recv_msg_cnt) {
-        Bot[bot.self_id].stat.recv_msg_cnt++
+      if (Bot[self_id]?.stat?.recv_msg_cnt) {
+        Bot[self_id].stat.recv_msg_cnt++
       } else {
-        Bot[bot.self_id].stat.recv_msg_cnt = 1
+        Bot[self_id].stat.recv_msg_cnt = 1
       }
       const payload = data.payload[0]
-      const e = await makeMessage(bot.self_id, payload)
+      const e = await makeMessage(self_id, payload)
       if (!e || (e.post_type === 'message' && e.message.length == 0)) return
       let event = ''
       switch (e.post_type) {
         case 'message':
           if (e.message_type == 'group') {
             logger.info(`${logger.blue(`[${e.self_id}]`)} 群消息：[${e.group_name}(${e.group_id}), ${e.nickname}(${e.user_id})] ${e.raw_message}`)
-            if (!Bot[bot.self_id].gml.has(Number(e.group_id))) {
-              Bot[bot.self_id].gml.set(Number(e.group_id), new Map())
+            if (!Bot[self_id].gml.has(Number(e.group_id))) {
+              Bot[self_id].gml.set(Number(e.group_id), new Map())
             }
-            if (!Bot[bot.self_id].gml.get(Number(e.group_id)).has(Number(e.user_id))) {
-              Bot[bot.self_id].gml.get(Number(e.group_id)).set(Number(e.user_id), {
+            if (!Bot[self_id].gml.get(Number(e.group_id)).has(Number(e.user_id))) {
+              Bot[self_id].gml.get(Number(e.group_id)).set(Number(e.user_id), {
                 bot_id: e.self_id,
                 group_id: e.group_id,
                 nickname: e.nickname,
@@ -827,8 +827,8 @@ async function toQQRedMsg(bot, data) {
             }
           } else if (e.message_type == 'private') {
             logger.info(`${logger.blue(`[${e.self_id}]`)} 好友消息：[${e.nickname}(${e.user_id})] ${e.raw_message}`)
-            if (!Bot[bot.self_id].fl.has(Number(e.user_id))) {
-              Bot[bot.self_id].fl.set(Number(e.user_id), {
+            if (!Bot[self_id].fl.has(Number(e.user_id))) {
+              Bot[self_id].fl.set(Number(e.user_id), {
                 bot_id: e.self_id,
                 user_id: e.user_id,
                 nickname: e.nickname

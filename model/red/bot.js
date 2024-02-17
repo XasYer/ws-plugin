@@ -24,10 +24,10 @@ export class QQRedBot {
             start_time: Date.now() / 1000,
             recv_msg_cnt: 0
         }
-        this.version = {
-            id: "QQ",
-            name: "chronocat"
-        }
+        // this.version = {
+        //     id: "QQ",
+        //     name: "chronocat"
+        // }
         this.fl = new Map()
         this.gl = new Map()
         this.gml = new Map()
