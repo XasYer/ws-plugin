@@ -18,13 +18,14 @@ export class HandlerTools extends plugin {
    * ws文字转图片
    * @param e
    * @param data
+   * @param cfg
    * @returns {Promise<*|*[]>}
    */
-  async wsToolToImg (e, data) {
-    if (!data) {
-      return false
+  async wsToolToImg (e, data, cfg = {}) {
+    if (!data) return false
+    if (!Object.keys(cfg).length) {
+      cfg = { retType: e?.retType || 'default' }
     }
-    const cfg = { retType: e?.retType || 'default' }
     return await toImg(data, e, cfg)
   }
 
