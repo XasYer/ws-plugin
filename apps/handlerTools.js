@@ -21,11 +21,10 @@ export class HandlerTools extends plugin {
    * @param cfg
    * @returns {Promise<*|*[]>}
    */
-  async wsToolToImg (e, data, cfg = {}) {
+  async wsToolToImg (e, data) {
     if (!data) return false
-    if (!Object.keys(cfg).length) {
-      cfg = { retType: e?.retType || 'default' }
-    }
+    const cfg = data.cfg || { retType: e?.retType || 'default' }
+    data = data.wsdata || data
     return await toImg(data, e, cfg)
   }
 
