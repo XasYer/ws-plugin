@@ -216,18 +216,31 @@ export class QQRedBot {
             self_id: this.uin,
             group_id
         }
-        const { msg: elements, log, message_id: id, rand, seq, time } = await makeSendMsg(data, message)
+        const { msg: elements, log, message_id: id, rand, seq, time, node } = await makeSendMsg(data, message)
         if (id) return { message_id: id, rand, seq, time }
         if (elements.length == 0) {
             throw '[ws-plugin] 发送消息错误: message is empty'
         }
-        const result = await this.getApiData('POST', 'message/send', {
-            peer: {
+        let result
+        if (node) {
+            let target = {
                 chatType: 2,
                 peerUin: String(group_id)
-            },
-            elements
-        })
+            }
+            result = await this.getApiData('POST', 'message/unsafeSendForward', {
+                msgElements: elements,
+                srcContact: target,
+                dstContact: target
+            })
+        } else {
+            result = await this.getApiData('POST', 'message/send', {
+                peer: {
+                    chatType: 2,
+                    peerUin: String(group_id)
+                },
+                elements
+            })
+        }
         logger.info(`${logger.blue(`[${this.uin} => ${group_id}]`)} 发送群消息：${log}`)
         const sendRet = {
             message_id: result.msgId,
@@ -238,7 +251,6 @@ export class QQRedBot {
             onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
         }
         setMsg(sendRet)
-        sendRet.md5 = elements.filter((i) => i.elementType === 2)
         return sendRet
     }
 
@@ -249,18 +261,31 @@ export class QQRedBot {
             self_id: this.uin,
             user_id
         }
-        const { msg: elements, log, message_id: id, rand, seq, time } = await makeSendMsg(data, message)
+        const { msg: elements, log, message_id: id, rand, seq, time, node } = await makeSendMsg(data, message)
         if (id) return { message_id: id, rand, seq, time }
         if (elements.length == 0) {
             throw '[ws-plugin] 发送消息错误: message is empty'
         }
-        const result = await this.getApiData('POST', 'message/send', {
-            peer: {
+        let result
+        if (node) {
+            let target = {
                 chatType,
                 peerUin: String(user_id)
-            },
-            elements
-        })
+            }
+            result = await this.getApiData('POST', 'message/unsafeSendForward', {
+                msgElements: elements,
+                srcContact: target,
+                dstContact: target
+            })
+        } else {
+            result = await this.getApiData('POST', 'message/send', {
+                peer: {
+                    chatType,
+                    peerUin: String(user_id)
+                },
+                elements
+            })
+        }
         logger.info(`${logger.blue(`[${this.uin} => ${user_id}]`)} 发送好友消息：${log}`)
         const sendRet = {
             message_id: result.msgId,
@@ -271,7 +296,6 @@ export class QQRedBot {
             onebot_id: Math.floor(Math.random() * Math.pow(2, 32)) | 0,
         }
         setMsg(sendRet)
-        sendRet.md5 = elements.filter((i) => i.elementType === 2)
         return sendRet
     }
 
@@ -702,7 +726,7 @@ export class QQRedBot {
     }
 
     async setFriendBlock(user_id, enable = true) {
-        await this.getApiData('POST', 'group/setBlock',{
+        await this.getApiData('POST', 'group/setBlock', {
             uin: Number(user_id),
             block: enable
         })

@@ -210,6 +210,25 @@ async function makeSendMsg(data, message) {
             const img = await toImg(_.tail(i.data), data, { retType: 'base64' })
             return await makeSendMsg(data, [title, img])
           } else return await toImg(i.data, data)
+        } else if (Config.redSendForwardMsgType == 5) {
+          const elements = []
+
+          for (const m of i.data) {
+            if (Array.isArray(m.message)) {
+              const msg = []
+              for (const message of m.message) {
+                const { msg: element } = await makeSendMsg(data, message)
+                msg.push(...element)
+              }
+              elements.push(msg)
+            } else {
+              const { msg: element } = await makeSendMsg(data, m.message)
+              elements.push(element)
+            }
+          }
+
+          log += `[转发消息]`
+          return { msg: { elementType: 10, elements }, log, node: true }
         }
         break
       case 'button':
