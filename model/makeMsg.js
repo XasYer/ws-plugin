@@ -232,9 +232,10 @@ async function makeSendMsg(params, uin, adapter) {
                     quote = await getMsg({ onebot_id: i.data.id })
                     if (quote) {
                         quote = await bot.getMsg?.(quote.message_id)
-                    } else {
-                        sendMsg.push(MsgToCQ([i]))
                     }
+                    // else {
+                    //     sendMsg.push(MsgToCQ([i]))
+                    // }
                 }
                 break
             case 'image':

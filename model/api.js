@@ -75,7 +75,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
             if (!ResponseData) {
                 ResponseData = {
                     user_id: await getUser_id({ user_id: params.user_id }),
-                    nickname: 'QQ用户',
+                    nickname: adapter?.name || 'QQ用户',
                     sex: 'unknown',
                     age: 18
                 }
@@ -469,8 +469,8 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                     ResponseData = {
                         group_id,
                         user_id,
-                        nickname: 'QQ用户',
-                        card: 'QQ用户',
+                        nickname: adapter?.name || 'QQ用户',
+                        card: adapter?.name || 'QQ用户',
                         sex: 'unknown',
                         last_sent_time: 0,
                         role: 'member',
