@@ -46,6 +46,7 @@ async function makeOneBotReportMsg(e) {
  * @returns 
  */
 async function makeGSUidReportMsg(e) {
+
     let message = []
     let msg = e.message
     if (e.source) {
@@ -147,7 +148,8 @@ async function makeGSUidReportMsg(e) {
  * @param {*} data 
  */
 async function makeGSUidSendMsg(data) {
-    let content = data.content, sendMsg = [], quote = null, bot = Bot[data.bot_self_id] || Bot
+    let content = data.content, quote = null, bot = Bot[data.bot_self_id] || Bot
+    const sendMsg = []
     if (content[0].type.startsWith('log')) {
         logger.info(content[0].data);
     } else {
@@ -186,12 +188,80 @@ async function makeGSUidSendMsg(data) {
                     }
                     sendMsg.push(await bot[target](data.target_id).makeForwardMsg?.(arr) || { type: 'node', data: arr })
                     break;
+                case 'template_markdown':
+                    const markdown_parms = [];
+                    for (const key in msg.data.para) {
+                        markdown_parms.push({ key, values: [msg.data.para[key]] });
+                    }
+                    const data = { custom_template_id: msg.data.template_id, params: markdown_parms }
+                    sendMsg.push(toMD(data));
+                    break;
+                case 'buttons':
+                    sendMsg.push(toButton(msg));
+                    break;
                 default:
                     break;
             }
         }
     }
     return { sendMsg, quote }
+}
+
+function toMD(data) {
+    if (Version.isTrss) {
+        return segment.markdown(data)
+    } else {
+        return {
+            type: 'markdown',
+            ...data
+        }
+    }
+}
+
+function toButton(obj) {
+    const buttons = [];
+    let button = [];
+    const sum = 2; // 每行几个
+    for (let j of obj.data) {
+        let action = j.action;
+        if (action == -1) {
+            action = 2;
+        }
+        let enter = false
+        if (action == 1) {
+            action = 2;
+            enter = true;
+        }
+        let specify_user_ids = j.specify_user_ids;
+        if (j.specify_user_ids.length == 0) {
+            specify_user_ids = false;
+        }
+        let input_data = j.data
+        if (j.data == '') {
+            input_data = '/';
+        }
+        button.push({
+            text: j.text,
+            clicked_text: j.text,
+            input: input_data,
+            send: enter,
+            // action: action,
+            permission: specify_user_ids
+        },);
+
+        if (button.length >= sum) {
+            buttons.push(button);
+            button = [];
+        } else if (button.length >= obj.data.length) {
+            buttons.push(button);
+            button = [];
+        }
+    }
+    if (Version.isTrss) {
+        return segment.button(...buttons)
+    } else {
+        return Bot.Button(buttons)
+    }
 }
 
 /**
