@@ -46,6 +46,7 @@ async function makeOneBotReportMsg(e) {
  * @returns 
  */
 async function makeGSUidReportMsg(e) {
+
     let message = []
     let msg = e.message
     if (e.source) {
@@ -116,7 +117,7 @@ async function makeGSUidReportMsg(e) {
         }
     }
     const MessageReceive = {
-        bot_id: 'Yunzai_Bot',
+        bot_id: 'qqgroup',
         bot_self_id: String(e.self_id),
         msg_id: String(e.message_id),
         user_id: String(e.user_id),
@@ -147,7 +148,8 @@ async function makeGSUidReportMsg(e) {
  * @param {*} data 
  */
 async function makeGSUidSendMsg(data) {
-    let content = data.content, sendMsg = [], quote = null, bot = Bot[data.bot_self_id] || Bot
+    let content = data.content, quote = null, bot = Bot[data.bot_self_id] || Bot
+	const sendMsg = []
     if (content[0].type.startsWith('log')) {
         logger.info(content[0].data);
     } else {
@@ -186,6 +188,18 @@ async function makeGSUidSendMsg(data) {
                     }
                     sendMsg.push(await bot[target](data.target_id).makeForwardMsg?.(arr) || { type: 'node', data: arr })
                     break;
+                case 'template_markdown':
+					const markdown_parms = [];
+					const parms_keys = Object.keys(msg.data.para);
+					for (const keys of parms_keys) {
+						markdown_parms.push({key:keys,values:[msg.data.para[keys]]});
+					}
+					sendMsg.push({ type: 'markdown', data: {custom_template_id:msg.data.template_id,params:markdown_parms} });
+					break;
+                case 'buttons':
+                    const buttons_data=await toButton(msg);
+					sendMsg.push({ type: 'button', data: buttons_data });
+					break;
                 default:
                     break;
             }
@@ -193,6 +207,50 @@ async function makeGSUidSendMsg(data) {
     }
     return { sendMsg, quote }
 }
+
+
+async function toButton(obj) {
+    const button = [];
+    let arr=[];
+    const sum = 2;//每行几个
+    for (let j of obj.data) {
+		let action = j.action;
+		if(action == -1){
+			action = 2;
+		}
+		let enter = false
+		if(action == 1){
+			action = 2;
+			enter = true;
+		}
+		let specify_user_ids = j.specify_user_ids;
+		if(j.specify_user_ids.length == 0){
+			specify_user_ids = false;
+		}
+		let input_data = j.data
+		if(j.data == ''){
+			input_data = '/';
+		}
+		arr.push({
+			"text": j.text,
+			"clicked_text": j.text,
+			"input": input_data,
+			"send": enter,
+			"action": action,
+			"permission": specify_user_ids
+		},);
+
+		if ( arr.length>=sum) {
+			button.push( arr);
+			arr = [];
+		}else if (arr.length>=obj.data.length){
+			button.push( arr);
+			arr = [];
+		}
+
+    }
+    return button
+  }
 
 /**
  * 制作onebot发送的消息
