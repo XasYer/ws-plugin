@@ -117,7 +117,7 @@ async function makeGSUidReportMsg(e) {
         }
     }
     const MessageReceive = {
-        bot_id: 'qqgroup',
+        bot_id: 'Yunzai_Bot',
         bot_self_id: String(e.self_id),
         msg_id: String(e.message_id),
         user_id: String(e.user_id),
