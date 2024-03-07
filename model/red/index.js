@@ -59,7 +59,7 @@ export const redAdapter = new class RedAdapter {
                 }
             }).catch(error => {
                 if (error.name === 'AbortError') {
-                    return { error: `${logger.red(`[${bot.uin}] ${api} 请求超时, 请检查账号状态或重启QQ！`)}` }
+                    return { error: `${logger.red(`[${bot.uin}] ${api} 请求超时，请检查账号状态或重启QQ！请求参数：${body} `)}` }
                 } else {
                     return { error }
                 }
