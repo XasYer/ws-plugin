@@ -10,7 +10,7 @@ const user_id_table = sequelize.define('user_id', {
     custom: DataTypes.BIGINT
 })
 
-await sequelize.sync({ alert: true })
+await sequelize.sync()
 
 async function saveUser_id(user_id) {
     return executeSync(async () => {
@@ -30,9 +30,17 @@ async function findUser_id(where, order = [['createdAt', 'DESC']]) {
                 { id: where.custom },
                 { custom: where.custom }
             ],
-            user_id: {
-                [Op.like]: where.like || '%'
-            }
+            user_id: (() => {
+                if (Array.isArray(where.like)) {
+                    return {
+                        [Op.or]: where.like.map(i => i = { [Op.like]: i })
+                    }
+                } else {
+                    return {
+                        [Op.like]: where.like || '%'
+                    }
+                }
+            })()
         }
     }
     return executeSync(async () => {

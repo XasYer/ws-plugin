@@ -74,14 +74,26 @@ async function createWebSocket(data) {
         if (/^(2854|3889)/.test(self_id) && self_id.length === 10) {
             client.adapter = {
                 name: 'QQBot',
-                user_like: self_id + '%',
-                group_like: self_id + '%'
+                user_like: [
+                    self_id + '%',
+                    'qg_%'
+                ],
+                group_like: [
+                    self_id + '%',
+                    'qg_%'
+                ]
             }
         } else if (!Version.isTrss && self_id.startsWith('1020') && self_id.length === 9) {
             client.adapter = {
                 name: 'QQBot',
-                user_like: self_id + '%',
-                group_like: self_id + '%'
+                user_like: [
+                    self_id + '%',
+                    'qg_%'
+                ],
+                group_like: [
+                    self_id + '%',
+                    'qg_%'
+                ]
             }
         }
     }
