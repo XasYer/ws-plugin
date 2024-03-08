@@ -66,7 +66,7 @@ async function makeGSUidReportMsg(e) {
             case 'text':
                 if (Config.noMsgInclude.length > 0 && Array.isArray(Config.noMsgInclude)) {
                     if (Config.noMsgInclude.some(item => i.text.includes(item))) {
-                        return false
+                        return []
                     }
                 }
                 message.push({
@@ -493,7 +493,7 @@ async function msgToOneBotMsg(msg, e) {
             case 'text':
                 if (Array.isArray(Config.noMsgInclude) && Config.noMsgInclude.length > 0) {
                     if (Config.noMsgInclude.some(item => i.text.includes(item))) {
-                        return false
+                        return []
                     }
                 }
                 reportMsg.push({
