@@ -14,7 +14,7 @@ import {
 let latestMsg = {}
 
 async function getMsg(where, other) {
-    if (Object.hasOwnProperty.call(where,'message_id') && where.message_id == undefined) {
+    if (Object.hasOwnProperty.call(where, 'message_id') && where.message_id == undefined) {
         return null
     }
     if (existSQL) {
@@ -31,7 +31,7 @@ async function getMsg(where, other) {
 
 async function setMsg(value) {
     if (Array.isArray(value.message_id) || !value.seq || !value.rand) {
-        return 
+        return
     }
     if (existSQL) {
         await saveMessage_id(value)
