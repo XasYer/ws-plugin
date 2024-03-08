@@ -193,8 +193,8 @@ async function makeGSUidSendMsg(data) {
                     for (const key in msg.data.para) {
                         markdown_parms.push({ key, values: [msg.data.para[key]] });
                     }
-                    const data = { custom_template_id: msg.data.template_id, params: markdown_parms }
-                    sendMsg.push(toMD(data));
+                    const md = { custom_template_id: msg.data.template_id, params: markdown_parms }
+                    sendMsg.push(toMD(md));
                     break;
                 case 'buttons':
                     sendMsg.push(toButton(msg));
