@@ -26,9 +26,10 @@ const Render = {
         }
         let resPath = data.pluResPath
         const layoutPath = process.cwd() + '/plugins/ws-plugin/resources/common/layout/'
+        const saveId = (cfg.saveId || e?.user_id || data.saveId) + '_' + Math.random().toString().slice(-6)
         return {
           ...data,
-          saveId: cfg.saveId || data.saveId,
+          saveId,
           _res_path: resPath,
           _ws_path: resPath,
           _layout_path: layoutPath,
