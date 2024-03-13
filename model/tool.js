@@ -190,6 +190,7 @@ let id = 1
  * 将转发消息渲染成图片并发送,data为makeForwordMsg.data
  * @param {Object} data makeForwordMsg.data
  * @param {{user_id:number,nickname:string,reply:function}} e 直接丢e即可
+ * @param cfg 渲染配置
  * @param cfg.retype
  * * default/空：自动发送图片，返回true
  * * msgId：自动发送图片，返回msg id
@@ -321,7 +322,7 @@ async function toImg(data, e, cfg = { retType: 'msgId' }) {
         let render = await Render.render(
             `chatHistory/${target}/index`,
             { data: html, target },
-            { e, scale: 1.2, retType: cfg.retType }
+            { e, scale: 1.2, ...cfg }
         )
         return cfg.returnID ? { render, wsids } : render
     }
