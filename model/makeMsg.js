@@ -410,6 +410,9 @@ async function makeForwardMsg(params, uin, adapter) {
                 }
             }]
         }
+        if (!Array.isArray(msg.data.content)) {
+            msg.data.content = [msg.data.content]
+        }
         let node = null
         for (let i of msg.data.content) {
             if (i.type == 'node') {
