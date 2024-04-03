@@ -423,10 +423,12 @@ export default class Client {
             }
             return value
         })
-        logger.info(`[ws-plugin] name:${this.name} 接收到api调用:${action} 参数:${log}`)
+        logger.info(`[ws-plugin] name: ${this.name} 接收到api调用: ${action} 参数: ${log}`)
         let result
         try {
+            logger.debug(`[ws-plugin] name: ${this.name} api: ${action} echo: ${echo} 参数: ${params}`)
             const data = await getApiData(action, params, this.name, this.uin, this.adapter, this.other);
+            logger.debug(`[ws-plugin] name: ${this.name} api: ${action} echo: ${echo} 返回值:`, data)
             result = {
                 status: 'ok',
                 retcode: 0,
