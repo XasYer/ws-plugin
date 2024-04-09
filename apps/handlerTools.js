@@ -1,9 +1,10 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { htmlCache, toImg } from '../model/index.js'
+import { findUser_id } from '../model/db/index.js'
 
 const getMsgReg = new RegExp('^#ws查看\s*([0-9]+)$')
 export class HandlerTools extends plugin {
-  constructor () {
+  constructor() {
     super({
       name: '[ws-plugin] tool',
       dsc: '[ws-plugin] tool',
@@ -13,7 +14,10 @@ export class HandlerTools extends plugin {
         { reg: '#ws转图片.*', fnc: 'wsToImg' },
         { reg: getMsgReg, fnc: 'getMsg' }
       ],
-      handler: [{ key: 'ws.tool.toImg', fn: 'wsToolToImg' }]
+      handler: [
+        { key: 'ws.tool.toImg', fn: 'wsToolToImg' },
+        { key: 'ws.tool.findUserId', fn: 'wsFindUserId' }
+      ]
     })
   }
 
@@ -23,11 +27,15 @@ export class HandlerTools extends plugin {
    * @param data
    * @returns {Promise<*|*[]>}
    */
-  async wsToolToImg (e, data) {
+  async wsToolToImg(e, data) {
     if (!data) return false
     const cfg = data.cfg || { retType: e?.retType || 'default' }
     data = data.wsdata || data.wsData || data
     return await toImg(data, e, cfg)
+  }
+
+  async wsFindUserId(where, order) {
+    return await findUser_id(where, order)
   }
 
   /**
@@ -35,7 +43,7 @@ export class HandlerTools extends plugin {
    * @param e
    * @returns {Promise<*|boolean>}
    */
-  async wsToImg (e) {
+  async wsToImg(e) {
     if (!e.user_id) {
       return false
     }
@@ -62,7 +70,7 @@ export class HandlerTools extends plugin {
    * @param e
    * @returns {Promise<boolean>}
    */
-  async getMsg (e) {
+  async getMsg(e) {
     const id = getMsgReg.exec(e.msg)
     const msg = htmlCache[id[1]]
     if (msg) {
