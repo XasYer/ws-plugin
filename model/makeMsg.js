@@ -369,7 +369,7 @@ async function makeSendMsg(params, uin, adapter) {
                 sendMsg.push(segment.record(i.data.file))
                 break
             case 'face':
-                sendMsg.push(segment.face(i.data.id))
+                sendMsg.push({ type: 'face', id: i.data.id })
                 break
             case 'node':
                 let data = {
@@ -380,7 +380,7 @@ async function makeSendMsg(params, uin, adapter) {
                 break
             case 'json':
                 let json = decodeHtml(i.data.data)
-                sendMsg.push(segment.json(json))
+                sendMsg.push({ type: 'json', data: json })
                 break
             default:
                 sendMsg.push(MsgToCQ([i]))
