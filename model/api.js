@@ -265,7 +265,7 @@ async function getApiData(api, params = {}, name, uin, adapter, other = {}) {
                 let detail = forwardMsg.data?.meta?.detail
                 if (detail) forward_id = detail.resid
             } else {
-                let match = forwardMsg.data.match(/m_resid="(.*?)"/);
+                let match = forwardMsg.data?.match(/m_resid="(.*?)"/);
                 if (match) forward_id = match[1];
             }
             if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
