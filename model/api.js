@@ -172,7 +172,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
     get_msg: async (params) => {
       const oldMsg = await getMsg({ onebot_id: params.message_id })
       if (oldMsg) {
-        let msg = await bot.getMsg?.(ResponseData.message_id)
+        let msg = await bot.getMsg?.(oldMsg.message_id)
         if (!msg) {
           if (oldMsg.group_id) {
             msg = await bot.pickGroup(oldMsg.group_id)?.getMsg?.(oldMsg.message_id)
