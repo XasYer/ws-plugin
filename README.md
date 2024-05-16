@@ -78,10 +78,6 @@ pnpm install --filter=ws-plugin
 
 </details>
 
-## 反馈或建议(QQ群)
-
-QQ群 [698673296](http://qm.qq.com/cgi-bin/qm/qr?_wv=1027&k=0xSHDCUDrVbiOKe7ksEi5xpxdmJj8VRT&authKey=gnMoAHGtaQcqlGg50M%2B6QvIvKsyzMrPymK0FjIxCe7mdzUM8rSIi2jvxWczaZEU5&noverify=0&group_code=698673296)
-
 ## onebot实现
 
 <details>
