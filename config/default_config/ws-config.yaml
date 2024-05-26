@@ -6,6 +6,9 @@ heartbeatInterval: 5
 # 可选: 1:string, 2:array
 messagePostFormat: 2
 
+# 设置ws-plugin需要用到的端口
+wsPort: 54545
+
 # 是否忽略云崽配置文件的仅艾特
 ignoreOnlyReplyAt: false
 

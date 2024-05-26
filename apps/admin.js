@@ -1,6 +1,6 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { Config, Render, Version, allSocketList, sendSocketList, createWebSocket } from '../components/index.js'
-import { toImg, resetLock, TMP_DIR } from '../model/index.js'
+import { toImg, TMP_DIR } from '../model/index.js'
 import lodash from 'lodash'
 import fs from 'fs'
 import { join } from 'path'
@@ -227,7 +227,7 @@ export class setting extends plugin {
           '连接名字,连接类型\n',
           '---------------------------------\n',
           '连接名字: 用来区分每个连接\n',
-          '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 5:正向http 6:反向http'
+          '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:red连接 5:正向http 6:反向http'
         ])
         // await this.reply([
         //     '请一次性发送以下参数:\n',
@@ -362,6 +362,18 @@ export class setting extends plugin {
             '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
             '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连\n',
             'access-token: 访问秘钥'
+          ])
+          break
+        case '4':
+          await this.reply([
+            '请继续发送以下参数,用逗号分割\n',
+            '---------------------------------\n',
+            '连接地址,Token(为空尝试自动获取),重连间隔(默认5),最大重连次数(默认0)\n',
+            '---------------------------------\n',
+            '连接地址: Host:Port,比如127.0.0.1:16530\n',
+            'Token: Chronocat 连接 Token\n',
+            '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
+            '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连'
           ])
           break
         case '5':
@@ -690,8 +702,6 @@ export class setting extends plugin {
   }
 
   async clearCache (e) {
-    // 重置数据库同步锁
-    resetLock()
     // 清除Temp目录下所有文件
     try {
       const files = fs.readdirSync(TMP_DIR)

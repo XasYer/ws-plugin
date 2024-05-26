@@ -34,6 +34,11 @@ class Config {
     }
   }
 
+  /** 获得yunzai Bot.yaml配置 */
+  get bot () {
+    return cfg.bot
+  }
+
   /** 主人QQ */
   get masterQQ () {
     return cfg.masterQQ
@@ -67,6 +72,11 @@ class Config {
   /** 数据上报类型 */
   get messagePostFormat () {
     return this.getDefOrConfig('ws-config').messagePostFormat
+  }
+
+  /** 端口 */
+  get wsPort () {
+    return this.getDefOrConfig('ws-config').wsPort
   }
 
   /** 是否忽略云崽配置文件的仅艾特和前缀,即不需要艾特或前缀即可上报消息 */
@@ -126,9 +136,19 @@ class Config {
     return this.getDefOrConfig('msg-config').muteStop
   }
 
+  /** red 发送伪造转发消息方式 */
+  get redSendForwardMsgType () {
+    return this.getDefOrConfig('msg-config').redSendForwardMsgType
+  }
+
   /** 文字转图片是否展示ID */
   get toImgID () {
     return this.getDefOrConfig('msg-config').toImgID
+  }
+
+  /** 转图片是否不包含标题 */
+  get toImgNoTitle () {
+    return this.getDefOrConfig('msg-config').toImgNoTitle
   }
 
   /** 渲染精度 */

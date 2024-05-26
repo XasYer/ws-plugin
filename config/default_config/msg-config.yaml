@@ -42,3 +42,6 @@ taskQueue: 1
 
 # 文字转图片是否展示ID 0:不展示 1:仅ID 2:提示+ID
 toImgID: 0
+
+# 转图片是否不包含标题 0:包含 1:不包含(标题+图混合)
+toImgNoTitle: 0

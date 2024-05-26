@@ -1,6 +1,6 @@
 export const cfgSchema = {
   ws: {
-    title: 'ws连接设置,改动此设置会将所有已连接强制断开重连',
+    title: 'ws连接设置,重启生效',
     cfg: {
       heartbeatInterval: {
         title: '心跳频率',
@@ -25,6 +25,20 @@ export const cfgSchema = {
         input: (n) => Math.min(2, Math.max(n * 1 || 0, 1)),
         desc: '上报数据类型: 1:string 2:array',
         fileName: 'ws-config'
+      },
+      wsPort: {
+        title: 'ws-plugin用到的端口',
+        key: '端口',
+        type: 'num',
+        def: 54545,
+        input: (n) => {
+          if (n > 0 && n <= 65535) {
+            return n * 1
+          } else {
+            return 54545
+          }
+        },
+        desc: 'ws-plugin用到的端口,1-65535,仅限喵崽',
       },
       ignoreOnlyReplyAt: {
         title: '忽略仅艾特',
@@ -88,6 +102,15 @@ export const cfgSchema = {
         def: 0,
         desc: '文字转图片是否展示ID 0:不展示 1:仅ID 2:提示+ID',
         input: (n) => Math.min(2, Math.max(n * 1 || 0, 1)),
+        fileName: 'msg-config'
+      },
+      redSendForwardMsgType: {
+        title: 'red转发方式',
+        key: 'red转发',
+        type: 'num',
+        def: 1,
+        desc: 'red 发送伪造转发消息方式 1:伪造转发 2:分开发送 3:合并发送 4:图片方式',
+        input: (n) => Math.min(4, Math.max(n * 1 || 0, 1)),
         fileName: 'msg-config'
       },
       msgStoreTime: {

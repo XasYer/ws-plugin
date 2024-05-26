@@ -108,6 +108,20 @@ export function supportGuoba() {
           },
         },
         {
+          field: 'msg.redSendForwardMsgType',
+          label: 'red伪造转发',
+          bottomHelpMessage: '可选: 1:伪造转发 2:陆续发送 3:合并发送 4:图片方式',
+          component: 'RadioGroup',
+          componentProps: {
+            options: [
+              { label: '伪造转发', value: 1 },
+              { label: '分开发送', value: 2 },
+              { label: '合并发送', value: 3 },
+              { label: '图片方式', value: 4 },
+            ],
+          },
+        },
+        {
           field: 'msg.renderScale',
           label: '图片渲染精度',
           bottomHelpMessage: '设置高精度会提高图片的精细度，但因图片较大可能会影响渲染与发送速度',
