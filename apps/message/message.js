@@ -108,7 +108,6 @@ Bot.on('message', async e => {
   for (const i of sendSocketList) {
     if (i.status == 1) {
       let reportMsg = null
-      console.log('i.uin', i.uin, 'e.self_id', e.self_id)
       switch (Number(i.type)) {
         case 1:
         case 2:
@@ -119,7 +118,6 @@ Bot.on('message', async e => {
           reportMsg = await makeOneBotReportMsg(msg)
           break
         case 3:
-          console.log(i.adapter)
           if (i.uin != e.self_id) continue
           reportMsg = await makeGSUidReportMsg(msg, i.adapter?.gsBotId)
           break
