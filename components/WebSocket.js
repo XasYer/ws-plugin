@@ -60,11 +60,13 @@ async function createWebSocket (data) {
     data.closed = data.close
     delete data.close
   }
+  data.rawName = data.rawName || data.name
   if (Array.isArray(data.uin)) {
     for (const uin of data.uin) {
       const str = String(uin)
       const i = _.cloneDeep(data)
       i.name += `(${str.slice(0, 4) + '...' + str.slice(-2)})`
+      i.rawName = data.name
       i.uin = uin
       await createWebSocket(i)
     }

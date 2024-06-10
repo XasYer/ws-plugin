@@ -103,10 +103,13 @@ Bot.on('message', async e => {
     msg.avatar = avatar
   }
   // 判断云崽前缀
-  msg = onlyReplyAt(msg)
+  msg = onlyReplyAt(msg, 'yz')
   if (!msg) return false
   for (const i of sendSocketList) {
     if (i.status == 1) {
+      msg.onlyReplyAt = Config.onlyReplyAt[i.other.rawName || i.name] || Config.onlyReplyAt
+      const tmpMsg = onlyReplyAt(_.cloneDeep(msg), 'ws')
+      if (!tmpMsg) continue
       let reportMsg = null
       switch (Number(i.type)) {
         case 1:
@@ -114,12 +117,12 @@ Bot.on('message', async e => {
         case 6:
           if (i.uin != e.self_id) continue
           e.reply = reply(e)
-          msg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
-          reportMsg = await makeOneBotReportMsg(msg)
+          tmpMsg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
+          reportMsg = await makeOneBotReportMsg(tmpMsg)
           break
         case 3:
           if (i.uin != e.self_id) continue
-          reportMsg = await makeGSUidReportMsg(msg, i.adapter?.gsBotId)
+          reportMsg = await makeGSUidReportMsg(tmpMsg, i.adapter?.gsBotId)
           break
         default:
           break
@@ -190,19 +193,33 @@ function reply (e) {
   }
 }
 
-function onlyReplyAt (e) {
+function onlyReplyAt (e, type) {
   if (!e.message) return false
 
-  let groupCfg = Version.isTrss ? cfg.getGroup(e.self_id, e.group_id) : cfg.getGroup(e.group_id)
-  if (groupCfg.onlyReplyAt != 1 || !groupCfg.botAlias || e.isPrivate) return e
+  if (type === 'yz') {
+    let groupCfg = Version.isTrss ? cfg.getGroup(e.self_id, e.group_id) : cfg.getGroup(e.group_id)
+    if (groupCfg.onlyReplyAt != 1 || !groupCfg.botAlias || e.isPrivate) return e
 
-  if (Config.ignoreOnlyReplyAt) {
-    return rmAlias(e, groupCfg)
+    if (Config.ignoreOnlyReplyAt) {
+      return rmAlias(e, groupCfg)
+    }
+    let at = atBot(e)
+    if (at) {
+      e.atBot = true
+      return e
+    }
+    e = hasAlias(e, groupCfg)
+    if (e) return e
+  } else if (type === 'ws') {
+    if (!e.onlyReplyAt.enable) {
+      return e
+    }
+    if (e.atBot) {
+      return e
+    }
+    e = hasAlias(e, { botAlias: e.onlyReplyAt.prefix })
+    if (e) return e
   }
-  let at = atBot(e)
-  if (at) return e
-  e = hasAlias(e, groupCfg)
-  if (e) return e
 
   return false
 }
@@ -241,6 +258,8 @@ function rmAlias (e, groupCfg) {
     if (e.message[0].type == 'text' && e.message[0].text.startsWith(name)) {
       e.message[0].text = _.trimStart(e.message[0].text, name).trim()
       break
+    } else if (e.message[0].type === 'at' && e.message[1].type == 'text' && e.message[1].text.startsWith(name)) {
+      e.message[1].text = _.trimStart(e.message[1].text, name).trim()
     }
   }
   return e

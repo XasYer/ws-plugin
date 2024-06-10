@@ -12,16 +12,26 @@ wsPort: 54545
 # 是否忽略云崽配置文件的仅艾特
 ignoreOnlyReplyAt: false
 
+# 是否单独添加仅艾特或前缀
+# 可以为每个连接单独添加
+onlyReplyAt:
+  enable: false
+  prefix:
+    - 示例前缀1
+  "ws_name":
+    enable: true
+    prefix:
+      - 单独连接示例前缀,ws_name是对应的连接名字
+
 # 连接服务列表
-servers: 
-  # 添加连接方式, 可添加多个
-    # 连接名字  请保证每个名字都不相同,否则会出问题
+# name: 连接名字  请保证每个名字都不相同,否则会出问题
+# address: 连接地址
+# type: 连接类型
+# reconnectInterval: 重连间隔 单位:秒
+# maxReconnectAttempts: 最大连接次数 0 为无限制
+servers:
   - name: ws_name
-    # 连接地址
     address: ws_address
-    # 连接类型 1:反向 Websocket 2:正向 Websocket 3:gsuid_core
     type: 1
-    # 重连间隔 单位:秒
     reconnectInterval: 5
-    # 最大连接次数 0 为无限制
     maxReconnectAttempts: 0
