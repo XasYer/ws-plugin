@@ -120,10 +120,20 @@ Bot.on('message', async e => {
           tmpMsg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
           reportMsg = await makeOneBotReportMsg(tmpMsg)
           break
-        case 3:
-          if (i.uin != e.self_id) continue
-          reportMsg = await makeGSUidReportMsg(tmpMsg, i.adapter?.gsBotId)
+        case 3: {
+          let botid = i.adapter?.gsBotId
+          if (i.uin === 'all') {
+            botid = {
+              QQBot: 'qqgroup',
+              QQGuild: 'qqguild',
+              KOOK: 'kook',
+              Telegram: 'telegram',
+              Discord: 'discord'
+            }[e.bot?.adapter?.id] || 'onebot'
+          } else if (i.uin != e.self_id) continue
+          reportMsg = await makeGSUidReportMsg(tmpMsg, botid)
           break
+        }
         default:
           break
       }
