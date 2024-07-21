@@ -58,6 +58,7 @@ export function supportGuoba() {
                 field: 'type',
                 label: '连接类型',
                 component: 'RadioGroup',
+                required: true,
                 componentProps: {
                     options: [
                         { label: '反向ws', value: 1 },
