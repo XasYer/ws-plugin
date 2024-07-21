@@ -32,6 +32,67 @@ export function supportGuoba() {
       schemas: [
         {
           component: 'Divider',
+          label: 'WS连接设置'
+        },
+        {
+          field: 'ws.servers',
+          label: '连接服务列表',
+          component: 'GSubForm',
+          componentProps: {
+            multiple: true,
+            schemas: [
+              {
+                field: 'name',
+                label: '连接名字',
+                bottomHelpMessage: '请保证每个名字都不相同,否则会出问题',
+                component: 'Input',
+                required: true
+              },
+              {
+                field: 'address',
+                label: '连接地址',
+                component: 'Input',
+                required: true
+              },
+              {
+                field: 'type',
+                label: '连接类型',
+                component: 'RadioGroup',
+                componentProps: {
+                    options: [
+                        { label: '反向ws', value: 1 },
+                        { label: '正向ws', value: 2 },
+                        { label: 'gscore', value: 3 },
+                        { label: 'red', value: 4 },
+                        { label: '正向http', value: 5 },
+                        { label: '反向http', value: 6 },
+                         ],
+                  },
+              },
+              {
+                field: 'reconnectInterval',
+                label: '重连间隔',
+                component: 'InputNumber',
+                required: true,
+                componentProps: {
+                    addonAfter: '秒'
+                }
+              },
+              {
+                field: 'maxReconnectAttempts',
+                label: '最大连接次数',
+                bottomHelpMessage: '0 为无限制',
+                component: 'InputNumber',
+                required: true,
+                componentProps: {
+                    addonAfter: '次'
+                }
+              }
+            ]
+          }
+        },
+        {
+          component: 'Divider',
           label: '通知设置'
         },
         {
@@ -58,7 +119,7 @@ export function supportGuoba() {
           field: 'msg.noGroup',
           label: '黑名单群聊',
           bottomHelpMessage: '数组内的群消息不上报',
-          component: 'Select',
+          component: 'GSelectGroup',
           componentProps: {
             allowAdd: true,
             allowDel: true,
@@ -70,7 +131,7 @@ export function supportGuoba() {
           field: 'msg.yesGroup',
           label: '白名单群聊',
           bottomHelpMessage: '只上报数组内的群消息',
-          component: 'Select',
+          component: 'GSelectGroup',
           componentProps: {
             allowAdd: true,
             allowDel: true,
@@ -99,12 +160,13 @@ export function supportGuoba() {
         {
           field: 'msg.msgStoreTime',
           label: '消息存储时间',
-          bottomHelpMessage: '消息存储时间,用于撤回和回复消息,单位秒',
+          bottomHelpMessage: '消息存储时间,用于撤回和回复消息',
           component: 'InputNumber',
           required: true,
           componentProps: {
             min: 0,
             placeholder: '请输入时间',
+            addonAfter: '秒'
           },
         },
         {
@@ -214,18 +276,18 @@ export function supportGuoba() {
         {
           field: 'ws.heartbeatInterval',
           label: '心跳频率',
-          bottomHelpMessage: '心跳频率, 单位秒',
+          bottomHelpMessage: '心跳频率',
           component: 'InputNumber',
           required: true,
           componentProps: {
             min: 0,
             placeholder: '请输入心跳频率时间',
+            addonAfter: '秒'
           },
         },
         {
           field: 'ws.messagePostFormat',
           label: '上报类型',
-          bottomHelpMessage: '可选: 1:string, 2:array',
           component: 'RadioGroup',
           componentProps: {
             options: [
