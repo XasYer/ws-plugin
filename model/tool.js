@@ -374,11 +374,20 @@ function deleteFolder (directoryPath, keepDirectory = false) {
         if (fs.lstatSync(curPath).isDirectory()) {
           deleteFolder(curPath)
         } else {
-          fs.unlinkSync(curPath)
+          try {
+            fs.unlinkSync(curPath)
+          } catch (error) {
+            logger.error(`[ws-plugin] 删除文件失败: ${curPath}`, error)
+          }
         }
       })
+
       if (!keepDirectory) {
-        fs.rmdirSync(directoryPath)
+        try {
+          fs.rmdirSync(directoryPath)
+        } catch (error) {
+          logger.error(`[ws-plugin] 删除文件夹失败: ${directoryPath}`, error)
+        }
       }
     }
   } catch (error) {
