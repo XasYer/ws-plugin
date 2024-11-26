@@ -502,6 +502,12 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
       if (!ResponseData.role) {
         ResponseData.role = 'member'
       }
+      if (!ResponseData.card) {
+        ResponseData.card = ResponseData.nickname || ResponseData.nick || 'QQ用户'
+      }
+      if (!ResponseData.nickname) {
+        ResponseData.nickname = ResponseData.card || 'QQ用户'
+      }
     },
     // 获取群成员列表
     get_group_member_list: async (params) => {

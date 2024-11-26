@@ -220,7 +220,7 @@ export class setting extends plugin {
         //     let msg = regRet[2].split(/,|，/g)
         //     await this.addWs(msg)
         // } else {
-        this.setContext('checkAddWs', this.e.isGroup)
+        this.setContext('checkAddWs')
         await this.reply([
           '请输入以下参数,用逗号分割\n',
           '---------------------------------\n',
@@ -243,7 +243,7 @@ export class setting extends plugin {
         if (regRet[2]) {
           await this.delWs(regRet[2])
         } else {
-          this.setContext('checkDelWs', this.e.isGroup)
+          this.setContext('checkDelWs')
           await this.reply('请继续发送需要删除的ws连接名字')
         }
         break
@@ -251,7 +251,7 @@ export class setting extends plugin {
         if (regRet[2]) {
           await this.openWs(regRet[2])
         } else {
-          this.setContext('checkOpenWs', this.e.isGroup)
+          this.setContext('checkOpenWs')
           this.reply('请继续发送需要打开的ws连接名字')
         }
         break
@@ -259,7 +259,7 @@ export class setting extends plugin {
         if (regRet[2]) {
           await this.closeWs(regRet[2])
         } else {
-          this.setContext('checkCloseWs', this.e.isGroup)
+          this.setContext('checkCloseWs')
           this.reply('请继续发送需要关闭的ws连接名字')
         }
         break
@@ -267,7 +267,7 @@ export class setting extends plugin {
         if (regRet[2]) {
           await this.resetWs(regRet[2])
         } else {
-          this.setContext('checkResetWs', this.e.isGroup)
+          this.setContext('checkResetWs')
           this.reply('请继续发送需要重新连接的ws连接名字')
         }
         break
@@ -295,7 +295,7 @@ export class setting extends plugin {
     }
     if (addWsMsg.length < 2) {
       await this.reply('格式有误,请检查后重新发送#ws添加连接')
-      this.finish('checkAddWs', this.e.isGroup)
+      this.finish('checkAddWs')
       return false
     }
     if (addWsMsg.length == 2) {
@@ -304,14 +304,14 @@ export class setting extends plugin {
           if (Array.isArray(i.uin)) {
             if (i.uin.some(m => m == this.e.self_id)) {
               this.reply(`已经有连接名为${addWsMsg[0]}的连接并且已添加uin`)
-              this.finish('checkAddWs', this.e.isGroup)
+              this.finish('checkAddWs')
               return
             } else {
               i.uin.push(Number(this.e.self_id) || this.e.self_id)
             }
           } else if (i.uin == this.e.self_id) {
             this.reply(`已经有连接名为${addWsMsg[0]}的连接并且已添加uin`)
-            this.finish('checkAddWs', this.e.isGroup)
+            this.finish('checkAddWs')
             return
           } else {
             i.uin = [i.uin, Number(this.e.self_id) || this.e.self_id]
@@ -324,7 +324,7 @@ export class setting extends plugin {
             logger.error(error)
             this.reply('操作失败~')
           } finally {
-            this.finish('checkAddWs', this.e.isGroup)
+            this.finish('checkAddWs')
           }
           return
         }
@@ -398,11 +398,11 @@ export class setting extends plugin {
           break
         default:
           await this.reply('格式有误,请检查后重新发送#ws添加连接')
-          this.finish('checkAddWs', this.e.isGroup)
+          this.finish('checkAddWs')
           await redis.del('ws-plugin:addWs:' + this.e.user_id)
           return false
       }
-      this.setContext('checkAddWs', this.e.isGroup)
+      this.setContext('checkAddWs')
       await redis.setEx('ws-plugin:addWs:' + this.e.user_id, 120, JSON.stringify(addWsMsg))
     } else {
       const config = {
@@ -438,7 +438,7 @@ export class setting extends plugin {
         config.uin = Number(seld_id) || String(seld_id)
       }
       await this.addWs(config)
-      this.finish('checkAddWs', this.e.isGroup)
+      this.finish('checkAddWs')
       await redis.del('ws-plugin:addWs:' + this.e.user_id)
     }
     return false
@@ -582,7 +582,7 @@ export class setting extends plugin {
     }
     let msg = this.e.msg
     await this.openWs(msg)
-    this.finish('checkOpenWs', this.e.isGroup)
+    this.finish('checkOpenWs')
   }
 
   async checkCloseWs () {
@@ -591,7 +591,7 @@ export class setting extends plugin {
     }
     let msg = this.e.msg
     await this.closeWs(msg)
-    this.finish('checkCloseWs', this.e.isGroup)
+    this.finish('checkCloseWs')
   }
 
   async delWs (msg) {
@@ -619,7 +619,7 @@ export class setting extends plugin {
     }
     let msg = this.e.msg
     await this.delWs(msg)
-    this.finish('checkDelWs', this.e.isGroup)
+    this.finish('checkDelWs')
   }
 
   async checkResetWs () {
@@ -628,7 +628,7 @@ export class setting extends plugin {
     }
     let msg = this.e.msg
     await this.resetWs(msg)
-    this.finish('checkResetWs', this.e.isGroup)
+    this.finish('checkResetWs')
   }
 
   async resetWs (msg) {

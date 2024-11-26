@@ -107,7 +107,7 @@ Bot.on('message', async e => {
   if (!msg) return false
   for (const i of sendSocketList) {
     if (i.status == 1) {
-      msg.onlyReplyAt = Config.onlyReplyAt[i.other.rawName || i.name] || Config.onlyReplyAt
+      msg.onlyReplyAt = Config.onlyReplyAt[i.other.rawName || i.rawName || i.name] || Config.onlyReplyAt
       const tmpMsg = onlyReplyAt(_.cloneDeep(msg), 'ws')
       if (!tmpMsg) continue
       let reportMsg = null
@@ -208,7 +208,9 @@ function onlyReplyAt (e, type) {
 
   if (type === 'yz') {
     let groupCfg = Version.isTrss ? cfg.getGroup(e.self_id, e.group_id) : cfg.getGroup(e.group_id)
-    if (groupCfg.onlyReplyAt != 1 || !groupCfg.botAlias || e.isPrivate) return e
+    if (groupCfg.onlyReplyAt == 0 || groupCfg.botAlias) return e
+    if (groupCfg.onlyReplyAt === 2 && e.isMaster) return e
+    if (e.isPrivate) return e
 
     if (Config.ignoreOnlyReplyAt) {
       return rmAlias(e, groupCfg)
@@ -265,11 +267,13 @@ function rmAlias (e, groupCfg) {
     alias = [alias]
   }
   for (let name of alias) {
-    if (e.message[0].type == 'text' && e.message[0].text.startsWith(name)) {
-      e.message[0].text = _.trimStart(e.message[0].text, name).trim()
-      break
-    } else if (e.message[0].type === 'at' && e.message[1].type == 'text' && e.message[1].text.startsWith(name)) {
-      e.message[1].text = _.trimStart(e.message[1].text, name).trim()
+    for (const i in e.message) {
+      if (e.message[i].type === 'text') {
+        if (e.message[i].text?.startsWith(name)) {
+          e.message[i].text = _.trimStart(e.message[i].text, name).trim()
+        }
+        break
+      }
     }
   }
   return e
