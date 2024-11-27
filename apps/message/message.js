@@ -107,7 +107,7 @@ Bot.on('message', async e => {
   if (!msg) return false
   for (const i of sendSocketList) {
     if (i.status == 1) {
-      msg.onlyReplyAt = Config.onlyReplyAt[i.other.rawName || i.rawName || i.name] || Config.onlyReplyAt
+      msg.onlyReplyAt = Config.onlyReplyAt[i.other.rawName || i.name] || Config.onlyReplyAt
       const tmpMsg = onlyReplyAt(_.cloneDeep(msg), 'ws')
       if (!tmpMsg) continue
       let reportMsg = null
@@ -208,15 +208,14 @@ function onlyReplyAt (e, type) {
 
   if (type === 'yz') {
     let groupCfg = Version.isTrss ? cfg.getGroup(e.self_id, e.group_id) : cfg.getGroup(e.group_id)
-    if (groupCfg.onlyReplyAt == 0 || groupCfg.botAlias) return e
+    if (groupCfg.onlyReplyAt == 0 || !groupCfg.botAlias) return e
     if (groupCfg.onlyReplyAt === 2 && e.isMaster) return e
     if (e.isPrivate) return e
 
     if (Config.ignoreOnlyReplyAt) {
       return rmAlias(e, groupCfg)
     }
-    let at = atBot(e)
-    if (at) {
+    if (atBot(e)) {
       e.atBot = true
       return e
     }
@@ -226,7 +225,7 @@ function onlyReplyAt (e, type) {
     if (!e.onlyReplyAt.enable) {
       return e
     }
-    if (e.atBot) {
+    if (atBot(e)) {
       return e
     }
     e = hasAlias(e, { botAlias: e.onlyReplyAt.prefix })
