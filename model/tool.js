@@ -197,7 +197,7 @@ let id = 1
  * * base64: 不自动发送图像，返回图像base64数据
  * @param {boolean} cfg.returnID 返回ws查看对应id, 默认不返回
  */
-async function toImg (data, e, cfg = { retType: 'msgId' }) {
+async function toImg (data, e, cfg = { retType: 'msgId', toQRCode: true, defToText: true }) {
   let isNode = false
   if (e.wsCacheIsNode) {
     isNode = e.wsCacheIsNode
@@ -226,7 +226,7 @@ async function toImg (data, e, cfg = { retType: 'msgId' }) {
       OriginalMessage.push(m)
       switch (m.type) {
         case 'text':
-          if (QRCode) {
+          if (cfg.toQRCode && QRCode) {
             const match = m.text.match(toQRCodeRegExp)
             if (match) {
               for (const url of match) {
@@ -251,8 +251,10 @@ async function toImg (data, e, cfg = { retType: 'msgId' }) {
           OriginalMessage.pop()
           continue
         default:
-          message += JSON.stringify(m, null, '<br />')
-          text++
+          if (cfg.defToText) {
+            message += JSON.stringify(m, null, '<br />')
+            text++
+          }
           break
       }
       message += '</div>'
