@@ -7,13 +7,14 @@ import fetch from 'node-fetch'
 import url from 'url'
 
 export default class Client {
-  constructor ({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, uin = Bot.uin, closed = false, ...other }) {
+  constructor ({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, accessKey, uin = Bot.uin, closed = false, ...other }) {
     this.name = name
     this.address = address
     this.type = type
     this.reconnectInterval = reconnectInterval
     this.maxReconnectAttempts = maxReconnectAttempts
     this.accessToken = accessToken
+    this.accessKey = accessKey?.trim?.() || 'Token'
     this.uin = Number(uin) || uin
     this.self_id = uin
     this.ws = null
@@ -35,7 +36,7 @@ export default class Client {
         'X-Client-Role': 'Universal',
         'User-Agent': `ws-plugin/${Version.version}`
       }
-      if (this.accessToken) headers.Authorization = 'Token ' + this.accessToken
+      if (this.accessToken) headers.Authorization = this.accessKey + ' ' + this.accessToken
       this.ws = new WebSocket(this.address, { headers })
     } catch (error) {
       logger.error(`[ws-plugin] 出错了,可能是ws地址填错了~\nws名字: ${this.name}\n地址: ${this.address}\n类型: 1`)
@@ -110,7 +111,7 @@ export default class Client {
       if (this.accessToken) {
         // eslint-disable-next-line n/no-deprecated-api
         const Url = url.parse(req.url, true)
-        const token = req.headers.authorization?.replace('Token ', '') || Url.query?.access_token
+        const token = req.headers.authorization?.replace(this.accessKey, '').trim() || Url.query?.access_token
         if (!token) {
           socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n')
           socket.destroy()
@@ -400,7 +401,7 @@ export default class Client {
 
   authorization (req, res, next) {
     let code = null
-    const token = req.headers.authorization?.replace?.(/^(Token|Bearer) /, '') || req.query.access_token
+    const token = req.headers.authorization?.replace?.(this.accessKey, '').trim() || req.query.access_token
     if (this.accessToken) {
       if (!token) {
         code = 401

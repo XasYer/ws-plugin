@@ -29,6 +29,8 @@ onlyReplyAt:
 # type: 连接类型
 # reconnectInterval: 重连间隔 单位:秒
 # maxReconnectAttempts: 最大连接次数 0 为无限制
+# accessToken: 鉴权token
+# accessKey: 鉴权token的前缀 比如Bearer 默认为Token
 servers:
   - name: ws_name
     address: ws_address
