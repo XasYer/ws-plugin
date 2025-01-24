@@ -181,18 +181,27 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
           }
         }
         if (msg) {
-          ResponseData = msg
-          if (ResponseData.user_id) {
-            ResponseData.user_id = await getUser_id({ user_id: ResponseData.user_id })
+          ResponseData = {
+            time: msg.time,
+            message_type: 'private',
+            sender: msg.sender,
+            real_id: Number(msg.seq),
+            message_id: Number(msg.rand),
+            message: await msgToOneBotMsg(msg.message),
+            raw_message: MsgToCQ(msg.message)
           }
-          if (ResponseData.group_id) {
+          if (msg.user_id) {
+            const user_id = await getUser_id({ user_id: ResponseData.user_id })
+            ResponseData.sender = {
+              ...ResponseData.sender,
+              user_id
+            }
+          }
+          if (msg.group_id) {
+            ResponseData.message_type = 'group'
             ResponseData.group = true
             ResponseData.group_id = await getGroup_id({ group_id: ResponseData.group_id })
           }
-          ResponseData.real_id = Number(ResponseData.seq)
-          ResponseData.message_id = Number(ResponseData.rand)
-          ResponseData.message = await msgToOneBotMsg(ResponseData.message)
-          ResponseData.raw_message = MsgToCQ(ResponseData.message)
         } else {
           throw { message: 'get_msg API error', noLog: true }
         }
