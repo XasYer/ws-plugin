@@ -181,14 +181,15 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
           }
         }
         if (msg) {
+          const message = await msgToOneBotMsg(msg.message)
           ResponseData = {
             time: msg.time,
             message_type: 'private',
             sender: msg.sender,
             real_id: Number(msg.seq),
             message_id: Number(msg.rand),
-            message: await msgToOneBotMsg(msg.message),
-            raw_message: MsgToCQ(msg.message)
+            message,
+            raw_message: MsgToCQ(message)
           }
           if (msg.user_id) {
             const user_id = await getUser_id({ user_id: ResponseData.user_id })
