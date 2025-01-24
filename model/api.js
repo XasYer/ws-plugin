@@ -192,7 +192,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
             raw_message: MsgToCQ(message)
           }
           if (msg.user_id) {
-            const user_id = await getUser_id({ user_id: ResponseData.user_id })
+            const user_id = await getUser_id({ user_id: msg.user_id })
             ResponseData.sender = {
               ...ResponseData.sender,
               user_id
@@ -201,7 +201,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
           if (msg.group_id) {
             ResponseData.message_type = 'group'
             ResponseData.group = true
-            ResponseData.group_id = await getGroup_id({ group_id: ResponseData.group_id })
+            ResponseData.group_id = await getGroup_id({ group_id: msg.group_id })
           }
         } else {
           throw { message: 'get_msg API error', noLog: true }
