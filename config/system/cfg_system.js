@@ -95,6 +95,13 @@ export const cfgSchema = {
         desc: '被禁言或者全体禁言时是否拦截消息不上报',
         fileName: 'msg-config'
       },
+      tempMsgReport: {
+        title: '拦截临时消息',
+        key: '临时拦截',
+        def: false,
+        desc: '是否拦截临时消息上报',
+        fileName: 'msg-config'
+      },
       toImgID: {
         title: '转图片ID',
         key: '图片id',

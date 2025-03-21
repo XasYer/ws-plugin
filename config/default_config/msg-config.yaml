@@ -31,6 +31,9 @@ yesGroup: []
 #被禁言或者全体禁言时候拦截消息不再上报
 muteStop: false
 
+# 拦截临时会话消息上报
+tempMsgReport: false
+
 #red 发送伪造转发消息方式 1:伪造转发 2:直接发送
 redSendForwardMsgType: 1
 

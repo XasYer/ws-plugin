@@ -230,6 +230,11 @@ class Config {
     return this.getDefOrConfig('request-config').groupAdd
   }
 
+  /** 临时会话是否上报 */
+  get tempMsgReport () {
+    return this.getDefOrConfig('msg-config').tempMsgReport
+  }
+
   /** 默认配置和用户配置 */
   getDefOrConfig (name) {
     let def = this.getdefSet(name)

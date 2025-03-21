@@ -7,6 +7,8 @@ Bot.on('message', async e => {
   if (!e.user_id) return false
   // 被禁言或者全体禁言
   if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false
+  // 临时会话
+  if (Config.tempMsgReport && e.post_type === 'post_type' && e.message_type === 'private' && e.sub_type === 'group') return false
   // 如果没有已连接的Websocket
   if (sendSocketList.length == 0) return false
   if (e.group_id) {
