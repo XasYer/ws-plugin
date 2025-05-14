@@ -103,6 +103,13 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
     // 好友操作 API
     // --------------------------------------------------------
 
+    // 发送名片赞
+    send_like: async params => {
+      ResponseData = await bot.sendLike?.(params.user_id, params.times) ?? false;
+      if (!ResponseData) {
+        throw { message: '今日同一好友点赞数已达上限', noLog: true };
+      }
+    },
     // 删除好友
     delete_friend: async params => {
       await bot.deleteFriend?.(params.user_id) || await bot.pickFriend(params.user_id)?.delete?.()
