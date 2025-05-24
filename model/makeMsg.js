@@ -336,7 +336,7 @@ async function makeSendMsg (params, uin, adapter) {
       }
         break
       case 'video':
-        if (i.data.file.startsWith('http')) {
+        if (typeof i.data.file === "string" && i.data.file.startsWith('http')) {
           const path = TMP_DIR + '/' + randomUUID({ disableEntropyCache: true }) + '.mp4'
           if (await common.downFile(i.data.file, path)) {
             sendMsg.push(segment.video(path))
