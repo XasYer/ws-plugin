@@ -189,6 +189,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
         }
         if (msg) {
           const message = await msgToOneBotMsg(msg.message)
+          msg.sender.level = String(msg.sender.level);
           ResponseData = {
             time: msg.time,
             message_type: 'private',
