@@ -265,7 +265,7 @@ export default class Client {
                 msg.reply(sendMsg)
               }
             } else {
-              sendRet = await bot.pickFriend(user_id).sendMsg(sendMs)
+              sendRet = await bot.pickFriend(user_id).sendMsg(sendMsg)
             }
             break
           default:
