@@ -254,7 +254,7 @@ export default class Client {
                 msg.reply(sendMsg)
               }
             } else {
-              sendRet = await bot.pickGroup(group_id).sendMsg(sendMsg, quote)
+              sendRet = await bot.pickGroup(group_id).sendMsg(sendMsg)
             }
             break
           case 'direct':
@@ -265,7 +265,7 @@ export default class Client {
                 msg.reply(sendMsg)
               }
             } else {
-              sendRet = await bot.pickFriend(user_id).sendMsg(sendMsg, quote)
+              sendRet = await bot.pickFriend(user_id).sendMsg(sendMs)
             }
             break
           default:
