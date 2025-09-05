@@ -434,7 +434,7 @@ class Config {
         return objValue
       } else if (_.isPlainObject(objValue) && _.isPlainObject(srcValue)) {
         if (!_.isEqual(objValue, srcValue)) {
-          return _.mergeWith({}, objValue, srcValue, customizer)
+          return _.mergeWith(_.cloneDeep(objValue), srcValue, customizer)
         }
       } else if (!_.isEqual(objValue, srcValue)) {
         differences = true
@@ -443,7 +443,7 @@ class Config {
       return objValue !== undefined ? objValue : srcValue
     }
 
-    let result = _.mergeWith({}, objA, objB, customizer)
+    let result = _.mergeWith(_.cloneDeep(objA), objB, customizer)
 
     return {
       differences,
