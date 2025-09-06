@@ -308,16 +308,41 @@ export class QQRedBot {
     }
 
     async deleteMsg(message_id) {
-        const msg = await getMsg({ message_id })
+        // 尝试不同格式的message_id
+        let msg = await getMsg({ message_id });
+    
+        // 如果找不到，尝试使用onebot_id
+        if (!msg) {
+            msg = await getMsg({ onebot_id: message_id });
+        }
+        
+        // 继续尝试数字或字符串格式
+        if (!msg) {
+            msg = await getMsg({ message_id: Number(message_id) });
+        }
+        
+        if (!msg) {
+            msg = await getMsg({ message_id: String(message_id) });
+        }
+        // 找到消息后执行撤回操作
         if (msg) {
-            await this.getApiData('POST', 'message/recall', {
-                peer: {
-                    chatType: msg.group_id ? 2 : 1,
-                    peerUin: String(msg.group_id || msg.user_id),
-                    guildId: null
-                },
-                msgIds: [msg.message_id]
-            })
+            try {
+                await this.getApiData('POST', 'message/recall', {
+                    peer: {
+                        chatType: msg.group_id ? 2 : 1,
+                        peerUin: String(msg.group_id || msg.user_id),
+                        guildId: null
+                    },
+                    msgIds: [msg.message_id]
+                });
+                return true;
+            } catch (error) {
+                logger.error(`[ws-plugin] 撤回消息失败: ${error.message}`);
+                return false;
+            }
+        } else {
+            logger.warn(`[ws-plugin] 找不到消息ID: ${message_id}`);
+            return false;
         }
     }
 
