@@ -29,17 +29,23 @@ async function getMsg (where, other) {
   }
 }
 
-async function setMsg (value) {
-  if (Array.isArray(value.message_id) || !value.seq || !value.rand) {
-    return
+async function setMsg(value) {
+  // 处理数组形式的message_id
+  if (Array.isArray(value.message_id)) {
+    value.message_id = value.message_id[0];
   }
+  
+  // 为来自NoneBot的消息补充可能缺失的seq和rand值
+  if (!value.seq) value.seq = Date.now();
+  if (!value.rand) value.rand = Math.floor(Math.random() * 1000000);
+  
   if (existSQL) {
-    await saveMessage_id(value)
+    await saveMessage_id(value);
   } else {
-    const EX = Config.msgStoreTime
+    const EX = Config.msgStoreTime;
     if (EX > 0) {
-      await redis.set(`Yz:ws-plugin:msg:${value.onebot_id}`, JSON.stringify(value), { EX })
-      await redis.set(`Yz:ws-plugin:msg:${value.message_id}`, JSON.stringify(value), { EX })
+      await redis.set(`Yz:ws-plugin:msg:${value.onebot_id || value.message_id}`, JSON.stringify(value), { EX });
+      await redis.set(`Yz:ws-plugin:msg:${value.message_id}`, JSON.stringify(value), { EX });
     }
   }
 }
