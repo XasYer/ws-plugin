@@ -339,25 +339,44 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
       logger.info(`[ws-plugin] 连接名字:${name} 处理完成`)
     },
     // 获取群消息历史记录
-    get_group_msg_history: async params => {
-      let messages = []; let flag = true; let ret
+    get_group_msg_history: async (params) => {
+      let messages = [];
+      let flag = true;
+      let ret;
       if (params.message_seq) {
-        let message_id = (await getMsg({ onebot_id: params.message_id }))?.seq
+        let message_id = (await getMsg({ onebot_id: params.message_id }))?.seq;
         if (message_id) {
-          ret = await bot.pickGroup(params.group_id).getChatHistory?.(message_id)
-          flag = false
+          ret = await bot
+            .pickGroup(params.group_id)
+            .getChatHistory?.(message_id, params.count);
+          flag = false;
         }
       }
       if (flag) {
-        ret = await bot.pickGroup(params.group_id).getChatHistory?.()
-      }
-      if (ret) {
-        for (const i of ret) {
-          messages.push(await msgToOneBotMsg(i.message))
-        }
+        ret = await bot
+          .pickGroup(params.group_id)
+          .getChatHistory?.(0, params.count);
       }
       ResponseData = {
-        messages
+        messages,
+      };
+    },
+
+    // 设置表情表态
+    set_reaction: async (params) => {
+      /**
+       * https://bot.q.qq.com/wiki/develop/api-v2/openapi/emoji/model.html#EmojiType
+       * @param code 表情ID
+       * @param type 表情类型 EmojiType
+       */
+      if (params.is_add) {
+        await bot
+          .pickGroup(params.group_id)
+          .setReaction?.(params.message_id, params.code, params.type || 1);
+      } else {
+        await bot
+          .pickGroup(params.group_id)
+          .delReaction?.(params.message_id, params.code, params.type || 1);
       }
     },
 
