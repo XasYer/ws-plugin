@@ -444,8 +444,8 @@ async function makeForwardMsg (params, uin, adapter) {
       }
       let { sendMsg } = await makeSendMsg(data)
       forwardMsg.push({
-        nickname: msg.data.name,
-        user_id: Number(msg.data.uin),
+        nickname: msg.data.nickname,
+        user_id: Number(msg.data.user_id),
         message: sendMsg
       })
     }
