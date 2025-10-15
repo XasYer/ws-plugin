@@ -369,14 +369,18 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
        * @param code 表情ID
        * @param type 表情类型 EmojiType
        */
+      let seq = (await getMsg({ onebot_id: params.message_id }))?.seq
+      if (!seq) {
+        throw { message: "消息不存在", noLog: true };
+      }
       if (params.is_add) {
         await bot
           .pickGroup(params.group_id)
-          .setReaction?.(params.message_id, params.code, params.type || 1);
+          .setReaction?.(seq, params.code, params.type || 1);
       } else {
         await bot
           .pickGroup(params.group_id)
-          .delReaction?.(params.message_id, params.code, params.type || 1);
+          .delReaction?.(seq, params.code, params.type || 1);
       }
     },
 
