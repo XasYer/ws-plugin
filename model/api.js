@@ -573,6 +573,9 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
         if (!list[i].role) {
           list[i].role = 'member'
         }
+        if (!list[i].sex) {
+          list[i].sex = 'unknown'
+        }
       }
       ResponseData = list
     },
