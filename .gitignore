@@ -5,3 +5,4 @@ model/db/data.db
 model/satori
 **/test.js
 !.gitignore
+pnpm-lock.yaml

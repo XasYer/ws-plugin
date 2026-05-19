@@ -61,6 +61,30 @@ async function createWebSocket (data) {
     delete data.close
   }
   data.rawName = data.rawName || data.name
+  if (data.uin === 'all') {
+    let uinList = []
+    if (global.Bot) {
+      if (Array.isArray(global.Bot.uin)) {
+        uinList = _.cloneDeep(global.Bot.uin)
+      } else {
+        uinList = [global.Bot.uin]
+        for (const i in global.Bot) {
+          const uinNum = Number(i)
+          if (/^\d{5,12}$/.test(i) && !uinList.includes(uinNum)) {
+            uinList.push(uinNum)
+          }
+        }
+      }
+    }
+    // Filter out invalid uins if any
+    uinList = uinList.filter(u => u)
+    
+    if (uinList.length > 0) {
+      data.uin = uinList
+      await createWebSocket(data)
+      return
+    }
+  }
   if (Array.isArray(data.uin)) {
     for (const uin of data.uin) {
       const str = String(uin)
