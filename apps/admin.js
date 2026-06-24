@@ -227,7 +227,7 @@ export class setting extends plugin {
           '连接名字,连接类型\n',
           '---------------------------------\n',
           '连接名字: 用来区分每个连接\n',
-          '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:red连接 5:正向http 6:反向http'
+          '连接类型: 1:反向ws连接 2:正向ws连接 3:gscore连接 4:red连接 5:正向http 6:反向http 7:OneBot应用端ws'
         ])
         // await this.reply([
         //     '请一次性发送以下参数:\n',
@@ -301,6 +301,11 @@ export class setting extends plugin {
     if (addWsMsg.length == 2) {
       for (const i of Config.servers) {
         if (i.name == addWsMsg[0]) {
+          if (Number(i.type) === 7) {
+            this.reply(`已经有连接名为${addWsMsg[0]}的OneBot应用端ws连接`)
+            this.finish('checkAddWs')
+            return
+          }
           if (Array.isArray(i.uin)) {
             if (i.uin.some(m => m == this.e.self_id)) {
               this.reply(`已经有连接名为${addWsMsg[0]}的连接并且已添加uin`)
@@ -396,6 +401,18 @@ export class setting extends plugin {
             // 'secret: 秘钥',
           ])
           break
+        case '7':
+          await this.reply([
+            '请继续发送以下参数,用逗号分割\n',
+            '---------------------------------\n',
+            '连接地址,重连间隔(默认5),最大重连次数(默认0),access-token(默认空)\n',
+            '---------------------------------\n',
+            '连接地址: OneBot实现端ws地址,比如wss://example.com/OneBotv11/123456\n',
+            '重连间隔: 断开连接时每隔多少秒进行重新连接\n',
+            '最大重连次数: 达到这个数之后不进行重连,为0时会不断重连\n',
+            'access-token: 访问秘钥'
+          ])
+          break
         default:
           await this.reply('格式有误,请检查后重新发送#ws添加连接')
           this.finish('checkAddWs')
@@ -413,6 +430,7 @@ export class setting extends plugin {
       switch (addWsMsg[1]) {
         case '1':
         case '3':
+        case '7':
           config.reconnectInterval = Number(addWsMsg[3]) || 5
           config.maxReconnectAttempts = Number(addWsMsg[4]) || 0
           config.accessToken = addWsMsg[5]
@@ -430,10 +448,10 @@ export class setting extends plugin {
           break
       }
       // config.uin = Number(this.e.bot.uin || this.e.self_id) || String(this.e.bot.uin || this.e.self_id)
-      if (this.e.group) {
+      if (addWsMsg[1] !== '7' && this.e.group) {
         const seld_id = this.e.group?.bot?.uin || this.e.self_id
         config.uin = Number(seld_id) || String(seld_id)
-      } else if (this.e.friend) {
+      } else if (addWsMsg[1] !== '7' && this.e.friend) {
         const seld_id = this.e.friend?.bot?.uin || this.e.self_id
         config.uin = Number(seld_id) || String(seld_id)
       }
@@ -673,11 +691,12 @@ export class setting extends plugin {
       }
       let str = `连接名字: ${s.name}\n连接类型: ${s.type}\n当前状态: ${status}`
       if (!this.e.isGroup && this.e.isMaster) {
-        str += `\n连接地址: ${s.address}\nBot账号: ${s.uin}`
+        str += `\n连接地址: ${s.address}`
+        if (Number(s.type) !== 7) str += `\nBot账号: ${s.uin}`
         if (msg.length != 0) str = '\n---------------\n' + str
         msg.push(str)
       } else {
-        let uin = s.uin
+        let uin = Number(s.type) === 7 ? this.e.self_id : s.uin
         if (Array.isArray(uin)) {
           uin = this.e.user_id
         }

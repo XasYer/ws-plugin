@@ -47,6 +47,9 @@ onlyReplyAt:
 # name: 连接名字  请保证每个名字都不相同,否则会出问题
 # address: 连接地址
 # type: 连接类型
+#   1 反向ws: ws-plugin作为OneBot实现端，主动连接OneBot应用端
+#   2 正向ws: ws-plugin作为OneBot实现端，本地监听OneBot应用端连接
+#   7 OneBot应用端ws: ws-plugin作为OneBot应用端，主动连接OneBot实现端
 # reconnectInterval: 重连间隔 单位:秒
 # maxReconnectAttempts: 最大连接次数 0 为无限制
 # accessToken: 鉴权token

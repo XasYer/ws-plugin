@@ -67,6 +67,7 @@ export function supportGuoba() {
                         { label: 'red', value: 4 },
                         { label: '正向http', value: 5 },
                         { label: '反向http', value: 6 },
+                        { label: 'OneBot应用端ws', value: 7 },
                          ],
                   },
               },

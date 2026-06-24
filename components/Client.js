@@ -5,6 +5,7 @@ import express from 'express'
 import http from 'http'
 import fetch from 'node-fetch'
 import url from 'url'
+import OneBotAppClientAdapter from '../model/onebot/AppClientAdapter.js'
 
 export default class Client {
   constructor ({ name, address, type, reconnectInterval, maxReconnectAttempts, accessToken, accessKey, uin = Bot.uin, closed = false, ...other }) {
@@ -98,6 +99,105 @@ export default class Client {
     this.ws.on('error', (event) => {
       logger.error(`[ws-plugin] ${this.name} 连接失败\n${event}`)
     })
+  }
+
+  createOneBotAppWs () {
+    const headers = {
+      'X-Client-Role': 'Universal',
+      'User-Agent': `ws-plugin/${Version.version}`
+    }
+    if (this.accessToken) headers.Authorization = this.accessKey + ' ' + this.accessToken
+
+    this.appAdapter = new OneBotAppClientAdapter().bindClient(this)
+    try {
+      this.ws = new WebSocket(this.address, { headers })
+    } catch (error) {
+      logger.error(`[ws-plugin] 出错了,可能是OneBot应用端ws地址填错了~\nws名字: ${this.name}\n地址: ${this.address}\n类型: 7`)
+      logger.error(error)
+      return
+    }
+
+    this.ws.sendMsg = data => {
+      if (this.ws?.readyState !== WebSocket.OPEN) {
+        throw new Error(`${this.name} OneBot应用端ws未连接`)
+      }
+      this.ws.send(JSON.stringify(data))
+    }
+
+    this.ws.on('open', async () => {
+      logger.mark(`[ws-plugin] ${this.name} OneBot应用端已连接`)
+      if (this.status == 3 && this.reconnectCount > 1 && Config.reconnectToMaster) {
+        await this.sendMasterMsg(`${this.name} 重连成功~`)
+      } else if (this.status == 0 && Config.firstconnectToMaster) {
+        await this.sendMasterMsg(`${this.name} 连接成功~`)
+      }
+      this.status = 1
+      this.reconnectCount = 1
+      await this.appAdapter.connectEndpoint(this.ws, this.getOneBotAppSelfIdHint()).catch(error => {
+        logger.error(`[ws-plugin] ${this.name} OneBot应用端初始化失败`, error)
+      })
+    })
+
+    this.ws.on('message', event => {
+      const text = Buffer.isBuffer(event) ? event.toString() : String(event.data ?? event)
+      this.appAdapter.message(text, this.ws).catch(error => {
+        logger.error(`[ws-plugin] ${this.name} OneBot应用端消息处理失败`, error)
+      })
+    })
+
+    this.ws.on('close', async code => {
+      logger.warn(`[ws-plugin] ${this.name} OneBot应用端连接已关闭`)
+      const appSelfId = this.appSelfId
+      if (this.status == 1 && appSelfId && Array.isArray(Bot?.uin)) {
+        Bot.uin = Bot.uin.filter(i => String(i) !== String(appSelfId))
+      }
+      if (this.status == 1 && appSelfId) {
+        delete Bot[appSelfId]
+        delete Bot[String(appSelfId)]
+        delete Bot[Number(appSelfId)]
+        this.appSelfId = null
+      }
+      if (Config.disconnectToMaster && this.reconnectCount == 1 && this.status == 1) {
+        await this.sendMasterMsg(`${this.name} 已断开连接...`)
+      } else if (Config.firstconnectToMaster && this.reconnectCount == 1 && this.status == 0) {
+        await this.sendMasterMsg(`${this.name} 连接失败...`)
+      }
+      this.status = 3
+      if (!this.stopReconnect && ((this.reconnectCount < this.maxReconnectAttempts) || this.maxReconnectAttempts <= 0)) {
+        if (code === 1005) {
+          logger.warn(`[ws-plugin] ${this.name} 连接异常,停止重连`)
+          this.status = 0
+        } else {
+          logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第${this.reconnectCount}次`)
+          this.reconnectCount++
+          setTimeout(() => {
+            this.createOneBotAppWs()
+          }, this.reconnectInterval * 1000)
+        }
+      } else {
+        this.stopReconnect = false
+        this.status = 0
+        logger.warn(`[ws-plugin] ${this.name} 达到最大重连次数或关闭连接,停止重连`)
+      }
+    })
+
+    this.ws.on('error', event => {
+      logger.error(`[ws-plugin] ${this.name} OneBot应用端连接失败\n${event}`)
+    })
+  }
+
+  getOneBotAppSelfIdHint () {
+    try {
+      const { pathname, searchParams } = new URL(this.address)
+      const querySelfId = searchParams.get('self_id') || searchParams.get('selfId')
+      if (querySelfId) return Number(querySelfId) || querySelfId
+      const tail = pathname.split('/').filter(Boolean).at(-1)
+      if (/^\d+$/.test(tail)) return Number(tail) || tail
+    } catch (error) {
+      const match = String(this.address).match(/(?:^|\/)(\d+)(?:\?|#|$)/)
+      if (match) return Number(match[1]) || match[1]
+    }
+    return null
   }
 
   createServer () {

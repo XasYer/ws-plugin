@@ -61,6 +61,14 @@ async function createWebSocket (data) {
     delete data.close
   }
   data.rawName = data.rawName || data.name
+  if (Number(data.type) === 7) {
+    const client = new Client(data)
+    setAllSocketList(client)
+    if (data.address == 'ws_address') return
+    if (data.closed) return
+    client.createOneBotAppWs()
+    return
+  }
   if (Array.isArray(data.uin)) {
     for (const uin of data.uin) {
       const str = String(uin)
@@ -138,6 +146,9 @@ async function createWebSocket (data) {
       if (!await checkVersion(data)) return
       client.createHttpPost()
       sendSocketList.push(client)
+      break
+    case 7:
+      client.createOneBotAppWs()
       break
     default:
   }
