@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, getLatestMsg, lifecycle, heartbeat, setMsg } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, getLatestMsg, lifecycle, heartbeat, setMsg, getUser_id, isAllUin, resolveAllBotId } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from 'express'
 import http from 'http'
@@ -15,8 +15,8 @@ export default class Client {
     this.maxReconnectAttempts = maxReconnectAttempts
     this.accessToken = accessToken
     this.accessKey = accessKey?.trim?.() || 'Token'
-    this.uin = Number(uin) || uin
-    this.self_id = uin
+    this.uin = isAllUin(uin) ? 'all' : (Number(uin) || uin)
+    this.self_id = isAllUin(uin) ? resolveAllBotId() : uin
     this.ws = null
     this.status = 0
     this.closed = closed
@@ -29,10 +29,28 @@ export default class Client {
 
   stopReconnect = false
 
+  getSyncSelfId () {
+    if (!this.self_id && isAllUin(this.uin)) {
+      const id = resolveAllBotId()
+      if (id && typeof id !== 'string') this.self_id = id
+    }
+    return this.self_id
+  }
+
+  async resolveSelfId () {
+    if (!this.self_id && isAllUin(this.uin)) {
+      const id = resolveAllBotId()
+      if (id) {
+        this.self_id = typeof id === 'string' ? await getUser_id({ user_id: id }) : id
+      }
+    }
+    return this.self_id
+  }
+
   createWs () {
     try {
       const headers = {
-        'X-Self-ID': this.self_id,
+        'X-Self-ID': this.getSyncSelfId(),
         'X-Client-Role': 'Universal',
         'User-Agent': `ws-plugin/${Version.version}`
       }
@@ -50,12 +68,13 @@ export default class Client {
       } else if (this.status == 0 && Config.firstconnectToMaster) {
         await this.sendMasterMsg(`${this.name} 连接成功~`)
       }
-      this.ws.send(lifecycle(this.self_id))
+      const selfId = await this.resolveSelfId()
+      this.ws.send(lifecycle(selfId))
       this.status = 1
       this.reconnectCount = 1
       if (Config.heartbeatInterval > 0) {
         this.timer = setInterval(async () => {
-          this.ws.send(heartbeat(this.self_id))
+          this.ws.send(heartbeat(await this.resolveSelfId()))
         }, Config.heartbeatInterval * 1000)
       }
     })
@@ -129,10 +148,10 @@ export default class Client {
         if (Url.pathname === '/') {
           conn.id = req.headers['sec-websocket-key']
           let time = null
-          conn.send(lifecycle(this.self_id))
+          conn.send(lifecycle(this.getSyncSelfId()))
           if (Config.heartbeatInterval > 0) {
             time = setInterval(async () => {
-              conn.send(heartbeat(this.self_id))
+              conn.send(heartbeat(await this.resolveSelfId()))
             }, Config.heartbeatInterval * 1000)
           }
           logger.mark(`[ws-plugin] ${this.name} 接受 WebSocket 连接: ${req.connection.remoteAddress}`)
@@ -170,10 +189,10 @@ export default class Client {
         } else if (Url.pathname === '/event' || Url.pathname === '/event/') {
           conn.id = req.headers['sec-websocket-key']
           let time = null
-          conn.send(lifecycle(this.self_id))
+          conn.send(lifecycle(this.getSyncSelfId()))
           if (Config.heartbeatInterval > 0) {
             time = setInterval(async () => {
-              conn.send(heartbeat(this.self_id))
+              conn.send(heartbeat(await this.resolveSelfId()))
             }, Config.heartbeatInterval * 1000)
           }
           logger.mark(`[ws-plugin] ${this.name} 接受 WebSocket event 连接: ${req.connection.remoteAddress}`)
@@ -398,7 +417,7 @@ export default class Client {
           method: 'POST',
           headers: {
             'content-type': 'application/json',
-            'x-self-id': this.self_id,
+            'x-self-id': this.getSyncSelfId(),
             'user-agent': `ws-plugin/${Version.version}`
           },
           body
@@ -465,13 +484,16 @@ export default class Client {
   }
 
   async sendMasterMsg (msg) {
-    // const bot = Version.isTrss ? Bot[this.uin] : Bot
-    const bot = Bot[this.uin] || Bot
+    const resolvedUin = isAllUin(this.uin) ? resolveAllBotId() : this.uin
+    const bot = Bot[resolvedUin] || Bot
     let masterQQ = []
-    const master = Version.isTrss ? Config.master[this.uin] : Config.masterQQ
+    let master = Version.isTrss ? Config.master[resolvedUin] : Config.masterQQ
+    if (Version.isTrss && isAllUin(this.uin) && (!master || master.length === 0)) {
+      master = [...new Set(Object.values(Config.master || {}).flat())]
+    }
     if (Config.howToMaster > 0) {
       masterQQ.push(master?.[Config.howToMaster - 1])
-    } else if (Config.howToMaster == 0) {
+    } else if (Config.howToMaster == 0 && Array.isArray(master)) {
       masterQQ.push(...master)
     }
     for (const i of masterQQ) {

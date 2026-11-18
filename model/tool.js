@@ -82,7 +82,7 @@ async function CreateMusicShare (data) {
 async function SendMusicShare (data) {
   let core, bot
   if (Version.isTrss) {
-    bot = Bot[data.bot_id]
+    bot = Bot[data.bot_id] || Bot
     core = bot?.core
   } else {
     bot = Bot
@@ -397,6 +397,27 @@ function deleteFolder (directoryPath, keepDirectory = false) {
   }
 }
 
+/** 判断 uin 是否为 all（不区分大小写） */
+function isAllUin (uin) {
+  return typeof uin === 'string' && uin.trim().toLowerCase() === 'all'
+}
+
+/** 判断事件账号是否匹配配置 uin（all 默认排除 stdin，仅显式指定 stdin 时匹配） */
+function matchUin (configUin, selfId) {
+  if (isAllUin(configUin)) return selfId !== 'stdin'
+  return configUin == selfId
+}
+
+/** 在 uin=all 模式下解析一个真实可用的兜底 Bot 账号（排除 stdin） */
+function resolveAllBotId () {
+  if (typeof Bot === 'undefined') return 0
+  if (Array.isArray(Bot.uin)) {
+    const id = Bot.uin.find(i => i && i !== 'stdin')
+    return Number(id) || id || 0
+  }
+  return Bot.uin === 'stdin' ? 0 : (Number(Bot.uin) || Bot.uin || 0)
+}
+
 export {
   SendMusicShare,
   sleep,
@@ -405,5 +426,8 @@ export {
   decodeHtml,
   toImg,
   htmlCache,
-  deleteFolder
+  deleteFolder,
+  isAllUin,
+  matchUin,
+  resolveAllBotId
 }

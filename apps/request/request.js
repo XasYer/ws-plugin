@@ -1,4 +1,5 @@
 import { sendSocketList, Config, Version } from '../../components/index.js'
+import { matchUin } from '../../model/index.js'
 
 Bot.on('request', async e => {
     if (sendSocketList.length == 0) return false
@@ -52,7 +53,7 @@ Bot.on('request', async e => {
                 case 1:
                 case 2:
                 case 6:
-                    if (i.uin != e.self_id) return
+                    if (!matchUin(i.uin, e.self_id)) return
                     i.ws.send(msg)
                     break;
                 default:

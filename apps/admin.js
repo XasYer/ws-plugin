@@ -1,6 +1,6 @@
 import plugin from '../../../lib/plugins/plugin.js'
 import { Config, Render, Version, allSocketList, sendSocketList, createWebSocket } from '../components/index.js'
-import { toImg, TMP_DIR } from '../model/index.js'
+import { toImg, TMP_DIR, isAllUin } from '../model/index.js'
 import lodash from 'lodash'
 import fs from 'fs'
 import { join } from 'path'
@@ -301,7 +301,11 @@ export class setting extends plugin {
     if (addWsMsg.length == 2) {
       for (const i of Config.servers) {
         if (i.name == addWsMsg[0]) {
-          if (Array.isArray(i.uin)) {
+          if (isAllUin(i.uin)) {
+            this.reply(`已经有连接名为${addWsMsg[0]}的连接并且已配置为uin: all`)
+            this.finish('checkAddWs')
+            return
+          } else if (Array.isArray(i.uin)) {
             if (i.uin.some(m => m == this.e.self_id)) {
               this.reply(`已经有连接名为${addWsMsg[0]}的连接并且已添加uin`)
               this.finish('checkAddWs')
@@ -678,7 +682,7 @@ export class setting extends plugin {
         msg.push(str)
       } else {
         let uin = s.uin
-        if (Array.isArray(uin)) {
+        if (Array.isArray(uin) || isAllUin(uin)) {
           uin = this.e.user_id
         }
         msg.push({
