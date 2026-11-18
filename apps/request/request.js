@@ -53,7 +53,7 @@ Bot.on('request', async e => {
                 case 1:
                 case 2:
                 case 6:
-                    if (!matchUin(i.uin, e.self_id)) return
+                    if (!matchUin(i.uin, e.self_id, i.other?.excludeUin)) return
                     i.ws.send(msg)
                     break;
                 default:

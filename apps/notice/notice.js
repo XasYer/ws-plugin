@@ -123,7 +123,7 @@ Bot.on('notice', async e => {
                 case 1:
                 case 2:
                 case 6:
-                    if (!matchUin(i.uin, e.self_id)) continue
+                    if (!matchUin(i.uin, e.self_id, i.other?.excludeUin)) continue
                     i.ws.send(msg)
                     break;
                 default:

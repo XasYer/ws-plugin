@@ -402,20 +402,30 @@ function isAllUin (uin) {
   return typeof uin === 'string' && uin.trim().toLowerCase() === 'all'
 }
 
-/** 判断事件账号是否匹配配置 uin（all 默认排除 stdin，仅显式指定 stdin 时匹配） */
-function matchUin (configUin, selfId) {
-  if (isAllUin(configUin)) return selfId !== 'stdin'
+/** 判断账号是否命中排除列表 */
+function isExcludedUin (selfId, excludeUin) {
+  if (!excludeUin) return false
+  const list = Array.isArray(excludeUin) ? excludeUin : [excludeUin]
+  return list.some(i => i != null && i !== '' && String(i).trim() === String(selfId))
+}
+
+/** 判断事件账号是否匹配配置 uin（all 默认排除 stdin 与 excludeUin，仅显式指定 stdin 时匹配） */
+function matchUin (configUin, selfId, excludeUin) {
+  if (isAllUin(configUin)) {
+    return selfId !== 'stdin' && !isExcludedUin(selfId, excludeUin)
+  }
   return configUin == selfId
 }
 
-/** 在 uin=all 模式下解析一个真实可用的兜底 Bot 账号（排除 stdin） */
-function resolveAllBotId () {
+/** 在 uin=all 模式下解析一个真实可用的兜底 Bot 账号（排除 stdin 与 excludeUin） */
+function resolveAllBotId (excludeUin) {
   if (typeof Bot === 'undefined') return 0
   if (Array.isArray(Bot.uin)) {
-    const id = Bot.uin.find(i => i && i !== 'stdin')
+    const id = Bot.uin.find(i => i && i !== 'stdin' && !isExcludedUin(i, excludeUin))
     return Number(id) || id || 0
   }
-  return Bot.uin === 'stdin' ? 0 : (Number(Bot.uin) || Bot.uin || 0)
+  if (Bot.uin === 'stdin' || isExcludedUin(Bot.uin, excludeUin)) return 0
+  return Number(Bot.uin) || Bot.uin || 0
 }
 
 export {
@@ -428,6 +438,7 @@ export {
   htmlCache,
   deleteFolder,
   isAllUin,
+  isExcludedUin,
   matchUin,
   resolveAllBotId
 }

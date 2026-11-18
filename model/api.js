@@ -1,16 +1,56 @@
 import { join } from 'path'
 import fetch from 'node-fetch'
 import { randomUUID } from 'crypto'
-import { TMP_DIR, isAllUin, resolveAllBotId } from './tool.js'
+import { TMP_DIR, isAllUin, isExcludedUin, resolveAllBotId } from './tool.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import common from '../../../lib/common/common.js'
 import { Version } from '../components/index.js'
 import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
 import { getMsg, setMsg, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
 
+function createAllowedBotProxy (excludeUin) {
+  if (typeof Bot === 'undefined' || !Array.isArray(Bot.uin) || !excludeUin) return Bot
+  const list = Array.isArray(excludeUin) ? excludeUin : [excludeUin]
+  if (!list.some(i => i != null && i !== '')) return Bot
+  const getAllowedIds = () => Bot.uin.filter(id => id && id !== 'stdin' && !isExcludedUin(id, list))
+  return new Proxy(Bot, {
+    get (target, prop) {
+      if (prop === 'pickGroup') {
+        return (groupId, strict) => {
+          const gid = Number(groupId) || groupId
+          const ids = getAllowedIds()
+          const hit = ids.find(id => target[id]?.gl?.has?.(gid) || target[id]?.gl?.has?.(groupId))
+          if (hit) return target[hit].pickGroup(groupId)
+          if (strict || ids.length === 0) return false
+          return target[ids[0]]?.pickGroup?.(groupId)
+        }
+      }
+      if (prop === 'pickFriend' || prop === 'pickUser') {
+        return (userId, strict) => {
+          const uid = Number(userId) || userId
+          const ids = getAllowedIds()
+          const hit = ids.find(id => {
+            if (target[id]?.fl?.has?.(uid) || target[id]?.fl?.has?.(userId)) return true
+            for (const ml of target[id]?.gml?.values?.() || []) {
+              if (ml?.has?.(uid) || ml?.has?.(userId)) return true
+            }
+            return false
+          })
+          if (hit) return target[hit].pickFriend(userId)
+          if (strict || ids.length === 0) return false
+          return target[ids[0]]?.pickFriend?.(userId)
+        }
+      }
+      const val = target[prop]
+      return typeof val === 'function' ? val.bind(target) : val
+    }
+  })
+}
+
 async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
   const isAll = isAllUin(uin)
-  const bot = Bot[uin] || Bot
+  const excludeUin = other?.excludeUin
+  const bot = isAll ? createAllowedBotProxy(excludeUin) : (Bot[uin] || Bot)
   let sendRet = null
   let ResponseData = null
   const resolveParamsId = async (target, skipOwnQQBot = false) => {
@@ -30,7 +70,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
     if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') return true
     if (!isAll || !targetId) return false
     const botId = Bot.gl?.get?.(targetId)?.bot_id || Bot.fl?.get?.(targetId)?.bot_id
-    const adapterId = Bot?.[botId]?.adapter?.id
+    const adapterId = (botId && !isExcludedUin(botId, excludeUin)) ? Bot?.[botId]?.adapter?.id : null
     if (adapterId === 'QQBot' || adapterId === 'QQGuild') return true
     return String(targetId).startsWith('qg_') || !!getLatestMsg(targetId)
   }
@@ -43,7 +83,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
 
     // 获取登录号信息
     get_login_info: async params => {
-      const loginUin = isAll ? resolveAllBotId() : uin
+      const loginUin = isAll ? resolveAllBotId(excludeUin) : uin
       const loginBot = Bot[loginUin] || bot
       ResponseData = {
         user_id: loginUin ? await getUser_id({ user_id: loginUin }) : 0,
@@ -101,7 +141,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
         ResponseData = Array.from(list.values())
       }
       if (isAll) {
-        ResponseData = ResponseData.filter(i => i?.user_id !== 'stdin')
+        ResponseData = ResponseData.filter(i => i?.user_id !== 'stdin' && !isExcludedUin(i?.bot_id, excludeUin))
       }
       for (const i in ResponseData) {
         ResponseData[i].user_id = await getUser_id({ user_id: ResponseData[i].user_id })
@@ -514,7 +554,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
       }
       ResponseData = []
       for (const i of list) {
-        if (!i.group_id || (isAll && i.group_id === 'stdin')) continue
+        if (!i.group_id || (isAll && (i.group_id === 'stdin' || isExcludedUin(i.bot_id, excludeUin)))) continue
         i.group_id = await getGroup_id({ group_id: i.group_id })
         if (i.group_name) {
           i.group_memo = i.group_name

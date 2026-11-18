@@ -117,7 +117,7 @@ Bot.on('message', async e => {
         case 1:
         case 2:
         case 6:
-          if (!matchUin(i.uin, e.self_id)) continue
+          if (!matchUin(i.uin, e.self_id, i.other?.excludeUin)) continue
           e.reply = reply(e)
           tmpMsg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
           reportMsg = await makeOneBotReportMsg(tmpMsg)
@@ -135,7 +135,7 @@ Bot.on('message', async e => {
           let botid = i.adapter?.gsBotId
 
           if (isAllUin(i.uin)) {
-            if (e.self_id === 'stdin') continue
+            if (!matchUin(i.uin, e.self_id, i.other?.excludeUin)) continue
             botid = mappedBotId || 'onebot'
           } else if (i.uin != e.self_id) {
             continue

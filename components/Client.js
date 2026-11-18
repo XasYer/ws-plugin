@@ -1,5 +1,5 @@
 import WebSocket, { WebSocketServer } from 'ws'
-import { getApiData, makeGSUidSendMsg, getLatestMsg, lifecycle, heartbeat, setMsg, getUser_id, isAllUin, resolveAllBotId } from '../model/index.js'
+import { getApiData, makeGSUidSendMsg, getLatestMsg, lifecycle, heartbeat, setMsg, getUser_id, isAllUin, isExcludedUin, resolveAllBotId } from '../model/index.js'
 import { Version, Config } from './index.js'
 import express from 'express'
 import http from 'http'
@@ -16,7 +16,7 @@ export default class Client {
     this.accessToken = accessToken
     this.accessKey = accessKey?.trim?.() || 'Token'
     this.uin = isAllUin(uin) ? 'all' : (Number(uin) || uin)
-    this.self_id = isAllUin(uin) ? resolveAllBotId() : uin
+    this.self_id = isAllUin(uin) ? resolveAllBotId(other.excludeUin) : uin
     this.ws = null
     this.status = 0
     this.closed = closed
@@ -31,7 +31,7 @@ export default class Client {
 
   getSyncSelfId () {
     if (!this.self_id && isAllUin(this.uin)) {
-      const id = resolveAllBotId()
+      const id = resolveAllBotId(this.other?.excludeUin)
       if (id && typeof id !== 'string') this.self_id = id
     }
     return this.self_id
@@ -39,7 +39,7 @@ export default class Client {
 
   async resolveSelfId () {
     if (!this.self_id && isAllUin(this.uin)) {
-      const id = resolveAllBotId()
+      const id = resolveAllBotId(this.other?.excludeUin)
       if (id) {
         this.self_id = typeof id === 'string' ? await getUser_id({ user_id: id }) : id
       }
@@ -484,12 +484,16 @@ export default class Client {
   }
 
   async sendMasterMsg (msg) {
-    const resolvedUin = isAllUin(this.uin) ? resolveAllBotId() : this.uin
+    const excludeUin = this.other?.excludeUin
+    const resolvedUin = isAllUin(this.uin) ? resolveAllBotId(excludeUin) : this.uin
     const bot = Bot[resolvedUin] || Bot
     let masterQQ = []
     let master = Version.isTrss ? Config.master[resolvedUin] : Config.masterQQ
     if (Version.isTrss && isAllUin(this.uin) && (!master || master.length === 0)) {
-      master = [...new Set(Object.values(Config.master || {}).flat())]
+      const entries = Object.entries(Config.master || {})
+        .filter(([id]) => id !== 'stdin' && !isExcludedUin(id, excludeUin))
+        .flatMap(([, list]) => list || [])
+      master = [...new Set(entries)]
     }
     if (Config.howToMaster > 0) {
       masterQQ.push(master?.[Config.howToMaster - 1])
