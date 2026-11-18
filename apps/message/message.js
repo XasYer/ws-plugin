@@ -1,5 +1,5 @@
 import { sendSocketList, Config, Version } from '../../components/index.js'
-import { makeOneBotReportMsg, makeGSUidReportMsg, setLatestMsg, setMsg, getGroup_id, getUser_id } from '../../model/index.js'
+import { makeOneBotReportMsg, makeGSUidReportMsg, setLatestMsg, setMsg, getGroup_id, getUser_id, isAllUin, matchUin } from '../../model/index.js'
 import _ from 'lodash'
 import cfg from '../../../../lib/config/config.js'
 
@@ -117,7 +117,7 @@ Bot.on('message', async e => {
         case 1:
         case 2:
         case 6:
-          if (i.uin != e.self_id) continue
+          if (!matchUin(i.uin, e.self_id, i.other?.excludeUin)) continue
           e.reply = reply(e)
           tmpMsg.messagePostFormat = i.other?.messagePostFormat || Config.messagePostFormat
           reportMsg = await makeOneBotReportMsg(tmpMsg)
@@ -134,7 +134,8 @@ Bot.on('message', async e => {
           const mappedBotId = botIdMap[adapterId]
           let botid = i.adapter?.gsBotId
 
-          if (i.uin === 'all') {
+          if (isAllUin(i.uin)) {
+            if (!matchUin(i.uin, e.self_id, i.other?.excludeUin)) continue
             botid = mappedBotId || 'onebot'
           } else if (i.uin != e.self_id) {
             continue

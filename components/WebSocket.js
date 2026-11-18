@@ -1,6 +1,6 @@
 import Client from './Client.js'
 import { Config, Version } from './index.js'
-import { getUser_id } from '../model/index.js'
+import { getUser_id, isAllUin } from '../model/index.js'
 import { redAdapter } from '../model/red/index.js'
 import _ from 'lodash'
 
@@ -90,19 +90,26 @@ async function createWebSocket (data) {
     return (/^(2854|3889|401)/.test(self_id) && self_id.length === 10) || (!Version.isTrss && self_id.startsWith('1020') && self_id.length === 9)
   }
 
-  const botAdapterId = Bot?.[client.uin]?.adapter?.id || Bot?.[client.self_id]?.adapter?.id
-
-  if (typeof client.self_id === 'string') {
-    client.self_id = await getUser_id({ user_id: client.self_id })
-    client.adapter = adapterName[client.uin?.substring?.(0, 3)]
-    const self_id = String(client.self_id)
-    if (!client.adapter && (botAdapterId === 'QQBot' || isQQBotLikeId(self_id))) {
-      client.adapter = getQQBotAdapter(self_id)
+  if (isAllUin(client.uin)) {
+    // all 模式服务多适配器，不写入 'all' 到数据库，仅把非数字兜底 self_id 转为整数
+    if (typeof client.self_id === 'string') {
+      client.self_id = await getUser_id({ user_id: client.self_id })
     }
   } else {
-    const self_id = String(client.self_id)
-    if (botAdapterId === 'QQBot' || isQQBotLikeId(self_id)) {
-      client.adapter = getQQBotAdapter(self_id)
+    const botAdapterId = Bot?.[client.uin]?.adapter?.id || Bot?.[client.self_id]?.adapter?.id
+
+    if (typeof client.self_id === 'string') {
+      client.self_id = await getUser_id({ user_id: client.self_id })
+      client.adapter = adapterName[client.uin?.substring?.(0, 3)]
+      const self_id = String(client.self_id)
+      if (!client.adapter && (botAdapterId === 'QQBot' || isQQBotLikeId(self_id))) {
+        client.adapter = getQQBotAdapter(self_id)
+      }
+    } else {
+      const self_id = String(client.self_id)
+      if (botAdapterId === 'QQBot' || isQQBotLikeId(self_id)) {
+        client.adapter = getQQBotAdapter(self_id)
+      }
     }
   }
   setAllSocketList(client)

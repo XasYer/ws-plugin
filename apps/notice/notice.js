@@ -1,5 +1,5 @@
 import { sendSocketList, Config, Version } from '../../components/index.js'
-import { setMsg, getMsg, getGroup_id, getUser_id } from '../../model/index.js'
+import { setMsg, getMsg, getGroup_id, getUser_id, matchUin } from '../../model/index.js'
 
 Bot.on('notice', async e => {
     if (Config.muteStop && (e.group?.mute_left > 0 || e.group?.all_muted)) return false
@@ -123,7 +123,7 @@ Bot.on('notice', async e => {
                 case 1:
                 case 2:
                 case 6:
-                    if (i.uin != e.self_id) continue
+                    if (!matchUin(i.uin, e.self_id, i.other?.excludeUin)) continue
                     i.ws.send(msg)
                     break;
                 default:

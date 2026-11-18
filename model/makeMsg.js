@@ -1,7 +1,7 @@
 import { Config, Version } from '../components/index.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import { getMsg, setMsg, getUser_id } from './DataBase.js'
-import { SendMusicShare, TMP_DIR, decodeHtml } from './tool.js'
+import { SendMusicShare, TMP_DIR, decodeHtml, isAllUin } from './tool.js'
 import common from '../../../lib/common/common.js'
 import { randomUUID } from 'crypto'
 import fs from 'fs'
@@ -327,10 +327,8 @@ async function makeSendMsg (params, uin, adapter) {
         break
       case 'at': {
         let qq = i.data.qq
-        if (adapter?.name) {
-          if (qq != 'all') {
-            qq = await getUser_id({ custom: qq, like: adapter.user_like })
-          }
+        if ((adapter?.name || isAllUin(uin)) && qq != 'all' && !isNaN(Number(qq))) {
+          qq = await getUser_id({ custom: qq, like: adapter?.user_like })
         }
         sendMsg.push(segment.at(Number(qq) || String(qq)))
       }
@@ -387,7 +385,7 @@ async function makeSendMsg (params, uin, adapter) {
           ...params,
           messages: [{ data: i.data }]
         }
-        sendMsg.push(await makeForwardMsg(data))
+        sendMsg.push(await makeForwardMsg(data, uin, adapter))
         break
       }
       case 'json':
@@ -442,7 +440,7 @@ async function makeForwardMsg (params, uin, adapter) {
         ...params,
         message: i
       }
-      let { sendMsg } = await makeSendMsg(data)
+      let { sendMsg } = await makeSendMsg(data, uin, adapter)
       forwardMsg.push({
         nickname: msg.data.nickname,
         user_id: Number(msg.data.user_id),
@@ -453,7 +451,7 @@ async function makeForwardMsg (params, uin, adapter) {
       forwardMsg.push({
         nickname: msg.data.name,
         user_id: Number(msg.data.uin),
-        message: await makeForwardMsg(node)
+        message: await makeForwardMsg(node, uin, adapter)
       })
     }
   }

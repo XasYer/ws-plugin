@@ -1,29 +1,80 @@
 import { join } from 'path'
 import fetch from 'node-fetch'
 import { randomUUID } from 'crypto'
-import { TMP_DIR } from './tool.js'
+import { TMP_DIR, isAllUin, isExcludedUin, resolveAllBotId } from './tool.js'
 import { MsgToCQ, CQToMsg } from './CQCode.js'
 import common from '../../../lib/common/common.js'
 import { Version } from '../components/index.js'
 import { makeSendMsg, makeForwardMsg, msgToOneBotMsg } from './makeMsg.js'
 import { getMsg, setMsg, getLatestMsg, getUser_id, getGroup_id } from './DataBase.js'
 
+function createAllowedBotProxy (excludeUin) {
+  if (typeof Bot === 'undefined' || !Array.isArray(Bot.uin) || !excludeUin) return Bot
+  const list = Array.isArray(excludeUin) ? excludeUin : [excludeUin]
+  if (!list.some(i => i != null && i !== '')) return Bot
+  const getAllowedIds = () => Bot.uin.filter(id => id && id !== 'stdin' && !isExcludedUin(id, list))
+  return new Proxy(Bot, {
+    get (target, prop) {
+      if (prop === 'pickGroup') {
+        return (groupId, strict) => {
+          const gid = Number(groupId) || groupId
+          const ids = getAllowedIds()
+          const hit = ids.find(id => target[id]?.gl?.has?.(gid) || target[id]?.gl?.has?.(groupId))
+          if (hit) return target[hit].pickGroup(groupId)
+          if (strict || ids.length === 0) return false
+          return target[ids[0]]?.pickGroup?.(groupId)
+        }
+      }
+      if (prop === 'pickFriend' || prop === 'pickUser') {
+        return (userId, strict) => {
+          const uid = Number(userId) || userId
+          const ids = getAllowedIds()
+          const hit = ids.find(id => {
+            if (target[id]?.fl?.has?.(uid) || target[id]?.fl?.has?.(userId)) return true
+            for (const ml of target[id]?.gml?.values?.() || []) {
+              if (ml?.has?.(uid) || ml?.has?.(userId)) return true
+            }
+            return false
+          })
+          if (hit) return target[hit].pickFriend(userId)
+          if (strict || ids.length === 0) return false
+          return target[ids[0]]?.pickFriend?.(userId)
+        }
+      }
+      const val = target[prop]
+      return typeof val === 'function' ? val.bind(target) : val
+    }
+  })
+}
+
 async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
-  const bot = Bot[uin] || Bot
+  const isAll = isAllUin(uin)
+  const excludeUin = other?.excludeUin
+  const bot = isAll ? createAllowedBotProxy(excludeUin) : (Bot[uin] || Bot)
   let sendRet = null
   let ResponseData = null
-  if (adapter) {
-    if (params.user_id) {
-      if (params.user_id == uin && adapter.name == 'QQBot') {
-        params.user_id = String(params.user_id)
-      } else {
-        params.user_id = await getUser_id({ custom: params.user_id, like: adapter.user_like })
+  const resolveParamsId = async (target, skipOwnQQBot = false) => {
+    if (!adapter && !isAll) return
+    if (target.user_id) {
+      if (skipOwnQQBot && target.user_id == uin && adapter?.name == 'QQBot') {
+        target.user_id = String(target.user_id)
+      } else if (!isNaN(Number(target.user_id))) {
+        target.user_id = await getUser_id({ custom: target.user_id, like: adapter?.user_like })
       }
     }
-    if (params.group_id) {
-      params.group_id = await getGroup_id({ custom: params.group_id, like: adapter.group_like })
+    if (target.group_id && !isNaN(Number(target.group_id))) {
+      target.group_id = await getGroup_id({ custom: target.group_id, like: adapter?.group_like })
     }
   }
+  const isPassiveReply = (targetId) => {
+    if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') return true
+    if (!isAll || !targetId) return false
+    const botId = Bot.gl?.get?.(targetId)?.bot_id || Bot.fl?.get?.(targetId)?.bot_id
+    const adapterId = (botId && !isExcludedUin(botId, excludeUin)) ? Bot?.[botId]?.adapter?.id : null
+    if (adapterId === 'QQBot' || adapterId === 'QQGuild') return true
+    return String(targetId).startsWith('qg_') || !!getLatestMsg(targetId)
+  }
+  await resolveParamsId(params, true)
   let publicApi = {
     // --------------------------------------------------------
     // Bot 账号
@@ -32,9 +83,11 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
 
     // 获取登录号信息
     get_login_info: async params => {
+      const loginUin = isAll ? resolveAllBotId(excludeUin) : uin
+      const loginBot = Bot[loginUin] || bot
       ResponseData = {
-        user_id: await getUser_id({ user_id: uin }),
-        nickname: bot.nickname
+        user_id: loginUin ? await getUser_id({ user_id: loginUin }) : 0,
+        nickname: loginBot.nickname
       }
     },
     // 设置登录号资料
@@ -87,6 +140,9 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
       } else if (list instanceof Map) {
         ResponseData = Array.from(list.values())
       }
+      if (isAll) {
+        ResponseData = ResponseData.filter(i => i?.user_id !== 'stdin' && !isExcludedUin(i?.bot_id, excludeUin))
+      }
       for (const i in ResponseData) {
         ResponseData[i].user_id = await getUser_id({ user_id: ResponseData[i].user_id })
       }
@@ -126,7 +182,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
     send_private_msg: async (params) => {
       let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
       if (sendMsg.length == 0) return
-      if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+      if (isPassiveReply(params.user_id)) {
         const msg = getLatestMsg(params.user_id)
         if (msg) {
           await msg.reply(sendMsg)
@@ -140,7 +196,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
     send_group_msg: async (params) => {
       let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
       if (sendMsg.length == 0) return
-      if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+      if (isPassiveReply(params.group_id)) {
         const msg = getLatestMsg(params.group_id)
         if (msg) {
           await msg.reply(sendMsg)
@@ -155,7 +211,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
       let { sendMsg, quote } = await makeSendMsg(params, uin, adapter)
       if (sendMsg.length == 0) return
       if (params.message_type == 'group' || params.group_id) {
-        if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+        if (isPassiveReply(params.group_id)) {
           const msg = getLatestMsg(params.group_id)
           if (msg) {
             await msg.reply(sendMsg)
@@ -164,7 +220,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
         }
         sendRet = await bot.pickGroup?.(params.group_id).sendMsg?.(sendMsg, quote)
       } else if (params.message_type == 'private' || params.user_id) {
-        if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+        if (isPassiveReply(params.user_id)) {
           const msg = getLatestMsg(params.user_id)
           if (msg) {
             await msg.reply(sendMsg)
@@ -267,7 +323,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
         if (match) forward_id = match[1]
       }
       if (params.group_id) {
-        if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+        if (isPassiveReply(params.group_id)) {
           const msg = getLatestMsg(params.group_id)
           if (msg) {
             await msg.reply(forwardMsg)
@@ -276,7 +332,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
         }
         sendRet = await bot.pickGroup(params.group_id).sendMsg(forwardMsg)
       } else if (params.user_id) {
-        if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+        if (isPassiveReply(params.user_id)) {
           const msg = getLatestMsg(params.user_id)
           if (msg) {
             await msg.reply(forwardMsg)
@@ -301,7 +357,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
         let match = forwardMsg.data?.match(/m_resid="(.*?)"/)
         if (match) forward_id = match[1]
       }
-      if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+      if (isPassiveReply(params.group_id)) {
         const msg = getLatestMsg(params.group_id)
         if (msg) {
           await msg.reply(forwardMsg)
@@ -325,7 +381,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
         let match = forwardMsg.data.match(/m_resid="(.*?)"/)
         if (match) forward_id = match[1]
       }
-      if (adapter?.name == 'QQBot' || adapter?.name == 'QQGuild') {
+      if (isPassiveReply(params.user_id)) {
         const msg = getLatestMsg(params.user_id)
         if (msg) {
           await msg.reply(forwardMsg)
@@ -498,7 +554,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
       }
       ResponseData = []
       for (const i of list) {
-        if (!i.group_id) continue
+        if (!i.group_id || (isAll && (i.group_id === 'stdin' || isExcludedUin(i.bot_id, excludeUin)))) continue
         i.group_id = await getGroup_id({ group_id: i.group_id })
         if (i.group_name) {
           i.group_memo = i.group_name
@@ -988,12 +1044,7 @@ async function getApiData (api, params = {}, name, uin, adapter, other = {}) {
     // .get_word_slices
     // 对事件执行快速操作 ( 隐藏 API )
     '.handle_quick_operation': async ({ context, operation }) => {
-      if (adapter) {
-        if (context.user_id != uin) {
-          context.user_id = await getUser_id({ custom: context.user_id, like: adapter.user_like })
-        }
-        context.group_id = await getGroup_id({ custom: context.group_id, like: adapter.group_like })
-      }
+      await resolveParamsId(context, true)
       switch (context.post_type) {
         case 'message':
           switch (context.message_type) {

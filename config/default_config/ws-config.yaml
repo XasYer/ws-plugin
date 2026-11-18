@@ -51,6 +51,8 @@ onlyReplyAt:
 # maxReconnectAttempts: 最大连接次数 0 为无限制
 # accessToken: 鉴权token
 # accessKey: 鉴权token的前缀 比如Bearer 默认为Token
+# uin: 绑定的Bot账号，支持 all（不区分大小写，默认排除 stdin）
+# excludeUin: 当 uin 为 all 时要排除的账号列表
 servers:
   - name: ws_name
     address: ws_address
