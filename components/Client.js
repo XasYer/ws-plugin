@@ -27,6 +27,8 @@ export default class Client {
 
   timer = null
 
+  reconnectTimer = null
+
   stopReconnect = false
 
   getSyncSelfId () {
@@ -104,7 +106,9 @@ export default class Client {
         } else {
           logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第${this.reconnectCount}次`)
           this.reconnectCount++
-          setTimeout(() => {
+          clearTimeout(this.reconnectTimer)
+          this.reconnectTimer = setTimeout(() => {
+            if (this.stopReconnect) return
             this.createWs()
           }, this.reconnectInterval * 1000)
         }
@@ -336,7 +340,9 @@ export default class Client {
         } else {
           logger.warn(`[ws-plugin] ${this.name} 开始尝试重新连接第 ${this.reconnectCount} 次`)
           this.reconnectCount++
-          setTimeout(() => {
+          clearTimeout(this.reconnectTimer)
+          this.reconnectTimer = setTimeout(() => {
+            if (this.stopReconnect) return
             this.createGSUidWs()
           }, this.reconnectInterval * 1000)
         }
@@ -428,7 +434,10 @@ export default class Client {
 
   close () {
     this.stopReconnect = true
-    if (this.status == 1) {
+    clearInterval(this.timer)
+    clearTimeout(this.reconnectTimer)
+    this.reconnectTimer = null
+    if (this.status == 1 || this.status == 3) {
       this.ws?.close?.()
       this.status = 0
     }

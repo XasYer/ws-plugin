@@ -1,11 +1,70 @@
 import Client from './Client.js'
 import { Config, Version } from './index.js'
-import { getUser_id, isAllUin } from '../model/index.js'
+import { getUser_id, isAllUin, isExcludedUin, matchUin } from '../model/index.js'
 import { redAdapter } from '../model/red/index.js'
 import _ from 'lodash'
 
 let sendSocketList = []
 let allSocketList = []
+const allExpandServers = new Map()
+const expandingKeys = new Set()
+let connectListenerBound = false
+
+function isExpandableAllServer (data) {
+  return isAllUin(data?.uin) && (Number(data?.type) === 1 || Number(data?.type) === 6)
+}
+
+function getOnlineAllowedUins (excludeUin) {
+  if (typeof Bot === 'undefined') return []
+  const raw = Array.isArray(Bot.uin) ? Bot.uin : [Bot.uin]
+  const seen = new Set()
+  const result = []
+  for (const id of raw) {
+    if (!id || id === 'stdin' || isExcludedUin(id, excludeUin)) continue
+    const key = String(id)
+    if (seen.has(key)) continue
+    seen.add(key)
+    result.push(id)
+  }
+  return result
+}
+
+async function ensureExpandedAllClient (template, uin) {
+  const rawName = template.rawName || template.name
+  const uinStr = String(uin)
+  const childName = `${rawName}(${uinStr})`
+  const key = `${rawName}:${uinStr}`
+  if (!matchUin(template.uin, uin, template.excludeUin) || expandingKeys.has(key)) return
+  if (sendSocketList.some(c => c.other?.rawName === rawName && String(c.uin) === uinStr)) return
+  expandingKeys.add(key)
+  try {
+    const child = _.cloneDeep(template)
+    child.rawName = rawName
+    child.name = childName
+    child.uin = uin
+    child.closed = false
+    await createWebSocket(child)
+  } finally {
+    expandingKeys.delete(key)
+  }
+}
+
+function bindConnectListener () {
+  if (connectListenerBound || typeof Bot?.on !== 'function') return
+  connectListenerBound = true
+  Bot.on('connect', async e => {
+    const selfId = e?.self_id ?? e?.uin ?? e?.bot?.uin
+    if (!selfId) return
+    for (const server of allExpandServers.values()) {
+      if (!matchUin(server.uin, selfId, server.excludeUin)) continue
+      try {
+        await ensureExpandedAllClient(server, selfId)
+      } catch (err) {
+        logger.error(`[ws-plugin] ${server.rawName || server.name} 为新上线账号 ${selfId} 补建连接失败`, err)
+      }
+    }
+  })
+}
 
 const adapterName = {
   qg_: {
@@ -69,6 +128,40 @@ async function createWebSocket (data) {
       i.rawName = data.name
       i.uin = uin
       await createWebSocket(i)
+    }
+    return
+  }
+  if (isExpandableAllServer(data)) {
+    const rawName = data.rawName || data.name
+    if (data.address == 'ws_address' || data.closed) {
+      allExpandServers.delete(rawName)
+      for (const i of allSocketList) {
+        if (i.other?.rawName === rawName) i.close()
+      }
+      sendSocketList = sendSocketList.filter(i => i.other?.rawName !== rawName)
+      allSocketList = allSocketList.filter(i => i.other?.rawName !== rawName)
+      setAllSocketList(new Client(data))
+      return
+    }
+    allSocketList = allSocketList.filter(i => !(i.name === rawName && isAllUin(i.uin)))
+    sendSocketList = sendSocketList.filter(i => !(i.name === rawName && isAllUin(i.uin)))
+    for (const i of allSocketList) {
+      if (i.other?.rawName === rawName && !matchUin(data.uin, i.uin, data.excludeUin)) {
+        i.close()
+      }
+    }
+    allSocketList = allSocketList.filter(i => !(i.other?.rawName === rawName && !matchUin(data.uin, i.uin, data.excludeUin)))
+    sendSocketList = sendSocketList.filter(i => !(i.other?.rawName === rawName && !matchUin(data.uin, i.uin, data.excludeUin)))
+    const template = _.cloneDeep({ ...data, rawName })
+    allExpandServers.set(rawName, template)
+    bindConnectListener()
+    const uins = getOnlineAllowedUins(data.excludeUin)
+    if (uins.length === 0) {
+      logger.info(`[ws-plugin] ${rawName} 当前暂无可用在线 Bot，将在新 Bot 上线后自动建立独立连接`)
+      return
+    }
+    for (const uin of uins) {
+      await ensureExpandedAllClient(template, uin)
     }
     return
   }
@@ -199,26 +292,35 @@ async function modifyWebSocket (target) {
       }
       break
     case 'del':
-    case 'close':
+    case 'close': {
+      const targetName = target.data.rawName || target.data.name
+      const isTarget = i => i.name == targetName || i.other?.rawName == targetName
+      allExpandServers.delete(targetName)
       for (const i of allSocketList) {
-        // eslint-disable-next-line no-useless-escape
-        const reg = new RegExp(`^${target.data.name}\(.{1,6}\)$`)
-        if (i.name == target.data.name || reg.test(i.name)) {
+        if (isTarget(i)) {
           i.close()
         }
       }
+      sendSocketList = sendSocketList.filter(i => !isTarget(i))
+      if (target.type === 'del') {
+        allSocketList = allSocketList.filter(i => !isTarget(i))
+      }
       break
+    }
     default:
   }
 }
 
 function clearWebSocket () {
+  allExpandServers.clear()
   for (const i of allSocketList) {
     i.close()
   }
+  sendSocketList = []
 }
 
 async function initWebSocket () {
+  bindConnectListener()
   // if (Version.isTrss) return
   for (const i of Config.servers) {
     await createWebSocket(i)

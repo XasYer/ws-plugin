@@ -636,23 +636,26 @@ export class setting extends plugin {
   }
 
   async resetWs (msg) {
-    for (const i of sendSocketList) {
-      if (i.name == msg) {
+    const targets = sendSocketList.filter(i => i.name == msg || i.other?.rawName == msg)
+    if (targets.length > 0) {
+      for (const i of targets) {
         i.close()
         setTimeout(async () => {
           await createWebSocket({
+            ...i.other,
             name: i.name,
             address: i.address,
             type: i.type,
             reconnectInterval: i.reconnectInterval,
             maxReconnectAttempts: i.maxReconnectAttempts,
             uin: i.uin,
-            accessToken: i.accessToken
+            accessToken: i.accessToken,
+            accessKey: i.accessKey
           })
         }, 500)
-        this.reply('操作成功~请留意控制台输出~')
-        return true
       }
+      this.reply('操作成功~请留意控制台输出~')
+      return true
     }
     this.reply(`没有连接名字为${msg}的连接或已关闭连接`)
     return true
